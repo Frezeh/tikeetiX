@@ -1,0 +1,56 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: #ffffff;
+    --foreground: #000000;
+    --primary: #133205;
+    --secondary: #2a680c;
+    --tertiary: #a8f285;
+    --danger: #e72113;
+    --danger-emphasis: #e72113;
+    --danger-emphasis2: #bd1b0f;
+    --accent: #d8e6ff;
+    --accent-emphasis: #0d67fe;
+    --accent-emphasis2: #0655dd;
+    --success: #d8f1e6;
+    --success-emphasis: #0da767;
+    --success-emphasis2: #0f8755;
+    --success-emphasis3: #9df316;
+    --warning: #f7ebd9;
+    --warning-emphasis: #d18411;
+    --warning-emphasis2: #ae6e0e;
+    --card: #ffffff;
+    --popover: #ffffff;
+    --muted: #9df316;
+    --destructive: #cb1a14;
+    --border: #d0d5dd;
+    --input: #d0d5dd;
+    --ring: #000000;
+    --radius: 0.5rem;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+@layer utilities {
+  /* Hide scrollbar for Chrome, Safari and Opera */
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Hide scrollbar for IE, Edge and Firefox */
+  .no-scrollbar {
+    -ms-overflow-style: none; /* IE and Edge */
+    scrollbar-width: none; /* Firefox */
+  }
+}
