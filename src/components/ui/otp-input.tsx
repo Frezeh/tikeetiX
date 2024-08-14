@@ -35,7 +35,7 @@ const OtpInput = ({ className, onUpdate, length, ...props }: InputProps) => {
   };
 
   return (
-    <div className="flex space-x-2">
+    <div className="flex space-x-3 w-full">
       {otp.map((value, index) => (
         <input
           key={index}
@@ -46,7 +46,7 @@ const OtpInput = ({ className, onUpdate, length, ...props }: InputProps) => {
           onChange={(e) => handleChange(e, index)}
           onKeyDown={(e) => handleKeyDown(e, index)}
           className={cn(
-            "w-14 h-14 border border-[#F0F2F5] bg-[#F0F2F5] rounded-[6px] text-center text-xl ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 transition-all duration-300",
+            "w-1/4 h-14 border border-[#F0F2F5] bg-[#F0F2F5] rounded-[6px] text-center text-xl ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 transition-all duration-300",
             className
           )}
           {...props}

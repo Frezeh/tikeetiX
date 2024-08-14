@@ -5,9 +5,11 @@ import { Card, CardContent } from "@/components/ui/card";
 import { useState } from "react";
 import Auth from "./components/auth";
 import Otp from "./components/otp";
+import { User } from "@/services/models/auth";
 
 export default function Login() {
   const [step, setStep] = useState<"auth" | "otp">("auth");
+  const [userPayload, setUserPayload] = useState<Partial<User>>({});
 
   const moveToNext = () => setStep("otp");
   const goBack = () => setStep("auth");
@@ -15,7 +17,7 @@ export default function Login() {
   return (
     <AuthenticationLayot>
       <>
-        <div className="hidden lg:flex bg-[url('./assets/images/login-background.png')] h-[96vh] w-[40%] bg-cover rounded-[32px] p-10 flex-col justify-between">
+        <div className="hidden lg:flex bg-[url('./assets/images/login-background.png')] bg-primary h-[96vh] w-[40%] bg-cover rounded-[32px] p-10 flex-col justify-between">
           <img src={Logo} alt="TikeetiX Logo" className="w-32 h-6" />
           <div className="space-y-8">
             <h1 className="sm:text-2xl lg:text-3xl xl:text-5xl 2xl:text-[64px] text-background leading-[120%] tracking-[-4%] font-medium">
@@ -52,8 +54,8 @@ export default function Login() {
           </Card>
         </div>
 
-        {step === "auth" && <Auth moveToNext={moveToNext} />}
-        {step === "otp" && <Otp goBack={goBack} />}
+        {step === "auth" && <Auth moveToNext={moveToNext} setUserPayload={setUserPayload} />}
+        {step === "otp" && <Otp goBack={goBack} userPayload={userPayload}/>}
       </>
     </AuthenticationLayot>
   );

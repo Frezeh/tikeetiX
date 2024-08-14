@@ -1,9 +1,12 @@
 import EmailSentIcon from "@/assets/icons/email-sent-icon";
 import { ChevronLeft } from "lucide-react";
 
-const user_email = "username";
+type Props = {
+  goBack: () => void;
+  email: string;
+};
 
-export default function EmailSent({ goBack }: { goBack: VoidFunction }) {
+export default function EmailSent({ goBack, email }: Props) {
   return (
     <div className="lg:w-1/2 self-center overflow-y-scroll no-scrollbar h-auto px-1 lg:max-h-[90vh]">
       <div className="max-w-[357px] space-y-10 mx-auto">
@@ -22,7 +25,7 @@ export default function EmailSent({ goBack }: { goBack: VoidFunction }) {
           <p className="text-[#101928] text-center text-[28px] font-medium">
             Email sent
           </p>
-          <p className="text-[#667185] text-center text-base">{`We have sent an email to ${user_email} with instructions on how to reset your password.`}</p>
+          <p className="text-[#667185] text-center text-base">{`We have sent an email to ${email} with instructions on how to reset your password.`}</p>
         </div>
       </div>
     </div>

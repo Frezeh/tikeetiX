@@ -3,19 +3,35 @@ import Logo from "@/assets/icons/logo.svg";
 import AuthenticationLayot from "@/components/authentication-layout";
 import { Card, CardContent } from "@/components/ui/card";
 import { useState } from "react";
-import Register from "./components/register";
+import RegisterOrganization from "./components/register-organization";
+import RegisterUser from "./components/register-user";
 import Usertype from "./components/user-type";
+import VerifyEmail from "./components/verify-email";
 
 export default function Onboarding() {
-  const [step, setStep] = useState<"usertype" | "register">("usertype");
+  const [step, setStep] = useState<"usertype" | "register" | "otp">("usertype");
+  const [type, setType] = useState<"Individual" | "Organization">("Individual");
+  const [email, setEmail] = useState("");
 
-  const moveToNext = () => setStep("register");
-  const goBack = () => setStep("usertype");
+  const moveToNext = () => {
+    if (step === "usertype") {
+      setStep("register");
+    } else if (step === "register") {
+      setStep("otp");
+    }
+  };
+  const goBack = () => {
+    if (step === "otp") {
+      setStep("register");
+    } else if (step === "register") {
+      setStep("usertype");
+    }
+  };
 
   return (
     <AuthenticationLayot>
       <>
-        <div className="hidden lg:flex bg-[url('./assets/images/onboarding-background.png')] h-[96vh] w-[40%] bg-cover rounded-[32px] p-10 flex-col justify-between">
+        <div className="hidden lg:flex bg-[url('./assets/images/onboarding-background.png')] bg-primary h-[96vh] w-[40%] bg-cover rounded-[32px] p-10 flex-col justify-between">
           <img src={Logo} alt="TikeetiX Logo" className="w-32 h-6" />
           <div className="space-y-8">
             <h1 className="sm:text-2xl lg:text-3xl xl:text-5xl 2xl:text-[64px] text-background leading-[120%] tracking-[-4%] font-medium">
@@ -52,8 +68,26 @@ export default function Onboarding() {
           </Card>
         </div>
 
-        {step === "usertype" && <Usertype moveToNext={moveToNext} />}
-        {step === "register" && <Register goBack={goBack} />}
+        {step === "usertype" && (
+          <Usertype moveToNext={moveToNext} type={type} setType={setType} />
+        )}
+        {step === "register" &&
+          (type === "Individual" ? (
+            <RegisterUser
+              goBack={goBack}
+              moveToNext={moveToNext}
+              type={type}
+              setEmail={setEmail}
+            />
+          ) : (
+            <RegisterOrganization
+              goBack={goBack}
+              moveToNext={moveToNext}
+              type={type}
+              setEmail={setEmail}
+            />
+          ))}
+        {step === "otp" && <VerifyEmail goBack={goBack} email={email} />}
       </>
     </AuthenticationLayot>
   );

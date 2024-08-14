@@ -1,27 +1,26 @@
+import RegisterSuccessIcon from "@/assets/icons/register-success-icon";
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogFooter } from "@/components/ui/dialog";
 import Loading from "@/components/ui/loading";
 import OtpInput from "@/components/ui/otp-input";
 import { useToast } from "@/hooks/use-toast";
-import { saveItem } from "@/lib/utils";
-import { useProfileContext } from "@/provider/profile-provider";
-import { completeLogin } from "@/services/api/auth";
-import { User } from "@/services/models/auth";
+import { verifyEmail } from "@/services/api/auth";
 import { useMutation } from "@tanstack/react-query";
 import { ChevronLeft } from "lucide-react";
 import { useEffect, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
 type Props = {
   goBack: VoidFunction;
-  userPayload: Partial<User>;
+  email: string;
 };
 
-export default function Otp({ goBack, userPayload }: Props) {
+export default function VerifyEmail({ goBack, email }: Props) {
   const navigate = useNavigate();
-  const { updateProfile } = useProfileContext();
   const { toast } = useToast();
-  const { isPending, mutate } = useMutation({ mutationFn: completeLogin });
+  const { isPending, mutate } = useMutation({ mutationFn: verifyEmail });
   const [otp, setOtp] = useState("");
+  const [open, setOpen] = useState(false);
 
   const handleOtpChange = (value: string) => {
     setOtp(value);
@@ -33,23 +32,21 @@ export default function Otp({ goBack, userPayload }: Props) {
 
   const verifyOtp = () => {
     mutate(
-      { email: userPayload.email!, code: otp },
+      { email, code: otp },
       {
         onSuccess: (res) => {
           if (res.data) {
-            updateProfile(res.data.user);
-            saveItem("accessToken", res.data.accessToken);
-            navigate("/");
+            setOpen(true);
           } else {
             toast({
-              title: "Failed to login",
+              title: "Failed to verify email",
               variant: "error",
             });
           }
         },
         onError: () => {
           toast({
-            title: "Failed to login",
+            title: "Failed to verify email",
             variant: "error",
           });
         },
@@ -72,7 +69,7 @@ export default function Otp({ goBack, userPayload }: Props) {
         <p className="text-[#101928] text-xs">go back</p>
       </button>
       <div className="space-y-2">
-        <p className="text-[#101928] text-[40px] font-medium">OTP Login</p>
+        <p className="text-[#101928] text-[40px] font-medium">Verify email</p>
       </div>
 
       <div className="space-y-4 sm:max-w-[375px]">
@@ -95,14 +92,23 @@ export default function Otp({ goBack, userPayload }: Props) {
         </div>
       </div>
 
-      <div className="sm:max-w-[375px] flex flex-col items-center justify-center gap-2">
-        <p className="text-xs text-[#98A2B3] font-medium items-center flex gap-2">
-          Are you new here?
-          <Link to="/onboarding" className="text-sm text-secondary font-medium">
-            Create Account
-          </Link>
-        </p>
-      </div>
+      <Dialog
+        open={open}
+        onOpenChange={() => {
+          setOpen(!open);
+          navigate("/login");
+        }}
+      >
+        <DialogContent className="w-3/4 sm:max-w-[413px] sm:h-[266px] justify-center items-center gap-2 rounded-[10px]">
+          <RegisterSuccessIcon />
+
+          <DialogFooter className="w-full justify-center items-center">
+            <p className="font-medium text-xl sm:text-2xl text-center">
+              Account created
+            </p>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

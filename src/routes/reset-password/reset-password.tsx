@@ -57,7 +57,7 @@ export default function ResetPassword() {
     },
   });
 
-  function onSubmit(data: z.infer<typeof FormSchema>) {}
+  function onSubmit(_: z.infer<typeof FormSchema>) {}
 
   function validate(value: string) {
     let sixcharacters = value.length >= 6;
@@ -70,7 +70,7 @@ export default function ResetPassword() {
   return (
     <AuthenticationLayot>
       <>
-        <div className="hidden lg:flex bg-[url('./assets/images/password-background.png')] h-[96vh] w-[40%] bg-cover rounded-[32px] p-10 flex-col justify-start">
+        <div className="hidden lg:flex bg-[url('./assets/images/password-background.png')] bg-black h-[96vh] w-[40%] bg-cover rounded-[32px] p-10 flex-col justify-start">
           <img src={Logo} alt="TikeetiX Logo" className="w-32 h-6" />
           <div className="py-20">
             <h1 className="sm:text-2xl lg:text-3xl xl:text-5xl 2xl:text-[64px] text-background leading-[120%] tracking-[-4%] font-medium">
@@ -110,7 +110,7 @@ export default function ResetPassword() {
                           className="bg-[#F0F2F5] border border-[#F0F2F5] h-14 placeholder:text-input w-[352px] pr-10"
                           error={!!form.formState.errors.password}
                           type={visible ? "text" : "password"}
-                          suffixItem={
+                          suffixitem={
                             visible ? (
                               <VisibleIcon
                                 className="absolute top-0 right-0 cursor-pointer lg:mt-[18px] mr-4 mt-4"
@@ -192,7 +192,7 @@ export default function ResetPassword() {
                           className="bg-[#F0F2F5] border border-[#F0F2F5] h-14 placeholder:text-input w-[352px] pr-10"
                           error={!!form.formState.errors.confirmpassword}
                           type={visible ? "text" : "password"}
-                          suffixItem={
+                          suffixitem={
                             visible ? (
                               <VisibleIcon
                                 className="absolute top-0 right-0 cursor-pointer lg:mt-[18px] mr-4 mt-4"

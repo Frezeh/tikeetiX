@@ -14,18 +14,6 @@ const LANGUAGES = [
     name: "ENG",
     value: "English",
   },
-  {
-    name: "FRA",
-    value: "French",
-  },
-  {
-    name: "ESP",
-    value: "Spanish",
-  },
-  {
-    name: "GER",
-    value: "German",
-  },
 ];
 
 export default function AuthenticationLayot({

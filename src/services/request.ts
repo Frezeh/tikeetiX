@@ -8,8 +8,8 @@ export interface ApiResponse<T = any> {
 
 export interface GenericResponse<T = any> {
   status: number;
-  message?: T;
-  error?: string;
+  message: string;
+  data: T;
 }
 
 type ApiError = AxiosError<ApiResponse>;
@@ -54,7 +54,7 @@ export async function makeRequest<T = any>(
   config: AxiosRequestConfig
 ): Promise<ApiResponse<T>> {
   try {
-    const response: AxiosResponse<ApiResponse<T>> = await apiClient(config);
+    const response: AxiosResponse<GenericResponse<T>> = await apiClient(config);
     return {
       data: response.data,
       status: response.status,

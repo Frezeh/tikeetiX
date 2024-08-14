@@ -18,18 +18,20 @@ import {
 import { Input } from "@/components/ui/input";
 import Loading from "@/components/ui/loading";
 import { useToast } from "@/hooks/use-toast";
-import { one_number, upper_lowercase } from "@/lib/utils";
+import { one_number, special_character, upper_lowercase } from "@/lib/utils";
 import { login } from "@/services/api/auth";
+import { User } from "@/services/models/auth";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation } from "@tanstack/react-query";
 import { EyeOff } from "lucide-react";
-import { useEffect, useState } from "react";
+import { Dispatch, SetStateAction, useState } from "react";
 import { useForm } from "react-hook-form";
 import { Link } from "react-router-dom";
 import { z } from "zod";
 
 type Props = {
   moveToNext: VoidFunction;
+  setUserPayload: Dispatch<SetStateAction<Partial<User>>>;
 };
 
 const FormSchema = z.object({
@@ -44,30 +46,18 @@ const FormSchema = z.object({
     })
     .refine((value) => upper_lowercase.test(value), {
       message: "Password must contain both upper and lower case letters",
+    })
+    .refine((value) => special_character.test(value), {
+      message: "Password must contain a special character",
     }),
   rememberme: z.boolean().optional(),
 });
 
-export default function Auth({ moveToNext }: Props) {
+export default function Auth({ moveToNext, setUserPayload }: Props) {
   const [visible, setVisible] = useState(false);
   const { toast } = useToast();
 
   const { isPending, mutate } = useMutation({ mutationFn: login });
-
-  useEffect(() => {
-    // const res = fetch("https://jsonplaceholder.typicode.com/posts", {
-    const res = fetch("https://staging-tikeeti-api.fly.dev/api/v1/", {
-      method: "GET",
-      // credentials: "include",
-      headers: {
-        "Content-Type": "application/json",
-      },
-    })
-
-    res.then((res) => {
-      console.log(res);
-    })
-  }, [])
 
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
@@ -82,10 +72,13 @@ export default function Auth({ moveToNext }: Props) {
       { email: data.email, password: data.password },
       {
         onSuccess: (res) => {
-          //TODO: handle success
-          moveToNext();
+          if (res.data) {
+            setUserPayload(res.data);
+            moveToNext();
+          }
         },
-        onError: () => {
+        onError: (err) => {
+          console.log("err", err.message);
           toast({
             title: "Failed to login",
             variant: "error",
@@ -96,7 +89,7 @@ export default function Auth({ moveToNext }: Props) {
   }
 
   return (
-    <div className="space-y-8 lg:w-1/2 xl:w-[40%] self-center overflow-y-scroll no-scrollbar px-1 h-auto lg:max-h-[90vh]">
+    <div className="space-y-8 w-full sm:w-auto lg:w-1/2 xl:w-[40%] self-center overflow-y-scroll no-scrollbar px-1 h-auto lg:max-h-[90vh]">
       <div className="space-y-2">
         <p className="text-[#101928] text-[40px] font-medium">
           Let’s sign you in
@@ -122,10 +115,10 @@ export default function Auth({ moveToNext }: Props) {
                     {...field}
                     type="email"
                     placeholder="Email address"
-                    className="bg-[#F0F2F5] border border-[#F0F2F5] h-14 placeholder:text-input w-[320px] sm:w-[375px]"
+                    className="bg-[#F0F2F5] border border-[#F0F2F5] h-14 placeholder:text-input w-full sm:w-[357px] pr-12"
                     error={!!form.formState.errors.email}
-                    suffixItem={
-                      <EmailIcon className="absolute top-0 right-0 cursor-pointer lg:mt-[18px] mr-4 mt-4" />
+                    suffixitem={
+                      <EmailIcon className="absolute top-0 right-0 cursor-pointer lg:mt-[18px] lg:mr-8 mr-4 mt-4" />
                     }
                   />
                 </FormControl>
@@ -142,14 +135,14 @@ export default function Auth({ moveToNext }: Props) {
                 <FormControl>
                   <Input
                     {...field}
-                    placeholder="Email address"
-                    className="bg-[#F0F2F5] border border-[#F0F2F5] h-14 placeholder:text-input w-[320px] sm:w-[375px] pr-10"
+                    placeholder="Super s*cret pa**word"
+                    className="bg-[#F0F2F5] border border-[#F0F2F5] h-14 placeholder:text-input w-full sm:w-[357px] pr-12"
                     error={!!form.formState.errors.password}
                     type={visible ? "text" : "password"}
-                    suffixItem={
+                    suffixitem={
                       visible ? (
                         <VisibleIcon
-                          className="absolute top-0 right-0 cursor-pointer lg:mt-[18px] mr-4 mt-4"
+                          className="absolute top-0 right-0 cursor-pointer lg:mt-[18px] lg:mr-8 mr-4 mt-4"
                           onClick={() => setVisible(!visible)}
                         />
                       ) : (
@@ -157,7 +150,7 @@ export default function Auth({ moveToNext }: Props) {
                           color="#13191C"
                           width={21}
                           height={20}
-                          className="absolute top-0 right-0 cursor-pointer lg:mt-[18px] mr-4 mt-4"
+                          className="absolute top-0 right-0 cursor-pointer lg:mr-8 mr-4 mt-4"
                           onClick={() => setVisible(!visible)}
                         />
                       )
@@ -168,7 +161,7 @@ export default function Auth({ moveToNext }: Props) {
               </FormItem>
             )}
           />
-          <div className="flex justify-between items-center">
+          <div className="flex w-full sm:w-[357px] justify-between items-center">
             <FormField
               control={form.control}
               name="rememberme"
@@ -196,20 +189,20 @@ export default function Auth({ moveToNext }: Props) {
             </Link>
           </div>
           <div className="pt-4">
-            <Button type="submit" variant="gradient" className="w-full h-14">
+            <Button type="submit" variant="gradient" className="w-full sm:w-[357px] h-14">
               {isPending ? <Loading /> : "Login to account"}
             </Button>
           </div>
         </form>
       </Form>
 
-      <div className="sm:max-w-[375px] w-full flex justify-center items-center gap-1">
+      <div className="sm:max-w-[357px] w-full flex justify-center items-center gap-1">
         <div className="w-1/2 bg-[#D0D5DD] h-[1px]" />
         <p className="text-[#D0D5DD] text-xs font-medium">or</p>
         <div className="w-1/2 bg-[#D0D5DD] h-[1px]" />
       </div>
 
-      <div className="sm:max-w-[375px] flex justify-between items-center 2xl:py-2">
+      <div className="sm:max-w-[357px] w-full flex justify-between items-center 2xl:py-2">
         <button>
           <img src={Google} alt="google" />
         </button>

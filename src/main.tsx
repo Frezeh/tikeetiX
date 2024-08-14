@@ -6,11 +6,14 @@ import { Toaster } from "@/components/ui/toaster";
 import "./index.css";
 import { router } from "@/routes/router";
 import { queryClient } from "@/services/query-client";
+import { ProfileProvider } from "./provider/profile-provider";
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
     <QueryClientProvider client={queryClient}>
-      <RouterProvider router={router} />
+      <ProfileProvider>
+        <RouterProvider router={router} />
+      </ProfileProvider>
       <Toaster />
     </QueryClientProvider>
   </React.StrictMode>

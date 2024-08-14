@@ -1,18 +1,22 @@
+import IndividualBgLeft from "@/assets/icons/individual-bg-left";
+import IndividualBgRight from "@/assets/icons/individual-bg-right";
+import OrganizationBg from "@/assets/icons/organization-bg";
+import Individual from "@/assets/images/individual.png";
+import Organization from "@/assets/images/organization.png";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 import { ChevronLeft } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import ProgressIndicator from "./progress-indicator";
-import Individual from "@/assets/images/individual.png";
-import Organization from "@/assets/images/organization.png";
-import { useState } from "react";
-import { cn } from "@/lib/utils";
-import OrganizationBg from "@/assets/icons/organization-bg";
-import IndividualBgLeft from "@/assets/icons/individual-bg-left";
-import IndividualBgRight from "@/assets/icons/individual-bg-right";
 
-export default function Usertype({ moveToNext }: { moveToNext: VoidFunction }) {
+type Props = {
+  moveToNext: VoidFunction;
+  type: "Individual" | "Organization";
+  setType: (type: "Individual" | "Organization") => void;
+};
+
+export default function Usertype({ moveToNext, type, setType }: Props) {
   const navigate = useNavigate();
-  const [selected, setSelected] = useState("individual");
 
   const handleSubmit = () => {
     moveToNext();
@@ -49,20 +53,20 @@ export default function Usertype({ moveToNext }: { moveToNext: VoidFunction }) {
               <button
                 className={cn(
                   "relative w-[172.5px] group h-[99px] bg-[#F0F2F5] border-[#F0F2F5] border rounded-[5px] transition-all overflow-hidden duration-300",
-                  selected === "individual" && "border-success-emphasis3"
+                  type === "Individual" && "border-success-emphasis3"
                 )}
-                onClick={() => setSelected("individual")}
+                onClick={() => setType("Individual")}
               >
                 <div
                   className={cn(
                     "absolute pointer-events-none top-2 right-2 border-[1.5px] border-[#D0D5DD] w-5 h-5 bg-white rounded-full flex justify-center items-center",
-                    selected === "individual" && "border-[#0DA767]"
+                    type === "Individual" && "border-[#0DA767]"
                   )}
                 >
                   <div
                     className={cn(
                       "w-[10px] h-[10px] rounded-full bg-[#0DA767] hidden",
-                      selected === "individual" && "block"
+                      type === "Individual" && "block"
                     )}
                   />
                 </div>
@@ -92,20 +96,20 @@ export default function Usertype({ moveToNext }: { moveToNext: VoidFunction }) {
               <button
                 className={cn(
                   "relative w-[172.5px] group h-[99px] bg-[#F0F2F5] hover:border-success-emphasis3 border-[#F0F2F5] border rounded-[5px] transition-all overflow-hidden duration-500",
-                  selected === "organization" && "border-success-emphasis3"
+                  type === "Organization" && "border-success-emphasis3"
                 )}
-                onClick={() => setSelected("organization")}
+                onClick={() => setType("Organization")}
               >
                 <div
                   className={cn(
                     "absolute pointer-events-none top-2 right-2 border-[1.5px] border-[#D0D5DD] w-5 h-5 bg-white rounded-full flex justify-center items-center",
-                    selected === "organization" && "border-[#0DA767]"
+                    type === "Organization" && "border-[#0DA767]"
                   )}
                 >
                   <div
                     className={cn(
                       "w-[10px] h-[10px] rounded-full bg-[#0DA767] hidden",
-                      selected === "organization" && "block"
+                      type === "Organization" && "block"
                     )}
                   />
                 </div>

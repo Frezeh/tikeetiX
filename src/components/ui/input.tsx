@@ -4,7 +4,7 @@ import { cn } from "@/lib/utils";
 export interface InputProps
   extends React.InputHTMLAttributes<HTMLInputElement> {
   prefixItem?: React.ReactNode;
-  suffixItem?: React.ReactNode;
+  suffixitem?: React.ReactNode;
   error?: boolean;
   success?: boolean;
 }
@@ -12,7 +12,7 @@ export interface InputProps
 const Input = React.forwardRef<HTMLInputElement, InputProps>(
   ({ className, type, error, success, ...props }, ref) => {
     return (
-      <div className="relative w-fit">
+      <div className="relative w-full">
         {!!props.prefixItem && props.prefixItem}
         <input
           type={type}
@@ -25,7 +25,7 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
           ref={ref}
           {...props}
         />
-        {!!props.suffixItem && props.suffixItem}
+        {!!props.suffixitem && props.suffixitem}
       </div>
     );
   }

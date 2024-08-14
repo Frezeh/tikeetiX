@@ -10,18 +10,22 @@ export const router = createBrowserRouter([
   {
     path: "login",
     element: <Login />,
+    errorElement: <ErrorPage />,
   },
   {
     path: "onboarding",
     element: <Onboarding />,
+    errorElement: <ErrorPage />,
   },
   {
     path: "forgot-password",
     element: <ForgotPassword />,
+    errorElement: <ErrorPage />,
   },
   {
     path: "reset-password",
     element: <ResetPassword />,
+    errorElement: <ErrorPage />,
   },
   {
     path: "/",

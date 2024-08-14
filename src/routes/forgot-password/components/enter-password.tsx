@@ -10,14 +10,19 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import Loading from "@/components/ui/loading";
+import { forgotPassword } from "@/services/api/auth";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useMutation } from "@tanstack/react-query";
 import { ChevronLeft } from "lucide-react";
+import { Dispatch, SetStateAction } from "react";
 import { useForm } from "react-hook-form";
 import { Link, useNavigate } from "react-router-dom";
 import { z } from "zod";
 
 type Props = {
   moveToNext: VoidFunction;
+  setEmail: Dispatch<SetStateAction<string>>;
 };
 
 const FormSchema = z.object({
@@ -26,8 +31,9 @@ const FormSchema = z.object({
   }),
 });
 
-export default function EnterPassword({ moveToNext }: Props) {
+export default function EnterPassword({ moveToNext, setEmail }: Props) {
   const navigate = useNavigate();
+  const { isPending, mutate } = useMutation({ mutationFn: forgotPassword });
 
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
@@ -37,7 +43,20 @@ export default function EnterPassword({ moveToNext }: Props) {
   });
 
   function onSubmit(data: z.infer<typeof FormSchema>) {
-    moveToNext();
+    mutate(
+      { email: data.email },
+      {
+        onSuccess: (res) => {
+          if (res.status === 200) {
+            setEmail(data.email);
+            moveToNext();
+          }
+        },
+        onError: (err) => {
+          console.log("err", err.message);
+        },
+      }
+    );
   }
 
   return (
@@ -82,7 +101,7 @@ export default function EnterPassword({ moveToNext }: Props) {
                       placeholder="Email address"
                       className="bg-[#F0F2F5] border border-[#F0F2F5] h-14 placeholder:text-input w-[375px]"
                       error={!!form.formState.errors.email}
-                      suffixItem={
+                      suffixitem={
                         <EmailIcon className="absolute top-0 right-0 cursor-pointer lg:mt-[18px] mr-4 mt-4" />
                       }
                     />
@@ -91,14 +110,15 @@ export default function EnterPassword({ moveToNext }: Props) {
                 </FormItem>
               )}
             />
-            {/* <div className="w-full pt-4"> */}
             <Button type="submit" variant="gradient" className="w-full h-14">
-              <div className="flex gap-1 items-center">
-                <p className="text-center">Send link to email</p> <SendIcon />
-              </div>
-              {/* {loading ? <Loading /> : "Log in"} */}
+              {isPending ? (
+                <Loading />
+              ) : (
+                <div className="flex gap-1 items-center justify-center">
+                  <p className="text-center">Send link to email</p> <SendIcon />
+                </div>
+              )}
             </Button>
-            {/* </div> */}
           </form>
         </Form>
       </div>

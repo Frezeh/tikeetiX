@@ -24,7 +24,9 @@
     --warning-emphasis2: #ae6e0e;
     --card: #ffffff;
     --popover: #ffffff;
-    --muted: #9df316;
+    /* --muted: #9df316; */
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
     --destructive: #cb1a14;
     --border: #d0d5dd;
     --input: #d0d5dd;
