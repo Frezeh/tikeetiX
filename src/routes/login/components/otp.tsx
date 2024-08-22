@@ -2,11 +2,11 @@ import { Button } from "@/components/ui/button";
 import Loading from "@/components/ui/loading";
 import OtpInput from "@/components/ui/otp-input";
 import { useToast } from "@/hooks/use-toast";
-import { saveItem } from "@/lib/utils";
 import { useProfileContext } from "@/provider/profile-provider";
 import { completeLogin } from "@/services/api/auth";
 import { User } from "@/services/models/auth";
 import { useMutation } from "@tanstack/react-query";
+import Cookies from 'js-cookie';
 import { ChevronLeft } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
@@ -36,9 +36,10 @@ export default function Otp({ goBack, userPayload }: Props) {
       { email: userPayload.email!, code: otp },
       {
         onSuccess: (res) => {
-          if (res.data) {
+          if (res) {
             updateProfile(res.data.user);
-            saveItem("accessToken", res.data.accessToken);
+            Cookies.set('accessToken', res.data.accessToken);
+            Cookies.set('refreshToken', res.data.refreshToken);
             navigate("/");
           } else {
             toast({

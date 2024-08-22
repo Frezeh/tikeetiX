@@ -5,6 +5,14 @@ import ForgotPassword from "./forgot-password/forgot-password";
 import ResetPassword from "./reset-password/reset-password";
 import ErrorPage from "./error-page";
 import Root from "./root";
+import Dashboard from "./dashboard/dashboard";
+import Events from "./events/events";
+import Movies from "./movies/movies";
+import ManageOrders from "./manage-orders/manage-orders";
+import Marketing from "./marketing/marketing";
+import Finance from "./finance/finance";
+import Reporting from "./reporting/reporting";
+import Settings from "./settings/settings";
 
 export const router = createBrowserRouter([
   {
@@ -23,7 +31,7 @@ export const router = createBrowserRouter([
     errorElement: <ErrorPage />,
   },
   {
-    path: "reset-password",
+    path: "auth/code",
     element: <ResetPassword />,
     errorElement: <ErrorPage />,
   },
@@ -31,5 +39,39 @@ export const router = createBrowserRouter([
     path: "/",
     element: <Root />,
     errorElement: <ErrorPage />,
+    children: [
+      {
+        path: "/",
+        element: <Dashboard />,
+      },
+      {
+        path: "/events",
+        element: <Events />,
+      },
+      {
+        path: "/movies",
+        element: <Movies />,
+      },
+      {
+        path: "/manage-orders",
+        element: <ManageOrders />,
+      },
+      {
+        path: "/marketing",
+        element: <Marketing />,
+      },
+      {
+        path: "/finance",
+        element: <Finance />,
+      },
+      {
+        path: "/reporting",
+        element: <Reporting />,
+      },
+      {
+        path: "/settings",
+        element: <Settings />,
+      },
+    ],
   },
 ]);

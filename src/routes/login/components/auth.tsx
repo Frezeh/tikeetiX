@@ -1,8 +1,8 @@
-import Apple from "@/assets/icons/apple.svg";
+// import Apple from "@/assets/icons/apple.svg";
 import EmailIcon from "@/assets/icons/email-icon";
-import Facebook from "@/assets/icons/facebook.svg";
-import Google from "@/assets/icons/google.svg";
-import Twitter from "@/assets/icons/twitter.svg";
+// import Facebook from "@/assets/icons/facebook.svg";
+// import Google from "@/assets/icons/google.svg";
+// import Twitter from "@/assets/icons/twitter.svg";
 import VisibleIcon from "@/assets/icons/visible-icon";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -196,7 +196,7 @@ export default function Auth({ moveToNext, setUserPayload }: Props) {
         </form>
       </Form>
 
-      <div className="sm:max-w-[357px] w-full flex justify-center items-center gap-1">
+      {/* <div className="sm:max-w-[357px] w-full flex justify-center items-center gap-1">
         <div className="w-1/2 bg-[#D0D5DD] h-[1px]" />
         <p className="text-[#D0D5DD] text-xs font-medium">or</p>
         <div className="w-1/2 bg-[#D0D5DD] h-[1px]" />
@@ -215,7 +215,7 @@ export default function Auth({ moveToNext, setUserPayload }: Props) {
         <button>
           <img src={Twitter} alt="twitter" />
         </button>
-      </div>
+      </div> */}
 
       <div className="sm:max-w-[375px] flex flex-col items-center justify-center gap-2">
         <p className="text-xs text-[#98A2B3] font-medium items-center flex gap-2">

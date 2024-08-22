@@ -85,3 +85,43 @@ export const forgotPassword = async (body: { email: string }) => {
 
   return response.data;
 };
+export const resetPassword = async (body: { email: string, password: string }) => {
+  const config: AxiosRequestConfig = {
+    method: "POST",
+    url: "auth/reset-password",
+    data: body,
+  };
+
+  const response = await makeRequest<{ message: string }>(config);
+
+  return response.data;
+};
+
+export const verifyOtp = async (body: { email: string, code: string }) => {
+  const config: AxiosRequestConfig = {
+    method: "POST",
+    url: "auth/verify-otp",
+    data: body,
+  };
+
+  const response = await makeRequest<{ message: string }>(config);
+
+  return response.data;
+};
+
+export const getRefreshToken = async (token: string) => {
+  const config: AxiosRequestConfig = {
+    method: "GET",
+    url: "auth/refresh-token",
+    headers: {
+      Authorization: `Bearer ${token}`,
+    }
+  };
+
+  const response = await makeRequest<{
+    accessToken: string;
+    refreshToken: string;
+  }>(config);
+
+  return response.data;
+};

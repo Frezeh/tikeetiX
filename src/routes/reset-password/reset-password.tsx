@@ -1,3 +1,4 @@
+import EmailIcon from "@/assets/icons/email-icon";
 import Logo from "@/assets/icons/logo.svg";
 import VisibleIcon from "@/assets/icons/visible-icon";
 import AuthenticationLayot from "@/components/authentication-layout";
@@ -12,16 +13,23 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import Loading from "@/components/ui/loading";
+import { useToast } from "@/hooks/use-toast";
 import { one_alphabet, one_number } from "@/lib/utils";
+import { resetPassword, verifyOtp } from "@/services/api/auth";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useMutation } from "@tanstack/react-query";
 import { EyeOff } from "lucide-react";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
-import { Link } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { z } from "zod";
 
 const FormSchema = z
   .object({
+    email: z.string().min(1, { message: "Email is required" }).email({
+      message: "Must be a valid email",
+    }),
     password: z
       .string()
       .min(6, { message: "Password must be atleast 6 characters" })
@@ -47,17 +55,64 @@ const FormSchema = z
   });
 
 export default function ResetPassword() {
+  const navigate = useNavigate();
   const [visible, setVisible] = useState(false);
+  const location = useLocation();
+  const { toast } = useToast();
+  
+  const { isPending: isReseting, mutate: reset } = useMutation({
+    mutationFn: resetPassword,
+  });
+  const { isPending: isVerifying, mutate: verify } = useMutation({
+    mutationFn: verifyOtp,
+  });
+
+  const code = location.search.split("?")[1] ?? "";
 
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
     defaultValues: {
+      email: "",
       password: "",
       confirmpassword: "",
     },
   });
 
-  function onSubmit(_: z.infer<typeof FormSchema>) {}
+  function onSubmit(data: z.infer<typeof FormSchema>) {
+    verify(
+      { email: data.email, code },
+      {
+        onSuccess: (res) => {
+          if (res.data) {
+            reset(
+              { email: data.email, password: data.password },
+              {
+                onSuccess: () => {
+                  toast({
+                    title: "Password reset was successful!",
+                    variant: "success",
+                  });
+                  navigate("/login");
+                },
+                onError: () => {
+                  toast({
+                    title: "Failed to reset password!",
+                    variant: "error",
+                  });
+                },
+              }
+            );
+          }
+        },
+        onError: () => {
+          toast({
+            title: "Failed to reset password!",
+            variant: "error",
+          });
+        },
+      }
+    );
+  }
 
   function validate(value: string) {
     let sixcharacters = value.length >= 6;
@@ -66,6 +121,8 @@ export default function ResetPassword() {
 
     return { sixcharacters, onenumber, onealphabet };
   }
+
+  const isLoading = isReseting || isVerifying;
 
   return (
     <AuthenticationLayot>
@@ -93,8 +150,32 @@ export default function ResetPassword() {
             <Form {...form}>
               <form
                 onSubmit={form.handleSubmit(onSubmit)}
-                className="space-y-8 sm:max-w-[352px]"
+                className="space-y-4 sm:max-w-[352px]"
               >
+                <FormField
+                  control={form.control}
+                  name="email"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-[#101928]">
+                        Email address
+                      </FormLabel>
+                      <FormControl>
+                        <Input
+                          {...field}
+                          type="email"
+                          placeholder="Email address"
+                          className="bg-[#F0F2F5] border border-[#F0F2F5] h-14 placeholder:text-input w-full sm:w-[352px]"
+                          error={!!form.formState.errors.email}
+                          suffixitem={
+                            <EmailIcon className="absolute top-0 right-0 cursor-pointer lg:mt-[18px] mr-4 mt-4" />
+                          }
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
                 <FormField
                   control={form.control}
                   name="password"
@@ -107,7 +188,7 @@ export default function ResetPassword() {
                         <Input
                           {...field}
                           placeholder="Super s*cret pa**word"
-                          className="bg-[#F0F2F5] border border-[#F0F2F5] h-14 placeholder:text-input w-[352px] pr-10"
+                          className="bg-[#F0F2F5] border border-[#F0F2F5] h-14 placeholder:text-input w-full sm:w-[352px] pr-10"
                           error={!!form.formState.errors.password}
                           type={visible ? "text" : "password"}
                           suffixitem={
@@ -189,7 +270,7 @@ export default function ResetPassword() {
                         <Input
                           {...field}
                           placeholder="Super s*cret pa**word"
-                          className="bg-[#F0F2F5] border border-[#F0F2F5] h-14 placeholder:text-input w-[352px] pr-10"
+                          className="bg-[#F0F2F5] border border-[#F0F2F5] h-14 placeholder:text-input w-full sm:w-[352px] pr-10"
                           error={!!form.formState.errors.confirmpassword}
                           type={visible ? "text" : "password"}
                           suffixitem={
@@ -218,10 +299,10 @@ export default function ResetPassword() {
                   <Button
                     type="submit"
                     variant="gradient"
-                    className="w-[352px] h-14"
+                    className="w-full sm:w-[352px] h-14"
+                    disabled={isLoading}
                   >
-                   Reset password
-                    {/* {loading ? <Loading /> : "Log in"} */}
+                    {isLoading ? <Loading /> : "Reset password"}
                   </Button>
                 </div>
               </form>

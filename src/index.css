@@ -42,6 +42,11 @@
   body {
     @apply bg-background text-foreground;
   }
+  .ai-gradient {
+    background:linear-gradient(to right, #75E0D3 0%, #7246F5 26%, #B933C8 55%, #DD7455 78%, #F0CF73 100%);
+    /* -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent; */
+  }
 }
 
 @layer utilities {
@@ -49,7 +54,7 @@
   .no-scrollbar::-webkit-scrollbar {
     display: none;
   }
-
+  
   /* Hide scrollbar for IE, Edge and Firefox */
   .no-scrollbar {
     -ms-overflow-style: none; /* IE and Edge */

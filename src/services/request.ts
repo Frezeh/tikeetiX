@@ -1,5 +1,5 @@
-import { getItem } from "@/lib/utils";
-import axios, { AxiosResponse, AxiosRequestConfig, AxiosError } from "axios";
+import axios, { AxiosError, AxiosRequestConfig, AxiosResponse } from "axios";
+import Cookies from "js-cookie";
 
 export interface ApiResponse<T = any> {
   data: GenericResponse<T>;
@@ -18,29 +18,48 @@ function createApiClient() {
   const instance = axios.create({
     baseURL: import.meta.env.VITE_STAGING_BASE_URL,
     timeout: 10000, // Set your desired timeout
-    headers: {
-      token: getItem<string>("token"),
-    },
+  });
+
+  instance.interceptors.request.use((config) => {
+    const token = Cookies.get("accessToken");
+
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+
+    return config;
   });
 
   instance.interceptors.response.use(
     (response) => response,
-    (error) => {
-      return Promise.reject(error);
-    }
-  );
+    async (error) => {
+      const originalRequest = error.config;
 
-  instance.interceptors.request.use(
-    (config) => {
-      const token = getItem<string>("token");
+      if (error.response.status === 401 && !originalRequest._retry) {
+        originalRequest._retry = true;
+        const refreshToken = Cookies.get("refreshToken");
 
-      if (token) {
-        config.headers.token = token;
+        const response = await apiClient.get("/auth/refresh-token", {
+          headers: {
+            Authorization: `Bearer ${refreshToken}`,
+          },
+        });
+
+        if (response.status === 200) {
+          const newToken = response.data.data.accessToken;
+          Cookies.set("accessToken", newToken);
+          Cookies.set("refreshToken", response.data.data.refreshToken);
+
+          // Update the Authorization header for the failed request and retry it
+          apiClient.defaults.headers.common[
+            "Authorization"
+          ] = `Bearer ${newToken}`;
+          originalRequest.headers["Authorization"] = `Bearer ${newToken}`;
+
+          return apiClient(originalRequest);
+        }
       }
 
-      return config;
-    },
-    (error) => {
       return Promise.reject(error);
     }
   );
