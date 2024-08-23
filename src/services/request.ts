@@ -39,11 +39,14 @@ function createApiClient() {
         originalRequest._retry = true;
         const refreshToken = Cookies.get("refreshToken");
 
-        const response = await apiClient.get("/auth/refresh-token", {
-          headers: {
-            Authorization: `Bearer ${refreshToken}`,
-          },
-        });
+        const response = await axios.get(
+          `${import.meta.env.VITE_STAGING_BASE_URL}auth/refresh-token`,
+          {
+            headers: {
+              Authorization: `Bearer ${refreshToken}`,
+            },
+          }
+        );
 
         if (response.status === 200) {
           const newToken = response.data.data.accessToken;

@@ -1,4 +1,6 @@
-import { getRefreshToken } from "@/services/api/auth";
+import { ApiResponse } from "@/services/request";
+import { useQuery } from "@tanstack/react-query";
+import axios from "axios";
 import Cookies from "js-cookie";
 import { jwtDecode } from "jwt-decode";
 import { useEffect } from "react";
@@ -10,12 +12,37 @@ type JwtPayload = {
   id: number;
 };
 
+async function getToken(token: string) {
+  const response: ApiResponse<{ accessToken: string; refreshToken: string }> =
+    await axios.get(
+      `${import.meta.env.VITE_STAGING_BASE_URL}auth/refresh-token`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+  return response.data;
+}
+
 const useAuth = () => {
   const navigate = useNavigate();
   const removeToken = () => {
     Cookies.remove("accessToken");
     Cookies.remove("refreshToken");
   };
+
+  const { refetch, isFetching } = useQuery({
+    queryFn: () => getToken(Cookies.get("refreshToken") || ""),
+    queryKey: ["refresh-token"],
+    enabled: false,
+    retry: 0,
+    refetchOnWindowFocus: false,
+    meta: {
+      errorMessage: "Something went wrong",
+    },
+  });
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -40,13 +67,19 @@ const useAuth = () => {
               navigate("/login");
               return;
             } else {
-              const response = await getRefreshToken(refreshToken);
-
-              if (response.status === 200) {
-                const newToken = response.data.accessToken;
-                Cookies.set("accessToken", newToken);
-                Cookies.set("refreshToken", response.data.refreshToken);
-              }
+              refetch()
+                .then((res) => {
+                  const response = res.data;
+                  if (response?.status === 200) {
+                    const newToken = response.data.accessToken;
+                    Cookies.set("accessToken", newToken);
+                    Cookies.set("refreshToken", response.data.refreshToken);
+                  }
+                })
+                .catch(() => {
+                  removeToken();
+                  navigate("/login");
+                });
             }
           } else {
             // No refresh token found, redirect to login
@@ -65,6 +98,8 @@ const useAuth = () => {
 
     checkAuth();
   }, [navigate]);
+
+  return { isRefreshing: isFetching };
 };
 
 export default useAuth;

@@ -19,6 +19,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import Loader from "@/components/ui/loader";
 import {
   Select,
   SelectContent,
@@ -36,9 +37,13 @@ function Root() {
   const { pathname } = useLocation();
   const route = pathname;
   const ticketRoutes = ["/events", "/movies", "/transportation"];
-  useAuth();
+  const { isRefreshing } = useAuth();
   const { profile } = useProfileContext();
   const [showFAQ, setShowFAQ] = useState(true);
+
+  if (isRefreshing) {
+    return <Loader />;
+  }
 
   return (
     <main className="flex w-screen h-screen bg-[#F7F9FC] overflow-y-hidden">
