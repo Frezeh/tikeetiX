@@ -2,6 +2,7 @@ import Avatar from "@/assets/icons/avatar.svg";
 import BarChart from "@/assets/icons/bar-chart";
 import BellIcon from "@/assets/icons/bell-icon";
 import ChevronDouble from "@/assets/icons/chevron-double";
+import GBP from "@/assets/icons/gbp.svg";
 import HomeIcon from "@/assets/icons/home-icon";
 import Logo from "@/assets/icons/logo-dark.svg";
 import LoudSpeaker from "@/assets/icons/loud-speaker";
@@ -20,21 +21,37 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import Loader from "@/components/ui/loader";
+import Loading from "@/components/ui/loading";
 import {
   Select,
   SelectContent,
+  SelectGroup,
+  SelectItem,
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
 import useAuth from "@/hooks/use-auth";
-import { cn } from "@/lib/utils";
+import { cn, removeItem } from "@/lib/utils";
 import { useProfileContext } from "@/provider/profile-provider";
+import { logout } from "@/services/api/auth";
+import { useMutation } from "@tanstack/react-query";
+import Cookies from "js-cookie";
 import { ChevronDown, ClipboardIcon, SearchIcon } from "lucide-react";
 import { useState } from "react";
-import { Link, Outlet, useLocation } from "react-router-dom";
+import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
+
+const CURRENCY = [
+  {
+    id: 0,
+    country: "United Kingdom",
+    value: "GBP",
+    imageUrl: GBP,
+  },
+];
 
 function Root() {
   const { pathname } = useLocation();
+  const navigate = useNavigate();
   const route = pathname;
   const ticketRoutes = ["/events", "/movies", "/transportation"];
   const { isRefreshing } = useAuth();
@@ -44,6 +61,8 @@ function Root() {
   if (isRefreshing) {
     return <Loader />;
   }
+
+  const { isPending, mutate } = useMutation({ mutationFn: logout });
 
   return (
     <main className="flex w-screen h-screen bg-[#F7F9FC] overflow-y-hidden">
@@ -282,8 +301,36 @@ function Root() {
         )}
       </div>
 
-      <div className="border rounded-[15px] border-[#E4E7EC] mx-1 my-2 lg:w-[calc(100%-256px)] bg-background">
-        <div className="py-3 px-5 flex justify-end items-center border-b border-b-[#E4E7EC]">
+      <div className="border rounded-[15px] border-[#E4E7EC] mx-1 my-2 lg:w-[calc(100%-256px)] bg-background overflow-hidden">
+        <div className="py-3 px-5 flex justify-between items-center border-b border-b-[#E4E7EC]">
+          <Select>
+            <SelectTrigger
+              className="w-fit min-w-[97px] h-9 border-[#D0D5DD] rounded-[8px] bg-[#F0F2F5] text-[#344054]"
+              prefixIcon={<img src={GBP} alt="Globe" className="mr-1" />}
+            >
+              <SelectValue
+                className="placeholder:text-[#344054] text-sm"
+                placeholder={
+                  <span>
+                    <strong>GBP</strong> (United Kingdom)
+                  </span>
+                }
+              />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectGroup>
+                {CURRENCY.map((currency) => (
+                  <SelectItem
+                    value={currency.value}
+                    key={currency.id}
+                    className="text-[#344054] text-sm"
+                  >
+                    {currency.value} ({currency.country})
+                  </SelectItem>
+                ))}
+              </SelectGroup>
+            </SelectContent>
+          </Select>
           <div className="flex gap-10 items-center justify-between">
             <Input
               className="w-full sm:w-[375px] h-10 rounded-md pl-10 bg-[#F0F2F5] border-0"
@@ -341,14 +388,35 @@ function Root() {
                     <p className="text-[#344054] text-sm">API</p>
                   </div>
                 </div>
-                <div className="px-4 py-2 cursor-pointer">
-                  <p className="text-[#344054] text-sm">Log out</p>
-                </div>
+                <button
+                  className="px-4 py-2 cursor-pointer flex items-center"
+                  onClick={() => {
+                    mutate(undefined, {
+                      onSuccess: () => {
+                        removeItem("user");
+                        Cookies.remove("accessToken");
+                        Cookies.remove("refreshToken");
+                        navigate("/login");
+                      },
+                      onError: () => {
+                        navigate("/login");
+                      },
+                    });
+                  }}
+                >
+                  {isPending ? (
+                    <Loading />
+                  ) : (
+                    <p className="text-[#344054] text-sm">Log out</p>
+                  )}
+                </button>
               </SelectContent>
             </Select>
           </div>
         </div>
-        <Outlet />
+        <div className="h-screen overflow-scroll no-scrollbar pb-20">
+          <Outlet />
+        </div>
       </div>
     </main>
   );

@@ -125,3 +125,14 @@ export const getRefreshToken = async (token: string) => {
 
   return response.data;
 };
+
+export const logout = async () => {
+  const config: AxiosRequestConfig = {
+    method: "POST",
+    url: "auth/logout",
+  };
+
+  const response = await makeRequest<{ message: string }>(config);
+
+  return response.data;
+};
