@@ -77,10 +77,11 @@ export default function Auth({ moveToNext, setUserPayload }: Props) {
             moveToNext();
           }
         },
-        onError: (err) => {
-          console.log("err", err.message);
+        onError: (err: any) => {
           toast({
-            title: "Failed to login",
+            title: err?.error?.message
+              ? err?.error?.message
+              : "Failed to login",
             variant: "error",
           });
         },
@@ -189,7 +190,11 @@ export default function Auth({ moveToNext, setUserPayload }: Props) {
             </Link>
           </div>
           <div className="pt-4">
-            <Button type="submit" variant="gradient" className="w-full sm:w-[357px] h-14">
+            <Button
+              type="submit"
+              variant="gradient"
+              className="w-full sm:w-[357px] h-14"
+            >
               {isPending ? <Loading /> : "Login to account"}
             </Button>
           </div>

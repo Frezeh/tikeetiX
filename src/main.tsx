@@ -7,14 +7,19 @@ import "./index.css";
 import { router } from "@/routes/router";
 import { queryClient } from "@/services/query-client";
 import { ProfileProvider } from "./provider/profile-provider";
+import { TooltipProvider } from "./components/ui/tooltip";
+import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
     <QueryClientProvider client={queryClient}>
       <ProfileProvider>
-        <RouterProvider router={router} />
+        <TooltipProvider>
+          <RouterProvider router={router} />
+        </TooltipProvider>
       </ProfileProvider>
       <Toaster />
+      <ReactQueryDevtools initialIsOpen={false} />
     </QueryClientProvider>
   </React.StrictMode>
 );

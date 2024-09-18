@@ -1,8 +1,19 @@
 import { SVGProps } from "react";
 
-function TicketIcon({ fill = "#98A2B3", ...props }: SVGProps<SVGSVGElement>) {
+function TicketIcon({
+  fill = "#98A2B3",
+  width = 20,
+  height = 20,
+  ...props
+}: SVGProps<SVGSVGElement>) {
   return (
-    <svg width={20} height={20} viewBox="0 0 20 20" fill="none" {...props}>
+    <svg
+      width={width}
+      height={height}
+      viewBox="0 0 20 20"
+      fill="none"
+      {...props}
+    >
       <path
         d="M6.666 5.417a.833.833 0 00-1.666 0v1.666a.833.833 0 101.666 0V5.417zM5.833 8.333c.46 0 .833.373.833.834v1.666a.833.833 0 11-1.666 0V9.167c0-.46.373-.834.833-.834zM6.666 12.917a.833.833 0 10-1.666 0v1.666a.833.833 0 101.666 0v-1.666z"
         fill={fill}

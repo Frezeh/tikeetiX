@@ -41,11 +41,33 @@
   }
   body {
     @apply bg-background text-foreground;
+    input[type="number"]::-webkit-inner-spin-button,
+    input[type="number"]::-webkit-outer-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
+  
+    input[type="number"] {
+      -moz-appearance: textfield;
+      appearance: textfield;
+    }
   }
   .ai-gradient {
     background:linear-gradient(to right, #75E0D3 0%, #7246F5 26%, #B933C8 55%, #DD7455 78%, #F0CF73 100%);
     /* -webkit-background-clip: text;
     -webkit-text-fill-color: transparent; */
+  }
+  .carousel {
+    display: flex;
+    overflow-x: hidden;
+    scroll-snap-type: x mandatory;
+    justify-items: center;
+    align-items: center;
+    align-self: center;
+    /* all below will hide the scrollbar on all browsers.    */
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none; /* For Firefox */
+    -ms-overflow-style: none; /* For Internet Explorer and Edge */
   }
 }
 

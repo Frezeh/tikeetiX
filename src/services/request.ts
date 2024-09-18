@@ -85,7 +85,7 @@ export async function makeRequest<T = any>(
     const axiosError = error as ApiError;
     if (axiosError.response) {
       throw {
-        error: axiosError.response.data.data,
+        error: axiosError.response.data,
         status: axiosError.response.status,
       };
     } else {

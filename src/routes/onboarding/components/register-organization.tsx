@@ -382,7 +382,7 @@ export default function RegisterOrganization(props: Props) {
                 variant="gradient"
                 className="w-full lg:w-[357px] h-14"
               >
-                {isPending ? <Loading /> : "Login to account"}
+                {isPending ? <Loading /> : "Proceed"}
               </Button>
             </div>
           </form>

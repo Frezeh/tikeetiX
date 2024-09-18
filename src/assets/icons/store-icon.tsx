@@ -1,8 +1,19 @@
 import { SVGProps } from "react";
 
-function StoreIcon({ fill = "#98A2B3", ...props }: SVGProps<SVGSVGElement>) {
+function StoreIcon({
+  fill = "#98A2B3",
+  width = 20,
+  height = 20,
+  ...props
+}: SVGProps<SVGSVGElement>) {
   return (
-    <svg width={20} height={20} viewBox="0 0 20 20" fill="none" {...props}>
+    <svg
+      width={width}
+      height={height}
+      viewBox="0 0 20 20"
+      fill="none"
+      {...props}
+    >
       <path
         fillRule="evenodd"
         clipRule="evenodd"

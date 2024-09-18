@@ -13,6 +13,7 @@ const buttonVariants = cva(
         destructive: "bg-destructive hover:bg-destructive/90",
         secondary: "bg-secondary hover:bg-secondary/80",
         tertiary: "bg-tertiary hover:bg-tertiary/80",
+        ghost: "bg-[#F0F2F5] text-[#667185]",
         gradient:
           "bg-gradient-to-r from-primary to-secondary hover:from-primary/90 hover:to-secondary/90",
       },

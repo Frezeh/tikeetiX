@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
 import Cookies from "js-cookie";
 import { jwtDecode } from "jwt-decode";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 type JwtPayload = {
@@ -28,6 +28,7 @@ async function getToken(token: string) {
 
 const useAuth = () => {
   const navigate = useNavigate();
+  const [isLoading, setIsLoading] = useState(false);
   const removeToken = () => {
     Cookies.remove("accessToken");
     Cookies.remove("refreshToken");
@@ -46,6 +47,7 @@ const useAuth = () => {
 
   useEffect(() => {
     const checkAuth = async () => {
+      setIsLoading(true);
       const token = Cookies.get("accessToken");
       const refreshToken = Cookies.get("refreshToken");
 
@@ -93,13 +95,14 @@ const useAuth = () => {
         Cookies.remove("refreshToken");
         navigate("/login");
       } finally {
+        setIsLoading(false);
       }
     };
 
     checkAuth();
   }, [navigate]);
 
-  return { isRefreshing: isFetching };
+  return { isRefreshing: isFetching, isLoading };
 };
 
 export default useAuth;

@@ -11,7 +11,7 @@ export default function Dashboard() {
   const todaysDate = new Date();
 
   return (
-    <div className="flex flex-col justify-center items-center self-center h-3/4 px-10">
+    <div className="flex flex-col justify-center items-center self-center px-10 h-[calc(100vh/1.5)]">
       <div className="flex gap-1 items-center justify-between">
         <div className="flex gap-2 items-center">
           <Calendar size={12} color="#344054" />

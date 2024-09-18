@@ -22,6 +22,7 @@ import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import Loader from "@/components/ui/loader";
 import Loading from "@/components/ui/loading";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Select,
   SelectContent,
@@ -31,14 +32,20 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import useAuth from "@/hooks/use-auth";
-import { cn, removeItem } from "@/lib/utils";
+import { cn, removeItem, routesWithoutHeader, ticketRoutes } from "@/lib/utils";
 import { useProfileContext } from "@/provider/profile-provider";
 import { logout } from "@/services/api/auth";
 import { useMutation } from "@tanstack/react-query";
 import Cookies from "js-cookie";
 import { ChevronDown, ClipboardIcon, SearchIcon } from "lucide-react";
 import { useState } from "react";
-import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
+import {
+  Link,
+  Outlet,
+  useLocation,
+  useNavigate,
+  useParams,
+} from "react-router-dom";
 
 const CURRENCY = [
   {
@@ -53,19 +60,19 @@ function Root() {
   const { pathname } = useLocation();
   const navigate = useNavigate();
   const route = pathname;
-  const ticketRoutes = ["/events", "/movies", "/transportation"];
-  const { isRefreshing } = useAuth();
+  const { isRefreshing, isLoading } = useAuth();
   const { profile } = useProfileContext();
   const [showFAQ, setShowFAQ] = useState(true);
+  const { id } = useParams();
 
-  if (isRefreshing) {
+  if (isRefreshing || isLoading) {
     return <Loader />;
   }
 
   const { isPending, mutate } = useMutation({ mutationFn: logout });
 
   return (
-    <main className="flex w-screen h-screen bg-[#F7F9FC] overflow-y-hidden">
+    <main className="flex w-screen h-screen bg-[#F7F9FC] overflow-hidden">
       <div className="hidden lg:flex flex-col overflow-hidden py-6 max-h-full w-[272px] overflow-y-auto no-scrollbar">
         <div className="px-7 py-3 relative">
           <img src={Logo} alt="Logo" width={105} height={20} />
@@ -109,13 +116,13 @@ function Root() {
                 <AccordionTrigger
                   className={cn(
                     "flex justify-between h-11 items-center px-4 rounded-sm hover:bg-primary group bg-transparent hover:no-underline",
-                    ticketRoutes.includes(route) && "bg-[#E4E7EC]"
+                    ticketRoutes(id).includes(route) && "bg-[#E4E7EC]"
                   )}
                   triggerIcon={
                     <ChevronDown
                       className="group-hover:stroke-background shrink-0 transition-transform duration-200"
                       color={
-                        ticketRoutes.includes(route) ? "#667185" : "#98A2B3"
+                        ticketRoutes(id).includes(route) ? "#667185" : "#98A2B3"
                       }
                       width={20}
                       height={20}
@@ -126,13 +133,13 @@ function Root() {
                     <TicketIcon
                       className="group-hover:[&>path]:fill-background"
                       fill={
-                        ticketRoutes.includes(route) ? "#667185" : "#98A2B3"
+                        ticketRoutes(id).includes(route) ? "#667185" : "#98A2B3"
                       }
                     />
                     <p
                       className={cn(
                         "text-sm group-hover:text-background text-[#98A2B3] group-[.hover]:text-background",
-                        ticketRoutes.includes(route) &&
+                        ticketRoutes(id).includes(route) &&
                           "text-[#667185] font-medium"
                       )}
                     >
@@ -156,7 +163,8 @@ function Root() {
                       to="/movies"
                       className={cn(
                         "text-sm text-[#98A2B3] text-left hover:text-primary hover:font-bold transition-colors",
-                        route === "/movies" && "text-primary font-bold"
+                        (route === "/movies" || route === "/create-movie" || route === `/movie-details/${id}`) &&
+                          "text-primary font-bold"
                       )}
                     >
                       Movies
@@ -302,121 +310,127 @@ function Root() {
       </div>
 
       <div className="border rounded-[15px] border-[#E4E7EC] mx-1 my-2 lg:w-[calc(100%-256px)] bg-background overflow-hidden">
-        <div className="py-3 px-5 flex justify-between items-center border-b border-b-[#E4E7EC]">
-          <Select>
-            <SelectTrigger
-              className="w-fit min-w-[97px] h-9 border-[#D0D5DD] rounded-[8px] bg-[#F0F2F5] text-[#344054]"
-              prefixIcon={<img src={GBP} alt="Globe" className="mr-1" />}
-            >
-              <SelectValue
-                className="placeholder:text-[#344054] text-sm"
-                placeholder={
-                  <span>
-                    <strong>GBP</strong> (United Kingdom)
-                  </span>
-                }
-              />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectGroup>
-                {CURRENCY.map((currency) => (
-                  <SelectItem
-                    value={currency.value}
-                    key={currency.id}
-                    className="text-[#344054] text-sm"
-                  >
-                    {currency.value} ({currency.country})
-                  </SelectItem>
-                ))}
-              </SelectGroup>
-            </SelectContent>
-          </Select>
-          <div className="flex gap-10 items-center justify-between">
-            <Input
-              className="w-full sm:w-[375px] h-10 rounded-md pl-10 bg-[#F0F2F5] border-0"
-              placeholder="Search here..."
-              prefixItem={
-                <SearchIcon
-                  size={20}
-                  color="#667185"
-                  className="absolute top-0 left-0 ml-2 mt-2.5 placeholder:text-[#667185] placeholder:text-sm"
-                />
-              }
-            />
-            <button>
-              <BellIcon />
-            </button>
-
+        {!routesWithoutHeader(id).includes(route) && (
+          <div className="py-3 px-5 flex justify-between items-center border-b border-b-[#E4E7EC]">
             <Select>
-              <SelectTrigger className="border-0 space-x-2 text-[#13191C] text-base  focus:ring-0">
+              <SelectTrigger
+                className="w-fit min-w-[97px] h-9 border-[#D0D5DD] rounded-[8px] bg-[#F0F2F5] text-[#344054]"
+                prefixIcon={<img src={GBP} alt="Globe" className="mr-1" />}
+              >
                 <SelectValue
-                  placeholder={`${profile?.firstName} ${profile?.lastName}`}
+                  className="placeholder:text-[#344054] text-sm"
+                  placeholder={
+                    <span>
+                      <strong>GBP</strong> (United Kingdom)
+                    </span>
+                  }
                 />
               </SelectTrigger>
-              <SelectContent className="space-y-4">
-                <div className="px-4 py-3 flex items-center gap-3 cursor-pointer border-b border-[#E4E7EC]">
-                  <div className="relative">
-                    <img src={Avatar} alt="Avatar" width={40} height={40} />
-                    <div className="w-[10px] h-[10px] bg-[#04802E] rounded-full absolute right-0 border border-white bottom-1" />
-                  </div>
-                  <div>
-                    <p className="text-sm text-[#13191C] font-bold">
-                      {profile?.firstName} {profile?.lastName}
-                    </p>
-                    <p className="text-[#667185] text-xs">{profile?.email}</p>
-                  </div>
-                </div>
-                <div className="py-1 flex flex-col gap-[10px] border-b border-[#E4E7EC]">
-                  <div className="px-4 py-1 cursor-pointer">
-                    <p className="text-[#344054] text-sm">View profile</p>
-                  </div>
-                  <div className="px-4 py-1 cursor-pointer">
-                    <p className="text-[#344054] text-sm">Settings</p>
-                  </div>
-                  <div className="px-4 py-1 cursor-pointer">
-                    <p className="text-[#344054] text-sm">Keyboard shortcuts</p>
-                  </div>
-                </div>
-                <div className="py-1 flex flex-col gap-[10px] border-b border-[#E4E7EC]">
-                  <div className="px-4 py-1 cursor-pointer">
-                    <p className="text-[#344054] text-sm">Changelog</p>
-                  </div>
-                  <div className="px-4 py-1 cursor-pointer">
-                    <p className="text-[#344054] text-sm">Support</p>
-                  </div>
-                  <div className="px-4 py-1 cursor-pointer">
-                    <p className="text-[#344054] text-sm">API</p>
-                  </div>
-                </div>
-                <button
-                  className="px-4 py-2 cursor-pointer flex items-center"
-                  onClick={() => {
-                    mutate(undefined, {
-                      onSuccess: () => {
-                        removeItem("user");
-                        Cookies.remove("accessToken");
-                        Cookies.remove("refreshToken");
-                        navigate("/login");
-                      },
-                      onError: () => {
-                        navigate("/login");
-                      },
-                    });
-                  }}
-                >
-                  {isPending ? (
-                    <Loading />
-                  ) : (
-                    <p className="text-[#344054] text-sm">Log out</p>
-                  )}
-                </button>
+              <SelectContent>
+                <SelectGroup>
+                  {CURRENCY.map((currency) => (
+                    <SelectItem
+                      value={currency.value}
+                      key={currency.id}
+                      className="text-[#344054] text-sm"
+                    >
+                      {currency.value} ({currency.country})
+                    </SelectItem>
+                  ))}
+                </SelectGroup>
               </SelectContent>
             </Select>
+            <div className="flex gap-10 items-center justify-between">
+              <Input
+                className="w-full sm:w-[375px] h-10 rounded-md pl-10 bg-[#F0F2F5] border-0"
+                placeholder="Search here..."
+                prefixItem={
+                  <SearchIcon
+                    size={20}
+                    color="#667185"
+                    className="absolute top-0 left-0 ml-2 mt-2.5 placeholder:text-[#667185] placeholder:text-sm"
+                  />
+                }
+              />
+              <button>
+                <BellIcon />
+              </button>
+
+              <Select>
+                <SelectTrigger className="border-0 space-x-2 text-[#13191C] text-base  focus:ring-0">
+                  <SelectValue
+                    placeholder={`${profile?.firstName} ${profile?.lastName}`}
+                  />
+                </SelectTrigger>
+                <SelectContent className="space-y-4">
+                  <div className="px-4 py-3 flex items-center gap-3 cursor-pointer border-b border-[#E4E7EC]">
+                    <div className="relative">
+                      <img src={Avatar} alt="Avatar" width={40} height={40} />
+                      <div className="w-[10px] h-[10px] bg-[#04802E] rounded-full absolute right-0 border border-white bottom-1" />
+                    </div>
+                    <div>
+                      <p className="text-sm text-[#13191C] font-bold">
+                        {profile?.firstName} {profile?.lastName}
+                      </p>
+                      <p className="text-[#667185] text-xs">{profile?.email}</p>
+                    </div>
+                  </div>
+                  <div className="py-1 flex flex-col gap-[10px] border-b border-[#E4E7EC]">
+                    <div className="px-4 py-1 cursor-pointer">
+                      <p className="text-[#344054] text-sm">View profile</p>
+                    </div>
+                    <div className="px-4 py-1 cursor-pointer">
+                      <p className="text-[#344054] text-sm">Settings</p>
+                    </div>
+                    <div className="px-4 py-1 cursor-pointer">
+                      <p className="text-[#344054] text-sm">
+                        Keyboard shortcuts
+                      </p>
+                    </div>
+                  </div>
+                  <div className="py-1 flex flex-col gap-[10px] border-b border-[#E4E7EC]">
+                    <div className="px-4 py-1 cursor-pointer">
+                      <p className="text-[#344054] text-sm">Changelog</p>
+                    </div>
+                    <div className="px-4 py-1 cursor-pointer">
+                      <p className="text-[#344054] text-sm">Support</p>
+                    </div>
+                    <div className="px-4 py-1 cursor-pointer">
+                      <p className="text-[#344054] text-sm">API</p>
+                    </div>
+                  </div>
+                  <button
+                    className="px-4 py-2 cursor-pointer flex items-center"
+                    onClick={() => {
+                      mutate(undefined, {
+                        onSuccess: () => {
+                          removeItem("user");
+                          Cookies.remove("accessToken");
+                          Cookies.remove("refreshToken");
+                          navigate("/login");
+                        },
+                        onError: () => {
+                          navigate("/login");
+                        },
+                      });
+                    }}
+                  >
+                    {isPending ? (
+                      <Loading />
+                    ) : (
+                      <p className="text-[#344054] text-sm">Log out</p>
+                    )}
+                  </button>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
-        </div>
-        <div className="h-screen overflow-scroll no-scrollbar pb-20">
+        )}
+        {/* <div className="h-full overflow-scroll no-scrollbar pb-20"> */}
+        <ScrollArea className="h-screen overflow-scroll no-scrollbar">
           <Outlet />
-        </div>
+        </ScrollArea>
+        {/* </div> */}
       </div>
     </main>
   );

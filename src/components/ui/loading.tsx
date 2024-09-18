@@ -1,8 +1,10 @@
-export default function Loading() {
+import { cn } from "@/lib/utils";
+
+export default function Loading({className}: {className?: string}) {
   return (
     <svg
       aria-hidden="true"
-      className="inline w-10 h-10 mr-2 text-background animate-spin fill-inherit"
+      className={cn("inline w-10 h-10 mr-2 text-background animate-spin fill-inherit", className)}
       viewBox="0 0 100 101"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
