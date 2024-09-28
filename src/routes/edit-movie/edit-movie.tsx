@@ -16,6 +16,7 @@ import {
   DialogFooter,
   DialogHeader,
 } from "@/components/ui/dialog";
+import Loader from "@/components/ui/loader";
 import Loading from "@/components/ui/loading";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
@@ -26,11 +27,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
+import { uploadSingleFile } from "@/services/api/file-upload";
 import { deleteMovieRoom, getMovieRooms } from "@/services/api/movie-room";
 import { getMovie, updateMovie } from "@/services/api/movies";
+import { Movie } from "@/services/models/movies";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
@@ -46,10 +48,8 @@ import { useEffect, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { z } from "zod";
-import EditMovieDetails from "./edit-movie-details";
 import ShowingRoom from "../create-movie/components/showing-room";
-import { Movie } from "@/services/models/movies";
-import { uploadSingleFile } from "@/services/api/file-upload";
+import EditMovieDetails from "./edit-movie-details";
 
 export const EditMovieFormSchema = z.object({
   poster: z.string().min(1, { message: "Required" }),
@@ -164,27 +164,39 @@ export default function EditMovie() {
       data["location"] = form.getValues("location");
       data["image"];
 
-      upload(file, {
-        onSuccess: (res) => {
-          if (res.message) {
-            updateTicket({
-              title: form.getValues("title"),
-              description: form.getValues("description") ?? "",
-              genre: form.getValues("genre"),
-              ageRating: form.getValues("rating"),
-              location: form.getValues("location"),
-              image: res.data,
-              movieRooms: showingRoom?.data.map((room) => room.id)!,
+      if (!poster) {
+        updateTicket({
+          title: form.getValues("title"),
+          description: form.getValues("description") ?? "",
+          genre: form.getValues("genre"),
+          ageRating: form.getValues("rating"),
+          location: form.getValues("location"),
+          image: MOVIE?.data.image,
+          movieRooms: showingRoom?.data.map((room) => room.id)!,
+        });
+      } else {
+        upload(file, {
+          onSuccess: (res) => {
+            if (res.message) {
+              updateTicket({
+                title: form.getValues("title"),
+                description: form.getValues("description") ?? "",
+                genre: form.getValues("genre"),
+                ageRating: form.getValues("rating"),
+                location: form.getValues("location"),
+                image: res.data,
+                movieRooms: showingRoom?.data.map((room) => room.id)!,
+              });
+            }
+          },
+          onError: () => {
+            toast({
+              title: "Failed to create movie ticket",
+              variant: "error",
             });
-          }
-        },
-        onError: () => {
-          toast({
-            title: "Failed to create movie ticket",
-            variant: "error",
-          });
-        },
-      });
+          },
+        });
+      }
     }
   };
 
@@ -195,13 +207,7 @@ export default function EditMovie() {
   }, [room]);
 
   if (isLoading || isMovieLoading) {
-    return (
-      <div className="space-y-3 m-10">
-        <Skeleton className="h-4 w-full bg-gray-200" />
-        <Skeleton className="h-4 w-full bg-gray-200" />
-        <Skeleton className="h-4 w-full bg-gray-200" />
-      </div>
-    );
+    return <Loader />;
   }
 
   return (
@@ -222,7 +228,7 @@ export default function EditMovie() {
           </Link>
           <div className="bg-[#F0F2F5] h-[38px] px-2 rounded-[8px] flex items-center gap-2">
             <ChevronRight size={16} color="#98A2B3" />
-            <p className="text-[#667185] font-medium text-xs">Create ticket</p>
+            <p className="text-[#667185] font-medium text-xs">Edit ticket</p>
           </div>
         </div>
         <button className="bg-[#F0F2F5] h-[38px] px-4 rounded-[8px] flex items-center gap-2">
@@ -424,9 +430,15 @@ export default function EditMovie() {
                 )}
               >
                 <div className="p-4 w-full flex items-center gap-4 bg-[#F7F9FC] rounded-t-[16px]">
-                  {poster && (
+                  {poster ? (
                     <img
                       src={poster ? URL.createObjectURL(poster) : undefined}
+                      alt="Movie"
+                      className="w-20 h-20 rounded-[8px]"
+                    />
+                  ) : (
+                    <img
+                      src={form.getValues("poster")}
                       alt="Movie"
                       className="w-20 h-20 rounded-[8px]"
                     />

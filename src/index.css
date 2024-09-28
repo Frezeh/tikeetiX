@@ -46,14 +46,21 @@
       -webkit-appearance: none;
       margin: 0;
     }
-  
+
     input[type="number"] {
       -moz-appearance: textfield;
       appearance: textfield;
     }
   }
   .ai-gradient {
-    background:linear-gradient(to right, #75E0D3 0%, #7246F5 26%, #B933C8 55%, #DD7455 78%, #F0CF73 100%);
+    background: linear-gradient(
+      to right,
+      #75e0d3 0%,
+      #7246f5 26%,
+      #b933c8 55%,
+      #dd7455 78%,
+      #f0cf73 100%
+    );
     /* -webkit-background-clip: text;
     -webkit-text-fill-color: transparent; */
   }
@@ -69,6 +76,28 @@
     scrollbar-width: none; /* For Firefox */
     -ms-overflow-style: none; /* For Internet Explorer and Edge */
   }
+  .slider {
+    @apply [&::-webkit-slider-runnable-track]:rounded-full 
+    /* [&::-webkit-slider-runnable-track]:bg-border */
+    [&::-webkit-slider-thumb]:appearance-none 
+    [&::-webkit-slider-thumb]:h-[6px] 
+    [&::-webkit-slider-thumb]:w-[6px]
+    [&::-webkit-slider-thumb]:rounded-full 
+    [&::-webkit-slider-thumb]:bg-success-emphasis3
+    [&::-moz-range-track]:rounded-full
+    /* [&::-moz-range-track]:bg-border */
+    [&::-moz-range-thumb]:appearance-none 
+    [&::-moz-range-thumb]:h-[6px] 
+    [&::-moz-range-thumb]:w-[6px]
+    [&::-moz-range-thumb]:rounded-full 
+    [&::-moz-range-thumb]:bg-success-emphasis3
+    [&::-ms-track]:rounded-full
+    /* [&::-ms-track]:bg-border */
+    [&::-ms-thumb]:appearance-none 
+    [&::-ms-thumb]:h-[6px] 
+    [&::-ms-thumb]:w-[6px]
+    [&::-ms-thumb]:rounded-full
+  }
 }
 
 @layer utilities {
@@ -76,7 +105,7 @@
   .no-scrollbar::-webkit-scrollbar {
     display: none;
   }
-  
+
   /* Hide scrollbar for IE, Edge and Firefox */
   .no-scrollbar {
     -ms-overflow-style: none; /* IE and Edge */

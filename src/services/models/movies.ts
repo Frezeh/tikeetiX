@@ -24,6 +24,7 @@ export interface MovieData {
   limit: number;
   currentPage: number;
   foundItems: Movie[];
+  totalCount: number;
 }
 
 export interface MovieBody {

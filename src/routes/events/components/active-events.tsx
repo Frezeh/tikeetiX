@@ -1,10 +1,6 @@
-import OnHoldIcon from "@/assets/icons/on-hold-icon";
-import PowerIcon from "@/assets/icons/power-icon";
+import CancelIcon from "@/assets/icons/cancel-icon";
+import PauseIcon from "@/assets/icons/pause-icon";
 import TicketIcon from "@/assets/icons/ticket-icon";
-import VisibleIcon from "@/assets/icons/visible-icon";
-import CancelTicket from "@/assets/images/cancel-ticket-illustration.png";
-import Event from "@/assets/images/individual.png";
-import PauseTicket from "@/assets/images/pause-ticket-iIllustration.png";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import {
@@ -16,14 +12,18 @@ import {
 } from "@/components/ui/dialog";
 import {
   DropdownMenu,
-  DropdownMenuCheckboxItem,
   DropdownMenuContent,
-  DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import FilterItem from "@/components/ui/filter-item";
 import { Input } from "@/components/ui/input";
+import Loader from "@/components/ui/loader";
+import Loading from "@/components/ui/loading";
+import { LoadingMovieList } from "@/components/ui/loading-movie";
+import Pagination from "@/components/ui/pagination";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   Table,
   TableBody,
@@ -38,60 +38,155 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { cn } from "@/lib/utils";
+import { toast } from "@/hooks/use-toast";
+import { getAllEventLevel } from "@/services/api/event-level";
 import {
-  ChevronLeft,
-  ChevronRight,
+  deleteEvent,
+  getEvents,
+  getEventsWithoutParams,
+} from "@/services/api/events";
+import { Events } from "@/services/models/events";
+import {
+  useInfiniteQuery,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query";
+import { format } from "date-fns";
+import {
   ChevronsUpDown,
   Filter,
   ListFilter,
-  MoreVertical,
   SearchIcon,
   Upload,
+  XIcon,
 } from "lucide-react";
-import { useState } from "react";
+import {
+  Dispatch,
+  SetStateAction,
+  useCallback,
+  useMemo,
+  useState,
+} from "react";
+import EventActions from "./event-actions";
+import ExportEvents from "./export-events";
 
-const EVENTS = [
-  {
-    id: 0,
-    name: "AI Meetup with Autogon",
-    date: "7th Dec. 20241",
-    priceRange: "$49.99 - $100.",
-    qty: "57",
-    status: "Live",
-  },
-  {
-    id: 1,
-    name: "AI Meetup with Autogon",
-    date: "7th Dec. 20241",
-    priceRange: "$49.99 - $100.",
-    qty: "57",
-    status: "Not-Live",
-  },
-  {
-    id: 2,
-    name: "AI Meetup with Autogon",
-    date: "7th Dec. 20241",
-    priceRange: "$49.99 - $100.",
-    qty: "57",
-    status: "On-Hold",
-  },
-  {
-    id: 3,
-    name: "AI Meetup with Autogon",
-    date: "7th Dec. 20241",
-    priceRange: "$49.99 - $100.",
-    qty: "57",
-    status: "Sold Out!",
-  },
-];
+type Props = {
+  activeEventsFilterValue: string;
+  setActiveEventsFilterValue: Dispatch<SetStateAction<string>>;
+  activeEventsSearchValue: string;
+  setActiveEventsSearchValue: Dispatch<SetStateAction<string>>;
+};
 
-const pagination = [1, 2, 3, 4, 5, 6];
-
-export default function ActiveEvents() {
+export default function ActiveEvents(props: Props) {
+  const {
+    activeEventsFilterValue,
+    setActiveEventsFilterValue,
+    activeEventsSearchValue,
+    setActiveEventsSearchValue,
+  } = props;
   const [currentPage, setCurrentPage] = useState(1);
-  const [openCancel, setOpenCancel] = useState(false);
+  const [openRemove, setOpenRemove] = useState(false);
   const [openHold, setOpenHold] = useState(false);
+
+  const [openFilter, setOpenFilter] = useState(false);
+  const [openExport, setOpenExport] = useState(false);
+  const [selectedEvent, setSelectedEvent] = useState<Events>({} as Events);
+
+  const queryClient = useQueryClient();
+
+  const queryParams = useMemo(() => {
+    let params = "";
+
+    if (activeEventsFilterValue) {
+      params = params + `&status=${activeEventsFilterValue}`;
+    }
+    if (activeEventsSearchValue) {
+      params = params + `&searchTerm=${activeEventsSearchValue}`;
+    }
+
+    return params;
+  }, [activeEventsFilterValue, activeEventsSearchValue]);
+
+  const { isPending: isDeleting, mutate: remove } = useMutation({
+    mutationFn: deleteEvent,
+  });
+  const {
+    fetchNextPage,
+    fetchPreviousPage,
+    refetch,
+    isFetching,
+    isFetchingNextPage,
+    isFetchingPreviousPage,
+    isPending,
+    data,
+  } = useInfiniteQuery({
+    queryKey: ["events", currentPage],
+    queryFn: ({ pageParam }) => getEvents(pageParam, 20, queryParams),
+    initialPageParam: currentPage,
+    getNextPageParam: (lastPage) => lastPage.data.nextPage,
+    getPreviousPageParam: (firstPage) => firstPage.data.prevPage,
+  });
+  const { isPending: eventsPending, data: events } = useQuery({
+    queryKey: ["events"],
+    queryFn: getEventsWithoutParams,
+  });
+
+  const { data: eventLevel } = useQuery({
+    queryKey: ["event-level"],
+    queryFn: getAllEventLevel,
+  });
+
+  const loading = isFetching || isFetchingNextPage || isFetchingPreviousPage;
+  const RESPONSE = data?.pages[data?.pages.length - 1];
+  const EVENTS = RESPONSE?.data.foundItems || [];
+
+  const priceRange = useCallback(
+    (level: string[]) => {
+      let price: number[] = [];
+
+      eventLevel?.data.forEach((element) => {
+        if (level.includes(element.id)) {
+          price.push(element?.ticketPrice);
+        }
+      });
+
+      if (price.length === 0) {
+        return "Free";
+      }
+
+      return `$${Math.min(...price)} - $${Math.max(...price)}`;
+    },
+    [eventLevel]
+  );
+
+  const ACTIVETICKETS = useMemo(() => {
+    // return events?.data?.foundItems?.find((e) => e.startTime > Date.now()) ?? 0;
+    return RESPONSE?.data?.totalCount ?? 0;
+  }, [events]);
+
+  const deleteTicket = () => {
+    remove(selectedEvent.id, {
+      onSuccess: () => {
+        setOpenRemove(false);
+        toast({
+          title: "Ticket cancelled successfully",
+          variant: "success",
+        });
+        queryClient.invalidateQueries();
+      },
+      onError: () => {
+        toast({
+          title: "Failed to cancel ticket",
+          variant: "error",
+        });
+      },
+    });
+  };
+
+  if (isPending) {
+    return <Loader />;
+  }
 
   return (
     <div>
@@ -101,7 +196,13 @@ export default function ActiveEvents() {
             <CardContent className="flex justify-between items-center p-0">
               <div className="space-y-2">
                 <p className="text-[#475367] text-sm">Active tickets</p>
-                <p className="text-[#344054] font-bold text-xl">57</p>
+                {eventsPending ? (
+                  <Skeleton className="w-10 h-2 rounded-[12px] bg-gray-200" />
+                ) : (
+                  <p className="text-[#344054] font-bold text-xl h-2">
+                    {ACTIVETICKETS}
+                  </p>
+                )}
               </div>
               <div className="w-10 h-10 rounded-full bg-[#C7FFAC] border border-[#A8F285] flex justify-center items-center">
                 <TicketIcon fill="#133205" />
@@ -126,17 +227,39 @@ export default function ActiveEvents() {
           </div>
           <div className="ml-auto flex items-center gap-2">
             <Input
+              value={activeEventsSearchValue}
+              onChange={(e) => setActiveEventsSearchValue(e.target.value)}
               className="w-[250px] h-9 border border-[#D0D5DD] placeholder:text-[#98A2B3]"
               placeholder="Search"
               suffixitem={
-                <SearchIcon
-                  size={20}
-                  color="#D0D5DD"
-                  className="absolute top-0 right-0 mr-2 mt-2"
-                />
+                activeEventsSearchValue ? (
+                  <XIcon
+                    onClick={() => {
+                      setActiveEventsSearchValue("");
+                      const timeOut = setTimeout(() => {
+                        refetch();
+                        clearTimeout(timeOut);
+                      }, 200);
+                    }}
+                    size={20}
+                    //color="#D0D5DD"
+                    className="absolute top-0 right-0 mr-2 mt-2 cursor-pointer"
+                  />
+                ) : (
+                  <SearchIcon
+                    size={20}
+                    color="#D0D5DD"
+                    className="absolute top-0 right-0 mr-2 mt-2"
+                  />
+                )
               }
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  refetch();
+                }
+              }}
             />
-            <DropdownMenu>
+            <DropdownMenu open={openFilter} onOpenChange={setOpenFilter}>
               <DropdownMenuTrigger asChild>
                 <button className="h-9 gap-3 flex items-center border border-[#D0D5DD] rounded-[8px] bg-white py-[10px] px-3">
                   <Filter className="h-5 w-5" color="#667185" />
@@ -145,46 +268,104 @@ export default function ActiveEvents() {
                   </span>
                 </button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuLabel>Filter by</DropdownMenuLabel>
+              <DropdownMenuContent
+                align="end"
+                className="border border-[#E4E7EC] p-0 rounded-[8px] w-full"
+              >
+                <div className="py-3 px-2 grid grid-cols-3 justify-center items-center border-b border-b-[#F0F2F5] bg-[#F0F2F5]">
+                  <button
+                    className="h-[27px] w-16 bg-white rounded-[6px] border border-[#E4E7EC] text-[13px] text-[#667185]"
+                    onClick={() => setActiveEventsFilterValue("")}
+                  >
+                    Clear
+                  </button>
+                  <DropdownMenuLabel className="text-sm text-[#13191C] font-normal">
+                    Filter
+                  </DropdownMenuLabel>
+                  <button
+                    className="h-[27px] w-16 bg-[#13191C] rounded-[6px] border border-[#E4E7EC] text-[13px] text-white"
+                    onClick={() => {
+                      refetch();
+                      setOpenFilter(false);
+                    }}
+                  >
+                    Apply
+                  </button>
+                </div>
                 <DropdownMenuSeparator />
-                <DropdownMenuCheckboxItem checked>
-                  Active
-                </DropdownMenuCheckboxItem>
-                <DropdownMenuCheckboxItem>Draft</DropdownMenuCheckboxItem>
-                <DropdownMenuCheckboxItem>Archived</DropdownMenuCheckboxItem>
+                <DropdownMenuLabel className="pl-3 text-sm text-[#98A2B3] font-normal">
+                  Status
+                </DropdownMenuLabel>
+                <div className="grid grid-cols-3 px-1 pb-4">
+                  <div className="space-y-1">
+                    <FilterItem
+                      checked={activeEventsFilterValue === "DRAFT"}
+                      onCheckedChange={() =>
+                        setActiveEventsFilterValue("DRAFT")
+                      }
+                    >
+                      Draft
+                    </FilterItem>
+                    <FilterItem
+                      checked={activeEventsFilterValue === "PENDING"}
+                      onCheckedChange={() =>
+                        setActiveEventsFilterValue("PENDING")
+                      }
+                    >
+                      Pending
+                    </FilterItem>
+                  </div>
+                  <div className="space-y-1">
+                    <FilterItem
+                      checked={activeEventsFilterValue === "PAUSED"}
+                      onCheckedChange={() =>
+                        setActiveEventsFilterValue("PAUSED")
+                      }
+                    >
+                      Paused
+                    </FilterItem>
+                    <FilterItem
+                      checked={activeEventsFilterValue === "ONGOING"}
+                      onCheckedChange={() =>
+                        setActiveEventsFilterValue("ONGOING")
+                      }
+                    >
+                      Ongoing
+                    </FilterItem>
+                  </div>
+                  <div className="space-y-1">
+                    <FilterItem
+                      checked={activeEventsFilterValue === "COMPLETED"}
+                      onCheckedChange={() =>
+                        setActiveEventsFilterValue("COMPLETED")
+                      }
+                    >
+                      Completed
+                    </FilterItem>
+                  </div>
+                </div>
               </DropdownMenuContent>
             </DropdownMenu>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <button className="h-9 gap-3 flex items-center border border-[#D0D5DD] rounded-[8px] bg-[#F7F9FC] py-[10px] px-3">
-                  <Upload className="h-5 w-5" color="#667185" />
-                  <span className="sr-only sm:not-sr-only sm:whitespace-nowrap text-[#667185] text-sm font-medium">
-                    Export
-                  </span>
-                </button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuLabel>Filter by</DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                <DropdownMenuCheckboxItem checked>
-                  Active
-                </DropdownMenuCheckboxItem>
-                <DropdownMenuCheckboxItem>Draft</DropdownMenuCheckboxItem>
-                <DropdownMenuCheckboxItem>Archived</DropdownMenuCheckboxItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+            <button
+              className="h-9 gap-3 flex items-center border border-[#D0D5DD] rounded-[8px] bg-[#F7F9FC] py-[10px] px-3"
+              onClick={() => setOpenExport(true)}
+            >
+              <Upload className="h-5 w-5" color="#667185" />
+              <span className="sr-only sm:not-sr-only sm:whitespace-nowrap text-[#667185] text-sm font-medium">
+                Export
+              </span>
+            </button>
           </div>
         </div>
         <Card
           x-chunk="dashboard-06-chunk-0"
-          className="rounded-[12px] border-[#E4E7EC]"
+          className="rounded-[12px] border-[#E4E7EC] shadow-none"
         >
           <CardContent className="p-0 m-0">
             <Table className="rounded-[40px]">
-              <TableHeader className="bg-[#F9FAFB] rounded-[40px]">
-                <TableRow>
-                  <TableHead className="text-[#475367] font-medium pr-20">
+              <TableHeader className="rounded-40px]">
+                <TableRow className="border-[#E4E7EC]">
+                  <TableHead className="text-[#475367] font-medium pr-20 bg-[#F9FAFB] rounded-tl-[12px]">
                     <span className="flex items-center justify-between">
                       Event name{" "}
                       <ChevronsUpDown
@@ -194,7 +375,7 @@ export default function ActiveEvents() {
                       />
                     </span>
                   </TableHead>
-                  <TableHead className="text-[#475367] font-medium flex items-center gap-2">
+                  <TableHead className="text-[#475367] font-medium flex items-center gap-2 bg-[#F9FAFB]">
                     <span className="flex items-center gap-2">
                       Price range{" "}
                       <ChevronsUpDown
@@ -204,7 +385,7 @@ export default function ActiveEvents() {
                       />
                     </span>
                   </TableHead>
-                  <TableHead className="text-[#475367] font-medium">
+                  <TableHead className="text-[#475367] font-medium bg-[#F9FAFB]">
                     <span className="flex items-center gap-3">
                       Qty sold{" "}
                       <ListFilter
@@ -214,141 +395,87 @@ export default function ActiveEvents() {
                       />
                     </span>
                   </TableHead>
-                  <TableHead className="hidden md:table-cell">
+                  <TableHead className="hidden md:table-cell bg-[#F9FAFB] rounded-tr-[12px]">
                     <span className="sr-only">Actions</span>
                   </TableHead>
                 </TableRow>
               </TableHeader>
-              <TableBody className="[&_tr:last-child]:border-1">
-                {EVENTS.map((event) => (
-                  <TableRow key={event.id}>
-                    <TableCell className="hidden sm:table-cell">
-                      <div className="flex items-center gap-2">
-                        <img
-                          alt="Product image"
-                          className="aspect-square rounded-md object-cover w-[43px] h-[43px]"
-                          src={Event}
-                        />
-                        <div>
-                          <p className="text-[#101928] font-medium">
-                            {event.name}
-                          </p>
-                          <p className="text-[#667185]">{event.date}</p>
+              {loading ? (
+                <LoadingMovieList />
+              ) : (
+                <TableBody className="[&_tr:last-child]:border-1">
+                  {EVENTS.map((event) => (
+                    <TableRow key={event.id} className="border-[#E4E7EC]">
+                      <TableCell className="hidden sm:table-cell">
+                        <div className="flex items-center gap-2">
+                          <img
+                            alt="Event image"
+                            className="aspect-square rounded-md object-cover w-[43px] h-[43px]"
+                            src={event.image}
+                          />
+                          <div>
+                            <p className="text-[#101928] font-medium">
+                              {event.title}
+                            </p>
+                            <p className="text-sm text-[#667185]">
+                              {event.startTime
+                                ? format(event.startTime, "d MMM. yyyy")
+                                : ""}
+                            </p>
+                          </div>
                         </div>
-                      </div>
-                    </TableCell>
-                    <TableCell className="font-medium text-[#13191C]">
-                      {event.priceRange}
-                    </TableCell>
-                    <TableCell className="text-[#475367]">
-                      {event.qty}
-                    </TableCell>
-                    <TableCell>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <button
-                            aria-haspopup="true"
-                            className="w-[30px] h-[30px] rounded-[8px] flex items-center justify-center border border-[#E4E7EC] bg-white"
-                          >
-                            <MoreVertical className="h-4 w-4" color="#98A2B3" />
-                            <span className="sr-only">Toggle menu</span>
-                          </button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent
-                          align="end"
-                          className="rounded-[7px] p-0 "
-                        >
-                          <DropdownMenuItem className="px-3 py-2">
-                            <span className="flex items-center gap-[10px] text-[#13191C] text-xs">
-                              <VisibleIcon fill="#98A2B3" /> View ticket
-                            </span>
-                          </DropdownMenuItem>
-                          <DropdownMenuItem
-                            className="px-3 py-2"
-                            onClick={() => setOpenHold(true)}
-                          >
-                            <span className="flex items-center gap-[10px] text-[#13191C] text-xs">
-                              <OnHoldIcon fill="#98A2B3" /> Put on Hold
-                            </span>
-                          </DropdownMenuItem>
-                          <DropdownMenuItem className="px-3 py-2">
-                            <span className="flex items-center gap-[10px] text-[#13191C] text-xs">
-                              <OnHoldIcon fill="#98A2B3" /> Duplicate ticket
-                            </span>
-                          </DropdownMenuItem>
-                          <DropdownMenuItem
-                            className="bg-[#e7211329] rounded-none px-3 py-2"
-                            onClick={() => setOpenCancel(true)}
-                          >
-                            <span className="flex items-center gap-[10px] text-[#BD1B0F] text-xs">
-                              <PowerIcon fill="#BD1B0F" /> Cancel ticket
-                            </span>
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
+                      </TableCell>
+                      <TableCell className="font-medium text-[#13191C]">
+                        {priceRange(event.eventLevels)}
+                      </TableCell>
+                      <TableCell className="text-[#475367]">{0}</TableCell>
+                      <TableCell>
+                        <EventActions
+                          event={event}
+                          setOpenRemove={setOpenRemove}
+                          setSelectedEvent={setSelectedEvent}
+                          setOpenHold={setOpenHold}
+                        />
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              )}
             </Table>
           </CardContent>
-          <CardFooter className="flex items-center justify-center border-t mt-5 self-center p-5">
-            <div className="flex items-center gap-2">
-              <button
-                aria-haspopup="true"
-                className="w-9 h-9 rounded-[6px] flex items-center justify-center border border-[#D0D5DD] bg-white"
-                onClick={() => {
-                  currentPage > 1 && setCurrentPage((page) => page - 1);
+          <CardFooter className="flex items-center justify-center border-t border-[#E4E7EC] mt-5 self-center p-5">
+            {RESPONSE?.data && (
+              <Pagination
+                currentPage={currentPage}
+                pageSize={RESPONSE?.data.limit}
+                totalCount={RESPONSE.data.totalCount}
+                onNext={() => {
+                  setCurrentPage(currentPage + 1);
+                  fetchNextPage();
                 }}
-              >
-                <ChevronLeft color="#13191C" size={25} />
-                <span className="sr-only">Navigation control</span>
-              </button>
-              {pagination.map((page) => (
-                <button
-                  className={cn(
-                    "w-9 h-9 rounded-[6px] flex items-center justify-center bg-white",
-                    page === currentPage && "border border-[#13191C]"
-                  )}
-                  onClick={() => setCurrentPage(page)}
-                  key={page}
-                >
-                  <p
-                    className={cn(
-                      "text-[#667185] text-sm",
-                      page === currentPage && "text-[#13191C] font-medium"
-                    )}
-                  >
-                    {page}
-                  </p>
-                </button>
-              ))}
-              <button
-                aria-haspopup="true"
-                className="w-9 h-9 rounded-[6px] flex items-center justify-center border border-[#D0D5DD] bg-white"
-                onClick={() => {
-                  currentPage < 6 && setCurrentPage((page) => page + 1);
+                onPrevious={() => {
+                  setCurrentPage(currentPage - 1);
+                  fetchPreviousPage();
                 }}
-              >
-                <ChevronRight color="#13191C" size={25} />
-                <span className="sr-only">Navigation control</span>
-              </button>
-            </div>
+                onPageChange={(page) => {
+                  setCurrentPage(page);
+                  refetch();
+                }}
+              />
+            )}
           </CardFooter>
         </Card>
       </div>
 
-      <Dialog open={openCancel} onOpenChange={setOpenCancel}>
+      <Dialog open={openRemove} onOpenChange={setOpenRemove}>
         <DialogContent
-          className="w-3/4 sm:max-w-[400px] justify-center items-center gap-2 rounded-[8px] px-5 py-[15px] space-y-2"
+          className="w-3/4 sm:max-w-[400px] flex flex-col justify-center items-center gap-2 rounded-[8px] px-5 py-[15px] space-y-2"
           closeStyle="bg-white w-[34px] h-[34px] p-0 top-0 right-[-10%] top-[-8px] flex justify-center items-center rounded-[8px]"
         >
           <DialogHeader className="self-center">
-            <img
-              src={CancelTicket}
-              alt="cancel"
-              className="self-center w-20 h-20"
-            />
+            <div className="w-full flex items-center justify-center self-center">
+              <CancelIcon />
+            </div>
           </DialogHeader>
           <DialogDescription className="text-center space-y-2">
             <p className="text-[#13191C] text-lg font-medium">
@@ -359,13 +486,20 @@ export default function ActiveEvents() {
               sure you want to cancel this ticket?{" "}
             </p>
           </DialogDescription>
-
-          <DialogFooter className="flex justify-between items-center">
-            <Button className="h-9 w-[178px]" variant="ghost">
+          <DialogFooter className="flex justify-between items-center pt-2">
+            <Button
+              className="h-9 w-[178px]"
+              variant="ghost"
+              onClick={() => setOpenRemove(false)}
+            >
               Cancel
             </Button>
-            <Button className="h-9 w-[178px]" variant="destructive">
-              Delete
+            <Button
+              className="h-9 w-[178px]"
+              variant="destructive"
+              onClick={deleteTicket}
+            >
+              {isDeleting ? <Loading className="w-4 h-4" /> : "Delete"}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -377,11 +511,9 @@ export default function ActiveEvents() {
           closeStyle="bg-white w-[34px] h-[34px] p-0 top-0 right-[-10%] top-[-8px] flex justify-center items-center rounded-[8px]"
         >
           <DialogHeader className="self-center">
-            <img
-              src={PauseTicket}
-              alt="cancel"
-              className="self-center w-20 h-20"
-            />
+            <div className="w-full flex items-center justify-center self-center">
+              <PauseIcon />
+            </div>
           </DialogHeader>
           <DialogDescription className="text-center space-y-2">
             <p className="text-[#13191C] text-xl font-bold">
@@ -394,18 +526,20 @@ export default function ActiveEvents() {
           </DialogDescription>
 
           <DialogFooter className="flex justify-between items-center">
-            <Button className="h-14 w-[178px]" variant="ghost">
+            <Button className="h-9 w-[178px]" variant="ghost">
               Cancel
             </Button>
             <Button
-              className="h-14 w-[178px] bg-[#13191C] bg-gradient-to-r from-[#13191C] to-[#13191C]"
+              className="h-9 w-[178px] bg-[#13191C] bg-gradient-to-r from-[#13191C] to-[#13191C]"
               variant="gradient"
             >
-              Delete
+              Pause
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <ExportEvents openExport={openExport} setOpenExport={setOpenExport} />
     </div>
   );
 }

@@ -36,7 +36,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { toast } from "@/hooks/use-toast";
-import { LoadingMovieList } from "@/routes/create-movie/components/loading-movie";
+import { LoadingMovieList } from "@/components/ui/loading-movie";
 import { getMovieRooms } from "@/services/api/movie-room";
 import { allMovieActivities, deleteMovie } from "@/services/api/movies";
 import { Movie } from "@/services/models/movies";
@@ -175,7 +175,7 @@ export default function AllMovies(props: Props) {
               <div className="space-y-2">
                 <p className="text-[#475367] text-sm">Total tickets created</p>
                 <p className="text-[#344054] font-bold text-xl">
-                  {MOVIES.length}
+                  {RESPONSE?.data.totalCount ?? 0}
                 </p>
               </div>
               <div className="w-10 h-10 rounded-full bg-[#C7FFAC] border border-[#A8F285] flex justify-center items-center">
@@ -415,7 +415,7 @@ export default function AllMovies(props: Props) {
               <Pagination
                 currentPage={currentPage}
                 pageSize={RESPONSE?.data.limit}
-                totalCount={MOVIES.length} // TODO: Get from API
+                totalCount={RESPONSE?.data.totalCount}
                 onNext={() => {
                   setCurrentPage(currentPage + 1);
                   fetchNextPage();

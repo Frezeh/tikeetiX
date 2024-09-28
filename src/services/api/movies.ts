@@ -29,13 +29,17 @@ export const allMovieActivities = async (
   return response.data;
 };
 
-export const currentUserMovieActivities = async (params: string) => {
+export const currentUserMovieActivities = async (
+  page = 1,
+  limit = 10,
+  params: string
+) => {
   const config: AxiosRequestConfig = {
     method: "GET",
-    url: `movies/current-user-activities${params}`,
+    url: `movies/current-user-activities?page=${page}&limit=${limit}${params}`,
   };
 
-  const response = await makeRequest(config);
+  const response = await makeRequest<MovieData>(config);
 
   return response.data;
 };

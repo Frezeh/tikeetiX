@@ -1,19 +1,18 @@
 import BellIcon from "@/assets/icons/bell-icon";
 import CopyIcon from "@/assets/icons/copy-icon";
 import GBP from "@/assets/icons/gbp.svg";
-import LiveIcon from "@/assets/icons/live-icon";
-import MovieIcon from "@/assets/icons/movie-icon";
 import PencilIcon from "@/assets/icons/pencil-icon";
 import TicketIcon from "@/assets/icons/ticket-icon";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import displayStatusIcon from "@/components/ui/display-status-icon";
 import { Input } from "@/components/ui/input";
 import Loader from "@/components/ui/loader";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import UserProfile from "@/components/user-profile";
 import { toast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
-import { getMovie } from "@/services/api/movies";
+import { getEvent } from "@/services/api/events";
 import { useQuery } from "@tanstack/react-query";
 import {
   ChevronLeft,
@@ -25,30 +24,30 @@ import {
 import { useEffect } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import TicketsSold from "./components/tickets-sold";
+import { format } from "date-fns";
 
-export default function MovieDetails() {
+export default function EventDetails() {
   const navigate = useNavigate();
   const { id } = useParams();
 
   const {
     isLoading,
-    data: MOVIE,
+    data: EVENT,
     error,
   } = useQuery({
-    queryKey: [`movie-${id}`],
-    queryFn: () => getMovie(id!),
+    queryKey: [`event-${id}`],
+    queryFn: () => getEvent(id!),
     enabled: !!id,
-    //refetchOnWindowFocus: false,
   });
 
   useEffect(() => {
     if (error) {
       toast({
-        title: "Movie not found",
-        description: "The movie you are looking for does not exist",
+        title: "Event not found",
+        description: "The event you are looking for does not exist",
         variant: "error",
       });
-      navigate("/movies");
+      navigate("/events");
     }
   }, [error, navigate]);
 
@@ -68,7 +67,7 @@ export default function MovieDetails() {
             <p className="text-[#667185] font-medium text-sm">Back</p>
           </button>
           <div className="bg-[#E4E7EC] h-[38px] w-[1px]" />
-          <Link to="/movies" className="flex items-center gap-1">
+          <Link to="/events" className="flex items-center gap-1">
             <TicketIcon width={16} height={16} />
             <p className="text-[#667185] text-xs">Tickets</p>
           </Link>
@@ -114,7 +113,7 @@ export default function MovieDetails() {
               </div>
             }
             className="w-[120px] h-9 gap-2"
-            onClick={() => navigate(`/edit-movie/${id}`)}
+            onClick={() => navigate(`/edit-event/${id}`)}
           >
             Edit ticket
           </Button>
@@ -126,14 +125,14 @@ export default function MovieDetails() {
       <div className="px-5 pt-5 pb-10 border-b border-[#E4E7EC] flex items-center gap-20">
         <div className="flex items-center gap-4 w-[40%]">
           <img
-            src={MOVIE?.data.image}
+            src={EVENT?.data.image}
             alt="movie"
             className="w-20 h-20 rounded-[8px]"
           />
           <div className="space-y-3">
             <p className="text-[#475367] text-sm">name</p>
             <p className="text-[#13191C] text-xl font-medium">
-              {MOVIE?.data.title}
+              {EVENT?.data.title}
             </p>
           </div>
         </div>
@@ -141,18 +140,18 @@ export default function MovieDetails() {
         <div className="space-y-3">
           <p className="text-[#475367] text-sm">Type</p>
           <Badge className="flex items-center gap-2 bg-[#F0F2F5]">
-            <MovieIcon width={16} height={16} />
+            <TicketIcon width={16} height={16} />
             <span className="text-[#344054] text-sm font-medium">
-              Movie ticket
+              Event ticket
             </span>
           </Badge>
         </div>
         <div className="space-y-3">
           <p className="text-[#475367] text-sm">Status</p>
-          <div className="flex items-center gap-2">
-            <LiveIcon width={16} height={16} />
-            <span className="text-[#475367] text-sm">Live</span>
-          </div>
+          <span className="flex items-center gap-2 text-[#475367] text-sm">
+            {displayStatusIcon(EVENT?.data.status!)?.icon}{" "}
+            {displayStatusIcon(EVENT?.data?.status!)?.text}
+          </span>
         </div>
       </div>
 
@@ -171,14 +170,14 @@ export default function MovieDetails() {
                   <div className="space-y-1">
                     <p className="text-[#667185] text-sm">Description</p>
                     <p className="text-[#13191C] text-sm">
-                      {MOVIE?.data.description}
+                      {EVENT?.data.description}
                     </p>
                   </div>
                   <div className={cn("grid grid-cols-2 gap-7")}>
                     <div>
-                      <p className="text-[#667185] text-sm">Genre</p>
+                      <p className="text-[#667185] text-sm">Category</p>
                       <p className="text-[#13191C] text-sm font-medium">
-                        {MOVIE?.data.genre}
+                        {EVENT?.data?.category}
                       </p>
                     </div>
                     <div>
@@ -194,25 +193,23 @@ export default function MovieDetails() {
                       </div>
                     </div>
                     <div>
-                      <p className="text-[#667185] text-sm">Age rating</p>
+                      <p className="text-[#667185] text-sm">Type</p>
                       <p className="text-[#13191C] text-sm font-medium">
-                        {MOVIE?.data.ageRating}
+                        {EVENT?.data.type}
                       </p>
                     </div>
                     <div>
-                      <p className="text-[#667185] text-sm">
-                        Playtime/Duration
-                      </p>
+                      <p className="text-[#667185] text-sm">Start time</p>
                       <p className="text-[#13191C] text-sm font-medium">
-                        {MOVIE?.data.startTime}
+                        {EVENT?.data.startTime ? format(EVENT?.data.startTime, "PP") : "---"}
                       </p>
                     </div>
-                    <div>
+                    {/* <div>
                       <p className="text-[#667185] text-sm">
-                        Available room types
+                       Level
                       </p>
-                      <p className="text-[#13191C] text-sm font-medium"></p>
-                    </div>
+                      <p className="text-[#13191C] text-sm font-medium">{EVENT?.data.}</p>
+                    </div> */}
                   </div>
                   <div>
                     <div className="flex items-center gap-2">
@@ -220,12 +217,12 @@ export default function MovieDetails() {
                       <MapPin size={20} color="#98A2B3" />
                     </div>
                     <p className="text-[#13191C] text-sm font-medium">
-                      {MOVIE?.data.location}
+                      {EVENT?.data.location}
                     </p>
                   </div>
                   <div>
                     <p className="text-[#667185] text-sm">Organizer</p>
-                    <p className="text-[#13191C] text-sm font-medium">---</p>
+                    <p className="text-[#13191C] text-sm font-medium">{EVENT?.data.organizerName ?? "---"}</p>
                   </div>
                 </div>
               </div>

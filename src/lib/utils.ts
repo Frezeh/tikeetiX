@@ -66,6 +66,13 @@ export function __flatten<T>(data: T) {
   }
 }
 
+export function generateRandomId() {
+  return (
+    Math.random().toString(36).substring(2) +
+    Math.random().toString(36).substring(2)
+  );
+}
+
 export function ticketRoutes(id?: string) {
   return [
     "/events",
@@ -74,6 +81,7 @@ export function ticketRoutes(id?: string) {
     "/create-event",
     "/create-movie",
     `/movie-details/${id}`,
+    `/event-details/${id}`,
     `/edit-movie/${id}`,
   ];
 }
@@ -82,7 +90,9 @@ export function routesWithoutHeader(id?: string) {
   return [
     "/create-event",
     "/create-movie",
-    `/movie-details/${id}`,
     `/edit-movie/${id}`,
+    `/movie-details/${id}`,
+    `/event-details/${id}`,
+    `/edit-event/${id}`,
   ];
 }

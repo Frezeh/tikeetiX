@@ -4,6 +4,7 @@ function TicketIcon({
   fill = "#98A2B3",
   width = 20,
   height = 20,
+  className,
   ...props
 }: SVGProps<SVGSVGElement>) {
   return (
@@ -12,6 +13,7 @@ function TicketIcon({
       height={height}
       viewBox="0 0 20 20"
       fill="none"
+      className={className}
       {...props}
     >
       <path

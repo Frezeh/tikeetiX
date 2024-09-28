@@ -61,6 +61,7 @@ export default function Auth({ moveToNext, setUserPayload }: Props) {
 
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
+    //mode: "onBlur",
     defaultValues: {
       email: "",
       password: "",
@@ -191,7 +192,13 @@ export default function Auth({ moveToNext, setUserPayload }: Props) {
           </div>
           <div className="pt-4">
             <Button
+              // onClick={(e) => {
+              //   if(form.formState.errors){
+              //     e.preventDefault();
+              //   }
+              // }}
               type="submit"
+              disabled
               variant="gradient"
               className="w-full sm:w-[357px] h-14"
             >

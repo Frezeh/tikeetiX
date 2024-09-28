@@ -1,9 +1,11 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Calendar } from "@/components/ui/calendar";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
   Form,
   FormControl,
+  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -22,7 +24,14 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
-import { ChevronDown, Clock3, Download, MapPin, MoveLeft } from "lucide-react";
+import { format } from "date-fns";
+import {
+  CalendarIcon,
+  ChevronDown,
+  Download,
+  MapPin,
+  MoveLeft,
+} from "lucide-react";
 import {
   Dispatch,
   FormEvent,
@@ -33,62 +42,57 @@ import {
 } from "react";
 import { UseFormReturn } from "react-hook-form";
 
-const GENRES = ["Action", "Comedy", "Drama", "Horror", "Romance"];
-const RATINGS = ["PG 13", "R", "PG", "G"];
 type Props = {
   moveToNext: () => void;
   form: UseFormReturn<
     {
       poster: string;
       title: string;
-      genre: string;
-      rating: string;
-      duration: string;
+      category: string;
+      type: string;
       location: string;
       description?: string | undefined;
+      name?: string | undefined;
+      startTime: Date;
     },
     any,
     undefined
   >;
-  poster: File | undefined | null;
-  setPoster: Dispatch<SetStateAction<File | undefined | null>>;
+  poster: File | undefined;
+  setCroppedPoster: Dispatch<SetStateAction<File | undefined>>;
+  setOpenEditImage: Dispatch<SetStateAction<boolean>>;
 };
 
-function EditMovieDetails(props: Props) {
-  const { moveToNext, form, poster, setPoster } = props;
+const CATEGORIES = ["Art and festival", "Food & drinks"];
+const TYPE = ["Physical", "Virtual", "Hybrid (physical & virtual)"];
+
+function EventDetails(props: Props) {
+  const { moveToNext, form, poster, setCroppedPoster, setOpenEditImage } =
+    props;
 
   const onSubmit = () => {
     moveToNext();
   };
 
   const validate = useMemo(() => {
-    if (poster === null )
-      return {
-        format: true,
-        size: true,
-        aspectRatio: true,
-        errorMessage: "Please select a poster",
-      };
-    else {
-      let imageFormat = poster?.type.split("/")[1];
-      let imageSize = Number(poster?.size) / 1024 / 1024;
-      let format =
-        imageFormat === "jpeg" || imageFormat === "png" || imageFormat === "jpg"
-          ? true
-          : false;
-      let size = imageSize < 5 ? true : false;
+    let imageFormat = poster?.type.split("/")[1];
+    let imageSize = Number(poster?.size) / 1024 / 1024;
+    let format =
+      imageFormat === "jpeg" || imageFormat === "png" || imageFormat === "jpg"
+        ? true
+        : false;
+    let size = imageSize < 5 ? true : false;
 
-      return {
-        format,
-        size,
-        aspectRatio: size,
-        errorMessage: !format
-          ? "Invalid image format"
-          : !size
-          ? "File size should be less than 5 MB"
-          : "",
-      };
-    }
+    return {
+      format,
+      size,
+      aspectRatio: size,
+      errorMessage: !format
+        ? "Invalid image format"
+        : !size
+        ? "File size should be less than 5 MB"
+        : "",
+    };
   }, [poster]);
 
   const handleUpload = useCallback((e: FormEvent<HTMLInputElement>) => {
@@ -97,8 +101,8 @@ function EditMovieDetails(props: Props) {
 
     if (target === undefined) return;
 
-    form.setValue("poster", target.name);
-    setPoster(target);
+    setCroppedPoster(target);
+    setOpenEditImage(true);
   }, []);
 
   return (
@@ -114,11 +118,11 @@ function EditMovieDetails(props: Props) {
               name="poster"
               render={() => (
                 <FormItem>
-                  <FormLabel className="text-[#101928]">Movie poster</FormLabel>
+                  <FormLabel className="text-[#101928]">Event poster</FormLabel>
                   <FormControl>
                     <Label
                       htmlFor="image-file"
-                      className="cursor-pointer flex items-center justify-center bg-white border text-sm border-[#D0D5DD] border-dashed h-[106px] w-[106px] rounded-[8px] px-2"
+                      className="cursor-pointer flex items-center justify-center bg-white border text-sm border-[#D0D5DD] border-dashed h-[106px] w-[106px] rounded-[8px]"
                     >
                       {!form.watch("poster") ? (
                         <div className="flex items-center gap-2">
@@ -135,7 +139,6 @@ function EditMovieDetails(props: Props) {
                           id="image-file"
                           type="file"
                           accept=".png,.jpeg,.jpg"
-                          //   className="hidden"
                           error={!!form.formState.errors.poster}
                           onChange={handleUpload}
                         />
@@ -201,13 +204,13 @@ function EditMovieDetails(props: Props) {
             name="title"
             render={({ field }) => (
               <FormItem>
-                <FormLabel className="text-[#101928]">Movie title</FormLabel>
+                <FormLabel className="text-[#101928]">Event title</FormLabel>
                 <FormControl>
                   <Input
                     {...field}
                     type="text"
-                    placeholder="League of extraordinary gentlemen"
-                    className="bg-white border text-sm border-[#C7FFAC] h-14 placeholder:text-[#98A2B3] w-full"
+                    placeholder="CODM (League Extraordinaire) ‘ 24"
+                    className="bg-white border text-sm border-[#C7FFAC] h-14 placeholder:text-[#98A2B3] w-full focus-visible:ml-0.5 transition-opacity duration-100"
                     error={!!form.formState.errors.title}
                   />
                 </FormControl>
@@ -221,7 +224,7 @@ function EditMovieDetails(props: Props) {
             render={({ field }) => (
               <FormItem>
                 <FormLabel className="text-[#101928] flex items-center gap-2">
-                  Description{" "}
+                  Event Description{" "}
                   <Badge className="bg-[#E4E7EC] text-xs text-[#667185] font-medium">
                     Optional
                   </Badge>
@@ -230,10 +233,14 @@ function EditMovieDetails(props: Props) {
                   <Textarea
                     {...field}
                     placeholder="Enter text here..."
-                    className="bg-white border text-sm border-[#D0D5DD] h-[104px] placeholder:text-[#98A2B3] w-full"
+                    className="bg-white border text-sm border-[#D0D5DD] h-[104px] placeholder:text-[#98A2B3] w-full focus-visible:ml-0.5 transition-opacity duration-100"
                     error={!!form.formState.errors.description}
+                    maxLength={800}
                   />
                 </FormControl>
+                <FormDescription className="text-[#667185] text-sm">
+                  Max of 800 words
+                </FormDescription>
                 <FormMessage className="w-full" />
               </FormItem>
             )}
@@ -241,10 +248,10 @@ function EditMovieDetails(props: Props) {
           <div className="flex items-center justify-between">
             <FormField
               control={form.control}
-              name="genre"
+              name="category"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-[#101928]">Genre</FormLabel>
+                  <FormLabel className="text-[#101928]">Category</FormLabel>
                   <Select
                     onValueChange={field.onChange}
                     defaultValue={field.value}
@@ -253,22 +260,22 @@ function EditMovieDetails(props: Props) {
                       <SelectTrigger
                         className={cn(
                           "bg-white border border-[#D0D5DD] focus:ring-0 h-14 placeholder:text-[#667185] w-1/2 lg:w-[160px] 2xl:w-[180px]",
-                          !!form.formState.errors.genre && "border-[#E26E6A]"
+                          !!form.formState.errors.category && "border-[#E26E6A]"
                         )}
                         suffixIcon={<ChevronDown size={24} color="#667185" />}
                       >
                         {field.value ? (
-                          <SelectValue placeholder={field.value} />
+                          <SelectValue placeholder="Adventure" />
                         ) : (
                           <span className="text-[#667185] text-sm">
-                            Adventure
+                            Food & drinks
                           </span>
                         )}
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent className="w-auto h-auto max-h-[400px] p-0 m-0 border-[#E4E7EC]">
                       <SelectGroup>
-                        {GENRES.map((add, i) => (
+                        {CATEGORIES.map((add, i) => (
                           <SelectItem
                             value={add}
                             key={i}
@@ -286,10 +293,10 @@ function EditMovieDetails(props: Props) {
             />
             <FormField
               control={form.control}
-              name="rating"
+              name="type"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-[#101928]">Age rating</FormLabel>
+                  <FormLabel className="text-[#101928]">Type</FormLabel>
                   <Select
                     onValueChange={field.onChange}
                     defaultValue={field.value}
@@ -298,20 +305,22 @@ function EditMovieDetails(props: Props) {
                       <SelectTrigger
                         className={cn(
                           "bg-white border border-[#D0D5DD] focus:ring-0 h-14 placeholder:text-[#667185] w-1/2 lg:w-[160px] 2xl:w-[180px]",
-                          !!form.formState.errors.rating && "border-[#E26E6A]"
+                          !!form.formState.errors.type && "border-[#E26E6A]"
                         )}
                         suffixIcon={<ChevronDown size={24} color="#667185" />}
                       >
                         {field.value ? (
-                          <SelectValue placeholder={field.value} />
+                          <SelectValue placeholder="PG 13" />
                         ) : (
-                          <span className="text-[#667185] text-sm">PG 13</span>
+                          <span className="text-[#667185] text-sm">
+                            Physical
+                          </span>
                         )}
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent className="w-auto h-auto max-h-[400px] p-0 m-0 border-[#E4E7EC]">
                       <SelectGroup>
-                        {RATINGS.map((add, i) => (
+                        {TYPE.map((add, i) => (
                           <SelectItem
                             value={add}
                             key={i}
@@ -330,21 +339,19 @@ function EditMovieDetails(props: Props) {
           </div>
           <FormField
             control={form.control}
-            name="duration"
+            name="location"
             render={({ field }) => (
               <FormItem>
-                <FormLabel className="text-[#101928]">
-                  Playtime/Duration
-                </FormLabel>
+                <FormLabel className="text-[#101928]">Location</FormLabel>
                 <FormControl>
                   <Input
                     {...field}
                     type="text"
-                    placeholder="2:15:20"
-                    className="bg-white border text-sm border-[#D0D5DD] h-14 placeholder:text-[#98A2B3] w-full pr-12"
-                    error={!!form.formState.errors.duration}
+                    placeholder="Select location"
+                    className="bg-white border text-sm border-[#D0D5DD] h-14 placeholder:text-[#98A2B3] w-full pr-12 focus-visible:ml-0.5 transition-opacity duration-100"
+                    error={!!form.formState.errors.location}
                     suffixitem={
-                      <Clock3
+                      <MapPin
                         size={20}
                         color="#98A2B3"
                         className="absolute top-0 right-0 cursor-pointer lg:mt-[18px] lg:mr-8 mr-4 mt-4"
@@ -358,23 +365,83 @@ function EditMovieDetails(props: Props) {
           />
           <FormField
             control={form.control}
-            name="location"
+            name="startTime"
+            render={({ field }) => (
+              <FormItem className="flex flex-col">
+                <FormLabel className="text-[#101928]">Start time</FormLabel>
+                <Select onValueChange={field.onChange}>
+                  <FormControl>
+                    <SelectTrigger
+                      suffixIcon={
+                        <CalendarIcon
+                          className="ml-auto"
+                          color="#667185"
+                          size={20}
+                        />
+                      }
+                      className="border-[#D0D5DD] active:focus:outline-none h-14"
+                    >
+                      <Button
+                        variant={"ghost"}
+                        className={cn(
+                          "xl:w-[125px] 2xl:w-[145px] ml-[-20px] text-left items-start font-normal bg-transparent text-[#13191C]",
+                          !form.watch("startTime") && "text-[#667185]"
+                        )}
+                      >
+                        {form.watch("startTime") ? (
+                          format(form.watch("startTime"), "PP")
+                        ) : (
+                          <span className="text-[#667185]">24 Aug 2024</span>
+                        )}
+                      </Button>
+                    </SelectTrigger>
+                  </FormControl>
+
+                  <SelectContent
+                    className="w-auto h-auto p-0 rounded-[10px] shadow-lg mt-1 border-[0.3px] bg-card"
+                    align="start"
+                  >
+                    <Calendar
+                      mode="single"
+                      selected={field.value}
+                      onSelect={field.onChange}
+                      // selected={form.watch("end")}
+                      // onSelect={(d) => {
+                      //   form.setValue("end", d!);
+                      //   setOpenEndDate(false);
+                      // }}
+                      disabled={(date) => date < new Date()}
+                      fromDate={new Date()}
+                      toDate={new Date(Date.now() + 10000 * 60 * 60 * 24 * 365)}
+                      // fromYear={1800}
+                      // toYear={new Date().getFullYear()}
+                      initialFocus
+                    />
+                  </SelectContent>
+                </Select>
+                <FormMessage className="w-full" />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="name"
             render={({ field }) => (
               <FormItem>
-                <FormLabel className="text-[#101928]">Location</FormLabel>
+                <FormLabel className="text-[#101928]">
+                  Organizer's name
+                </FormLabel>
                 <FormControl>
                   <Input
                     {...field}
                     type="text"
-                    placeholder="Select location"
-                    className="bg-white border text-sm border-[#D0D5DD] h-14 placeholder:text-[#98A2B3] w-full pr-12"
-                    error={!!form.formState.errors.location}
+                    placeholder="Enter name of organizer"
+                    className="bg-white border text-sm border-[#D0D5DD] h-14 placeholder:text-[#98A2B3] w-full pr-24 focus-visible:ml-0.5 transition-opacity duration-100"
+                    error={!!form.formState.errors.name}
                     suffixitem={
-                      <MapPin
-                        size={20}
-                        color="#98A2B3"
-                        className="absolute top-0 right-0 cursor-pointer lg:mt-[18px] lg:mr-8 mr-4 mt-4"
-                      />
+                      <Badge className="absolute top-0 right-0 cursor-pointer lg:mt-[18px] mr-4 mt-4 bg-[#F0F2F5] text-xs text-[#98A2B3] font-medium">
+                        Optional
+                      </Badge>
                     }
                   />
                 </FormControl>
@@ -410,4 +477,4 @@ function EditMovieDetails(props: Props) {
   );
 }
 
-export default memo(EditMovieDetails);
+export default memo(EventDetails);

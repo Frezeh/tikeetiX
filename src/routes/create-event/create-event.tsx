@@ -1,8 +1,5 @@
-import BinIcon from "@/assets/icons/bin-icon";
 import DesktopIcon from "@/assets/icons/desktop-icon";
 import GBP from "@/assets/icons/gbp.svg";
-import MovieIcon from "@/assets/icons/movie-icon";
-import PencilIcon from "@/assets/icons/pencil-icon";
 import PhoneIcon from "@/assets/icons/phone-icon";
 import RemoveIcon from "@/assets/icons/remove-icon";
 import TicketIcon from "@/assets/icons/ticket-icon";
@@ -17,7 +14,6 @@ import {
   DialogHeader,
 } from "@/components/ui/dialog";
 import Loading from "@/components/ui/loading";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Select,
   SelectContent,
@@ -28,96 +24,116 @@ import {
 } from "@/components/ui/select";
 import { toast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
+import { deleteEventLevel, getAllEventLevel } from "@/services/api/event-level";
+import { createEvent } from "@/services/api/events";
 import { uploadSingleFile } from "@/services/api/file-upload";
-import { deleteMovieRoom, getMovieRooms } from "@/services/api/movie-room";
-import { createMovie } from "@/services/api/movies";
-import { MovieBody, MovieRoomResponse } from "@/services/models/movies";
+import { EventBody, TEventLevel } from "@/services/models/events";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import {
-  ChevronDown,
-  ChevronLeft,
-  ChevronRight,
-  MapPin,
-  MoveLeft,
-  PlusCircleIcon,
-} from "lucide-react";
+import { ChevronDown, ChevronLeft, ChevronRight, MapPin } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
 import { useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { Link, useNavigate } from "react-router-dom";
 import { z } from "zod";
-import EditShowingRoom from "./components/edit-showing-room";
-import MovieDetails from "./components/movie-details";
-import ShowingRoom from "./components/showing-room";
+import EditEventLevel from "./components/edit-event-level";
+import EditImage from "./components/edit-image";
+import EventDetails from "./components/event-details";
+import EventLevel from "./components/event-level";
+import EventLevelModal from "./components/event-level-modal";
 
-export const CreateMovieFormSchema = z.object({
+export const CreateEventFormSchema = z.object({
   poster: z.string().min(1, { message: "Required" }),
-  title: z.string().min(1, { message: "Movie title is required" }),
-  genre: z.string().min(1, { message: "Movie genre is required" }),
-  rating: z.string().min(1, { message: "Age rating is required" }),
-  duration: z.string().min(1, { message: "Duration is required" }),
-  location: z.string().min(1, { message: "Location is required" }),
+  title: z.string().min(1, { message: "Event title is required" }),
   description: z.string().optional(),
+  category: z.string().min(1, { message: "Event category is required" }),
+  type: z.string().min(1, { message: "Event type is required" }),
+  location: z.string().min(1, { message: "Location is required" }),
+  name: z.string().optional(),
+  startTime: z.date({
+    required_error: "Start time is required",
+  }),
 });
 
-export default function CreateMovie() {
+export const AddEventLevelFormSchema = z.object({
+  price: z.string().min(1, { message: "Required" }),
+  start: z.date({
+    required_error: "Sales start date is required",
+  }),
+  end: z.date({
+    required_error: "Sales end date is required",
+  }),
+  maxpurchase: z.string().min(1, { message: "Max purchase is required" }),
+});
+
+export default function CreateEvent() {
   const navigate = useNavigate();
   const [layout, setLayout] = useState<"desktop" | "phone">("desktop");
-  const [openShowingRoom, setOpenShowingRoom] = useState(false);
-  const [openEditRoom, setOpenEditRoom] = useState(false);
+  const [openLevel, setOpenLevel] = useState(false);
+  const [openEditLevel, setOpenEditLevel] = useState(false);
   const [openRemove, setOpenRemove] = useState(false);
   const [openPublish, setOpenPublish] = useState(false);
-  const [step, setStep] = useState<"movie-details" | "showing-room">(
-    "movie-details"
-  );
+  const [step, setStep] = useState<"event-details" | "level">("event-details");
+  const [croppedPoster, setCroppedPoster] = useState<File | undefined>();
   const [poster, setPoster] = useState<File | undefined>();
-  const [room, setRoom] = useState("");
-  const [selectedRoom, setSelectedRoom] = useState<MovieRoomResponse>(
-    {} as MovieRoomResponse
+  const [event, setEvent] = useState("");
+  const [openEditImage, setOpenEditImage] = useState(false);
+  const [selectedLevel, setSelectedLevel] = useState<TEventLevel>(
+    {} as TEventLevel
   );
+
   const [id, setId] = useState("");
   const queryClient = useQueryClient();
 
-  const { isLoading, data: showingRoom } = useQuery({
-    queryKey: ["movie-room"],
-    queryFn: getMovieRooms,
+  const { isLoading, data: eventLevel } = useQuery({
+    queryKey: ["event-level"],
+    queryFn: getAllEventLevel,
   });
-  const { isPending, mutate } = useMutation({ mutationFn: createMovie });
+  const { isPending, mutate } = useMutation({ mutationFn: createEvent });
   const { isPending: isRemoving, mutate: remove } = useMutation({
-    mutationFn: deleteMovieRoom,
+    mutationFn: deleteEventLevel,
   });
   const { isPending: isUploading, mutate: upload } = useMutation({
     mutationFn: uploadSingleFile,
   });
   const isCreating = isPending || isUploading;
 
-  const form = useForm<z.infer<typeof CreateMovieFormSchema>>({
-    resolver: zodResolver(CreateMovieFormSchema),
+  const form = useForm<z.infer<typeof CreateEventFormSchema>>({
+    resolver: zodResolver(CreateEventFormSchema),
     defaultValues: {
       poster: "",
       title: "",
-      genre: "",
-      rating: "",
-      duration: "",
+      category: "",
+      type: "",
       location: "",
+      name: "",
       description: "",
     },
   });
 
-  const createTicket = (data: MovieBody) => {
+  const levelForm = useForm<z.infer<typeof AddEventLevelFormSchema>>({
+    resolver: zodResolver(AddEventLevelFormSchema),
+    defaultValues: {
+      price: "",
+      start: undefined,
+      end: undefined,
+      maxpurchase: "",
+    },
+  });
+
+  const createTicket = (data: EventBody) => {
     mutate(data, {
       onSuccess: (res) => {
         if (res.message) {
           form.reset();
           setOpenPublish(true);
           setId(res.data.id);
-          queryClient.invalidateQueries({ queryKey: ["movies"] });
+          queryClient.invalidateQueries({ queryKey: ["events"] });
         }
       },
       onError: () => {
         toast({
-          title: "Failed to create movie ticket",
+          title: "Failed to create event ticket",
           variant: "error",
         });
       },
@@ -128,43 +144,39 @@ export default function CreateMovie() {
     let file = new FormData();
     file.append("file", poster as File);
 
-    if (showingRoom?.data.length === 0) {
-      toast({
-        title: "Showing room not found",
-        description: "Please add showing room first",
-        variant: "error",
-      });
-    } else {
-      upload(file, {
-        onSuccess: (res) => {
-          if (res.message) {
-            createTicket({
-              title: form.getValues("title"),
-              //startTime: form.getValues("duration"),
-              description: form.getValues("description") ?? "",
-              movieRooms: showingRoom?.data.map((room) => room.id)!,
-              ageRating: form.getValues("rating"),
-              genre: form.getValues("genre"),
-              location: form.getValues("location"),
-              image: res.data,
-            });
-          }
-        },
-        onError: () => {
-          toast({
-            title: "Failed to create movie ticket",
-            variant: "error",
+    upload(file, {
+      onSuccess: (res) => {
+        if (res.message) {
+          createTicket({
+            title: form.getValues("title"),
+            description: form.getValues("description") ?? "",
+            eventLevels: eventLevel?.data.map((event) => event.id)!,
+            type: form.getValues("type"),
+            organizerName: form.getValues("name") ?? "",
+            location: form.getValues("location"),
+            category: form.getValues("category"),
+            maxPurchasePerUser: Number(levelForm.getValues("maxpurchase")),
+            salesStartDate: levelForm.getValues("start"),
+            salesEndDate: levelForm.getValues("end"),
+            image: res.data,
+            startTime: form.getValues("startTime"),
           });
-        },
-      });
-    }
+        }
+      },
+      onError: () => {
+        toast({
+          title: "Failed to create event ticket",
+          variant: "error",
+        });
+      },
+    });
   };
 
-  const getRoomDetails = useMemo(() => {
-    const [name, price, currency] = room.split(",");
+  const getEventDetails = useMemo(() => {
+    const [name, price, currency] = event.split(",");
 
     return { name, price, currency };
-  }, [room]);
+  }, [event]);
 
   return (
     <div className="w-full h-screen overflow-hidden">
@@ -178,7 +190,7 @@ export default function CreateMovie() {
             <p className="text-[#667185] font-medium text-sm">Back</p>
           </button>
           <div className="bg-[#E4E7EC] h-[38px] w-[1px]" />
-          <Link to="/movies" className="flex items-center gap-1">
+          <Link to="/events" className="flex items-center gap-1">
             <TicketIcon width={16} height={16} />
             <p className="text-[#667185] text-xs">Tickets</p>
           </Link>
@@ -195,124 +207,29 @@ export default function CreateMovie() {
       <div className="flex justify-between h-full">
         <div className="2xl:w-1/3 lg:w-[40%] pl-5 2xl:pl-10 py-5 relative after:content-['_'] after:absolute after:h-[85%] after:my-auto after:border-l-[solid] after:border-l after:right-0 after:top-[0%]">
           <div className="w-full border-b border-[#E4E7EC] pb-1">
-            <p className="text-primary font-medium text-2xl">Create a movie</p>
+            <p className="text-primary font-medium text-2xl">Create Event</p>
           </div>
-          {step === "movie-details" && (
-            <MovieDetails
-              moveToNext={() => setStep("showing-room")}
+          {step === "event-details" && (
+            <EventDetails
+              moveToNext={() => setStep("level")}
               form={form}
               poster={poster}
-              setPoster={setPoster}
+              setCroppedPoster={setCroppedPoster}
+              setOpenEditImage={setOpenEditImage}
             />
           )}
-          {step === "showing-room" && (
-            <ScrollArea className="h-[80vh]">
-              <div className="space-y-8 mt-5">
-                <div className="space-y-2 mr-5">
-                  {showingRoom?.data &&
-                    showingRoom?.data.map((room) => (
-                      <Card
-                        className="p-4 border-[#D0D5DD] rounded-[8px]"
-                        key={room.id}
-                      >
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-2">
-                            <div className="w-8 h-8 rounded-[8px] border border-[#E4E7EC] flex justify-center items-center">
-                              <MovieIcon />
-                            </div>
-                            <p className="text-[#13191C] font-medium text-base">
-                              Room details
-                            </p>
-                          </div>
-                          <div className="flex items-center justify-between gap-3">
-                            <button
-                              onClick={() => {
-                                setSelectedRoom(room);
-                                setOpenEditRoom(true);
-                              }}
-                            >
-                              <PencilIcon />
-                            </button>
-                            <button
-                              onClick={() => {
-                                setSelectedRoom(room);
-                                setOpenRemove(true);
-                              }}
-                            >
-                              <BinIcon />
-                            </button>
-                          </div>
-                        </div>
-                        <div className="space-y-1 pt-2">
-                          <p className="text-[#667185] text-xs">Room name</p>
-                          <p className="text-[#13191C] text-[15px] font-medium">
-                            {room.roomName}
-                          </p>
-                        </div>
-                        <div className="flex items-center pt-4">
-                          <div className="space-y-1 w-1/2">
-                            <p className="text-[#667185] text-xs">
-                              Ticket price
-                            </p>
-                            <div className="flex items-center gap-1">
-                              <img src={GBP} alt="gbp" className="w-3 h-3" />
-                              <p className="text-[#667185] text-[15px] font-medium">
-                                {room.ticketCurrency}{" "}
-                                <span className="text-[#13191C]">
-                                  {room.ticketPrice}
-                                </span>
-                              </p>
-                            </div>
-                          </div>
-                          <div className="space-y-1 w-1/2">
-                            <p className="text-[#667185] text-xs">
-                              Number of seats
-                            </p>
-                            <p className="text-[#13191C] text-[15px] font-medium">
-                              {room.quantity}
-                            </p>
-                          </div>
-                        </div>
-                      </Card>
-                    ))}
-                  <Button
-                    variant="ghost"
-                    className="h-9 w-[175px] rounded-[8px] text-sm font-medium text-primary gap-2"
-                    prefixItem={
-                      <div>
-                        <PlusCircleIcon size={20} color="#133205" />
-                      </div>
-                    }
-                    onClick={() => setOpenShowingRoom(true)}
-                  >
-                    Add showing room
-                  </Button>
-                </div>
-                <div className="mr-5">
-                  <div className="flex items-center gap-2 w-full">
-                    <Button
-                      variant="ghost"
-                      className="w-1/2 h-14 rounded-[8px] text-base flex gap-1 font-medium text-[#13191C] px-10"
-                      prefixItem={
-                        <div className="">
-                          <MoveLeft size={20} color="#13191C" />
-                        </div>
-                      }
-                      onClick={() => setStep("movie-details")}
-                    >
-                      Previous
-                    </Button>
-                    <Button
-                      variant="gradient"
-                      className="w-1/2 h-14 rounded-[8px] gap-2 text-base font-medium px-10"
-                      onClick={publishTicket}
-                    >
-                      {isCreating ? <Loading /> : "Publish ticket"}
-                    </Button>
-                  </div>
-                </div>
-              </div>
-            </ScrollArea>
+          {step === "level" && (
+            <EventLevel
+              moveToPrevious={() => setStep("event-details")}
+              form={levelForm}
+              publishTicket={publishTicket}
+              openTicketLevel={() => setOpenLevel(true)}
+              openEditTicketLevel={() => setOpenEditLevel(true)}
+              openRemoveTicketLevel={() => setOpenRemove(true)}
+              setSelectedLevel={setSelectedLevel}
+              isCreating={isCreating}
+              eventLevel={eventLevel?.data ?? []}
+            />
           )}
         </div>
 
@@ -356,7 +273,7 @@ export default function CreateMovie() {
                   layout === "desktop" ? "w-[80%]" : "w-1/2"
                 )}
               >
-                <Select onValueChange={setRoom}>
+                <Select onValueChange={setEvent}>
                   <SelectTrigger
                     className="w-[142px] h-9 border-[#D0D5DD] rounded-[8px] bg-[#F7F9FC] text-[#344054] focus:ring-0"
                     prefixIcon={<ChevronDown size={20} color="#667185" />}
@@ -364,19 +281,19 @@ export default function CreateMovie() {
                   >
                     <SelectValue
                       className="placeholder:text-[#344054] text-sm"
-                      placeholder={isLoading ? "Loading..." : "Room type"}
+                      placeholder={isLoading ? "Loading..." : "ticket class"}
                     />
                   </SelectTrigger>
                   <SelectContent>
-                    {showingRoom?.data && (
+                    {eventLevel?.data && (
                       <SelectGroup>
-                        {showingRoom.data.map((room) => (
+                        {eventLevel.data.map((event) => (
                           <SelectItem
-                            value={`${room.roomName},${room.ticketPrice},${room.ticketCurrency}`}
-                            key={room.roomName}
+                            value={`${event.category},${event.ticketPrice},${event.ticketCurrency}`}
+                            key={event.category}
                             className="text-[#344054] text-sm"
                           >
-                            {room.roomName}
+                            {event.category}
                           </SelectItem>
                         ))}
                       </SelectGroup>
@@ -394,13 +311,13 @@ export default function CreateMovie() {
                   {poster && (
                     <img
                       src={poster ? URL.createObjectURL(poster) : undefined}
-                      alt="Movie"
+                      alt="Event"
                       className="w-20 h-20 rounded-[8px]"
                     />
                   )}
                   {form.watch("title") && (
                     <div className="space-1">
-                      <p className="text-[#667185] text-sm">Movie</p>
+                      <p className="text-[#667185] text-sm">Event</p>
                       <p className="text-[#13191C] text-lg font-medium">
                         {form.watch("title")}
                       </p>
@@ -421,58 +338,61 @@ export default function CreateMovie() {
                     )}
                   >
                     <div>
-                      <p className="text-[#667185] text-sm">Genre</p>
+                      <p className="text-[#667185] text-sm">Category</p>
                       <p className="text-[#13191C] text-sm font-medium">
-                        {form.watch("genre")}
+                        {form.watch("category")}
                       </p>
                     </div>
                     <div>
                       <p className="text-[#667185] text-sm">Ticket price</p>
-                      {room && (
+                      {event && (
                         <div className="flex items-center gap-1">
                           <img src={GBP} alt="gbp" className="w-3 h-3" />
                           <p className="text-[#667185] text-[15px] font-medium">
-                            {getRoomDetails.currency}{" "}
+                            {getEventDetails.currency}{" "}
                             <span className="text-[#13191C]">
-                              {getRoomDetails.price}
+                              {getEventDetails.price}
                             </span>
                           </p>
                         </div>
                       )}
                     </div>
                     <div>
-                      <p className="text-[#667185] text-sm">Age rating</p>
+                      <p className="text-[#667185] text-sm">Type</p>
                       <p className="text-[#13191C] text-sm font-medium">
-                        {form.watch("rating")}
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-[#667185] text-sm">
-                        Playtime/Duration
-                      </p>
-                      <p className="text-[#13191C] text-sm font-medium">
-                        {form.watch("duration")}
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-[#667185] text-sm">Room type</p>
-                      <p className="text-[#13191C] text-sm font-medium">
-                        {getRoomDetails.name}
+                        {form.watch("type")}
                       </p>
                     </div>
                   </div>
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <p className="text-[#667185] text-sm">Location</p>
-                      <MapPin size={20} color="#98A2B3" />
+                  <div
+                    className={cn(
+                      "grid grid-cols-2 gap-7",
+                      layout === "phone" && "grid-cols-2"
+                    )}
+                  >
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <p className="text-[#667185] text-sm">Location</p>
+                        <MapPin size={20} color="#98A2B3" />
+                      </div>
+                      <p className="text-[#13191C] text-sm font-medium">
+                        {form.watch("location")}
+                      </p>
                     </div>
-                    <p className="text-[#13191C] text-sm font-medium">
-                      {form.watch("location")}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-[#667185] text-sm">Organizer</p>
-                    <p className="text-[#13191C] text-sm font-medium">---</p>
+                    <div>
+                      <p className="text-[#667185] text-sm">Level</p>
+                      <p className="text-[#13191C] text-sm font-medium">
+                        {getEventDetails.name}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-[#667185] text-sm">Organizer</p>
+                      <p className="text-[#13191C] text-sm font-medium">
+                        {form.getValues("name")
+                          ? form.getValues("name")
+                          : "---"}
+                      </p>
+                    </div>
                   </div>
                 </div>
                 <div className="flex items-center gap-[26px] py-7 px-4">
@@ -502,7 +422,7 @@ export default function CreateMovie() {
             </div>
           </DialogHeader>
           <DialogDescription className="text-center text-[#13191C] text-lg font-medium">
-            Remove room
+            Remove event
           </DialogDescription>
 
           <DialogFooter className="flex justify-between items-center pt-2">
@@ -517,22 +437,22 @@ export default function CreateMovie() {
               className="h-9 w-[178px]"
               variant="destructive"
               onClick={() =>
-                remove(selectedRoom.id, {
+                remove(selectedLevel.id, {
                   onSuccess: (res) => {
                     if (res.message) {
                       setOpenRemove(false);
                       toast({
-                        title: "Showing room removed",
+                        title: "Ticket level removed",
                         variant: "success",
                       });
                       queryClient.invalidateQueries({
-                        queryKey: ["movie-room"],
+                        queryKey: ["event-level"],
                       });
                     }
                   },
                   onError: () => {
                     toast({
-                      title: "Failed to remove showing room",
+                      title: "Failed to remove ticket level",
                       variant: "error",
                     });
                   },
@@ -568,7 +488,7 @@ export default function CreateMovie() {
           </DialogDescription>
 
           <DialogFooter className="flex justify-between items-center pt-2">
-            <Link to={"/movies"} reloadDocument className="h-9 w-[178px]">
+            <Link to={"/events"} reloadDocument className="h-9 w-[178px]">
               <Button className="h-9 w-[178px]" variant="ghost">
                 Close
               </Button>
@@ -576,7 +496,7 @@ export default function CreateMovie() {
             <Button
               className="h-9 w-[178px]"
               variant="default"
-              onClick={() => navigate(`/movie-details/${id}`)}
+              onClick={() => navigate(`/event-details/${id}`)}
             >
               View ticket
             </Button>
@@ -584,14 +504,18 @@ export default function CreateMovie() {
         </DialogContent>
       </Dialog>
 
-      <ShowingRoom
-        openShowingRoom={openShowingRoom}
-        setOpenShowingRoom={setOpenShowingRoom}
+      <EventLevelModal openLevel={openLevel} setOpenLevel={setOpenLevel} />
+      <EditEventLevel
+        eventLevel={selectedLevel}
+        openEditEventLevel={openEditLevel}
+        setOpenEditEventLevel={setOpenEditLevel}
       />
-      <EditShowingRoom
-        room={selectedRoom}
-        openEditRoom={openEditRoom}
-        setOpenEditRoom={setOpenEditRoom}
+      <EditImage
+        openEditImage={openEditImage}
+        setOpenEditImage={setOpenEditImage}
+        croppedPoster={croppedPoster}
+        setPoster={setPoster}
+        cropPoster={(name: string) => form.setValue("poster", name)}
       />
     </div>
   );

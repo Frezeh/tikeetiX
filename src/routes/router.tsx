@@ -15,6 +15,10 @@ import Settings from "./settings/settings";
 import CreateMovie from "./create-movie/create-movie";
 import MovieDetails from "./movie-details/movie-details";
 import EditMovie from "./edit-movie/edit-movie";
+import Events from "./events/events";
+import CreateEvent from "./create-event/create-event";
+import EventDetails from "./event-details/event-details";
+import EditEvent from "./edit-event/edit-event";
 
 export const router = createBrowserRouter([
   {
@@ -48,7 +52,7 @@ export const router = createBrowserRouter([
       },
       {
         path: "/events",
-        element: <div>Events</div>,
+        element: <Events />,
       },
       {
         path: "/movies",
@@ -85,6 +89,18 @@ export const router = createBrowserRouter([
       {
         path: "/edit-movie/:id",
         element: <EditMovie />,
+      },
+      {
+        path: "/create-event",
+        element: <CreateEvent />,
+      },
+      {
+        path: "/event-details/:id",
+        element: <EventDetails />,
+      },
+      {
+        path: "/edit-event/:id",
+        element: <EditEvent />,
       },
     ],
   },

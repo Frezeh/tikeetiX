@@ -4,6 +4,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import {
   Form,
   FormControl,
+  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -237,8 +238,10 @@ function MovieDetails(props: Props) {
                     placeholder="Enter text here..."
                     className="bg-white border text-sm border-[#D0D5DD] h-[104px] placeholder:text-[#98A2B3] w-full focus-visible:ml-0.5 transition-opacity duration-100"
                     error={!!form.formState.errors.description}
+                    maxLength={800}
                   />
                 </FormControl>
+                <FormDescription className="text-[#667185] text-sm">Max of 800 words</FormDescription>
                 <FormMessage className="w-full" />
               </FormItem>
             )}

@@ -40,7 +40,7 @@ import { cn } from "@/lib/utils";
 import {
   LoadingMovieGrid,
   LoadingMovieList,
-} from "@/routes/create-movie/components/loading-movie";
+} from "@/components/ui/loading-movie";
 import { getMovieRooms } from "@/services/api/movie-room";
 import { allMovieActivities, deleteMovie } from "@/services/api/movies";
 import { Movie } from "@/services/models/movies";
@@ -69,6 +69,7 @@ import {
 } from "react";
 import { useNavigate } from "react-router-dom";
 import MovieActions from "./movie-actions";
+import Loader from "@/components/ui/loader";
 
 type Props = {
   overviewFilterValue: string;
@@ -180,7 +181,7 @@ export default function Overview(props: Props) {
   // },
 
   if (isPending) {
-    <LoadingMovieGrid />;
+    return <Loader />;
   }
 
   return (
@@ -193,7 +194,7 @@ export default function Overview(props: Props) {
                 <div className="space-y-2">
                   <p className="text-[#475367] text-sm">Total movies created</p>
                   <p className="text-[#344054] font-bold text-xl">
-                    {MOVIES.length}
+                    {RESPONSE?.data.totalCount ?? 0}
                   </p>
                 </div>
                 <div className="w-10 h-10 rounded-full bg-[#C7FFAC] border border-[#A8F285] flex justify-center items-center">
@@ -635,7 +636,7 @@ export default function Overview(props: Props) {
                 <Pagination
                   currentPage={currentPage}
                   pageSize={RESPONSE?.data.limit}
-                  totalCount={MOVIES.length} // TODO: Get from API
+                  totalCount={RESPONSE?.data.totalCount}
                   onNext={() => {
                     setCurrentPage(currentPage + 1);
                     fetchNextPage();
