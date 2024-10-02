@@ -161,7 +161,7 @@ export default function Overview({ data, isPending }: Props) {
                           />
                         </div>
                         <div className="flex flex-col justify-between gap-[6px] my-[15px]">
-                          <p className="text-[#101928] font-medium text-sm">
+                          <p className="text-[#101928] lg:max-w-28 2xl:max-w-52  flex-wrap font-medium text-sm truncate ...">
                             {d.title}
                           </p>
                           <div className="flex items-center gap-1">

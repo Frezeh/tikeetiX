@@ -181,7 +181,7 @@ export default function EditEvent() {
         onSuccess: (res) => {
           if (res.message) {
             setOpenPublish(true);
-            queryClient.invalidateQueries({ queryKey: ["events"] });
+            queryClient.invalidateQueries();
           }
         },
         onError: () => {
@@ -572,13 +572,19 @@ export default function EditEvent() {
                 Close
               </Button>
             </Link>
-            <Button
+            <Link
+              to={`/event-details/${id}`}
+              reloadDocument
               className="h-9 w-[178px]"
-              variant="default"
-              onClick={() => navigate(`/event-details/${id}`)}
             >
-              View ticket
-            </Button>
+              <Button
+                className="h-9 w-[178px]"
+                variant="default"
+                onClick={() => navigate(``)}
+              >
+                View ticket
+              </Button>
+            </Link>
           </DialogFooter>
         </DialogContent>
       </Dialog>

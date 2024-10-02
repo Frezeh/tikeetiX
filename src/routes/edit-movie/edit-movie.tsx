@@ -131,7 +131,7 @@ export default function EditMovie() {
         onSuccess: (res) => {
           if (res.message) {
             setOpenPublish(true);
-            queryClient.invalidateQueries({ queryKey: ["movies"] });
+            queryClient.invalidateQueries();
           }
         },
         onError: () => {
@@ -618,13 +618,15 @@ export default function EditMovie() {
                 Close
               </Button>
             </Link>
-            <Button
+            <Link
+              to={`/movie-details/${id}`}
+              reloadDocument
               className="h-9 w-[178px]"
-              variant="default"
-              onClick={() => navigate(`/movie-details/${id}`)}
             >
-              View ticket
-            </Button>
+              <Button className="h-9 w-[178px]" variant="default">
+                View ticket
+              </Button>
+            </Link>
           </DialogFooter>
         </DialogContent>
       </Dialog>
