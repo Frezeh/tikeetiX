@@ -18,7 +18,6 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Select, SelectContent, SelectTrigger } from "@/components/ui/select";
 import { toast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
-import { TEventLevel } from "@/services/models/events";
 import { format } from "date-fns";
 import {
   CalendarIcon,
@@ -28,6 +27,7 @@ import {
 } from "lucide-react";
 import { Dispatch, SetStateAction, memo, useState } from "react";
 import { UseFormReturn } from "react-hook-form";
+import { EVENTLEVEL, TICKETPRICE } from "../create-event";
 
 type Props = {
   moveToPrevious: () => void;
@@ -45,12 +45,12 @@ type Props = {
   openTicketLevel: () => void;
   openEditTicketLevel: () => void;
   openRemoveTicketLevel: () => void;
-  setSelectedLevel: Dispatch<SetStateAction<TEventLevel>>;
+  setSelectedLevel: Dispatch<SetStateAction<EVENTLEVEL>>;
   isCreating: boolean;
-  eventLevel: TEventLevel[];
+  eventLevel: EVENTLEVEL[];
+  price: string;
+  setPrice: Dispatch<SetStateAction<string>>;
 };
-
-const TICKETPRICE = ["Free event", "Paid event", "Donation"];
 
 function EventLevel(props: Props) {
   const {
@@ -63,8 +63,9 @@ function EventLevel(props: Props) {
     setSelectedLevel,
     isCreating,
     eventLevel,
+    price,
+    setPrice,
   } = props;
-  const [price, setPrice] = useState(TICKETPRICE[0]);
   const [openEndDate, setOpenEndDate] = useState(false);
   const [openStartDate, setOpenStartDate] = useState(false);
 
@@ -267,7 +268,9 @@ function EventLevel(props: Props) {
                             }}
                             disabled={(date) => date < new Date()}
                             fromDate={new Date()}
-                            toDate={new Date(Date.now() + 10000 * 60 * 60 * 24 * 365)}
+                            toDate={
+                              new Date(Date.now() + 10000 * 60 * 60 * 24 * 365)
+                            }
                             initialFocus
                           />
                         </SelectContent>
@@ -318,7 +321,9 @@ function EventLevel(props: Props) {
                             }}
                             disabled={(date) => date < new Date()}
                             fromDate={new Date()}
-                            toDate={new Date(Date.now() + 10000 * 60 * 60 * 24 * 365)}
+                            toDate={
+                              new Date(Date.now() + 10000 * 60 * 60 * 24 * 365)
+                            }
                             initialFocus
                           />
                         </SelectContent>
@@ -332,6 +337,10 @@ function EventLevel(props: Props) {
                     <Input
                       type="text"
                       placeholder="5"
+                      value={form.watch("maxpurchase")}
+                      onChange={(e) =>
+                        form.setValue("maxpurchase", e.target.value)
+                      }
                       className="bg-white border text-sm border-[#D0D5DD] h-14 placeholder:text-[#667185] w-full pr-12 focus-visible:ml-0.5 transition-opacity duration-100"
                       suffixitem={
                         <UserGroupIcon

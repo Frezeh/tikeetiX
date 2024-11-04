@@ -16,7 +16,6 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import Loading from "@/components/ui/loading";
 import {
   Popover,
   PopoverContent,
@@ -30,16 +29,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { toast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
-import { updateEventLevel } from "@/services/api/event-level";
-import { TEventLevel } from "@/services/models/events";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Check, ChevronDown } from "lucide-react";
 import { Dispatch, SetStateAction, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
+import { EVENTLEVEL } from "../create-event";
 
 const FormSchema = z.object({
   category: z.string().min(1, { message: "Category name is required" }),
@@ -63,50 +59,63 @@ const LEVELTYPE = [
 ];
 
 type Props = {
-  eventLevel: TEventLevel;
+  eventLevel: EVENTLEVEL;
   openEditEventLevel: boolean;
   setOpenEditEventLevel: Dispatch<SetStateAction<boolean>>;
+  updateEventLevel: (level: EVENTLEVEL) => void;
 };
 
 export default function EditEventLevel(props: Props) {
-  const { eventLevel, openEditEventLevel, setOpenEditEventLevel } = props;
-  const queryClient = useQueryClient();
-  const { isPending, mutate } = useMutation({ mutationFn: updateEventLevel });
+  const {
+    eventLevel,
+    openEditEventLevel,
+    setOpenEditEventLevel,
+    updateEventLevel,
+  } = props;
 
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
   });
 
   const onSubmit = (data: z.infer<typeof FormSchema>) => {
-    mutate(
-      {
-        id: eventLevel.id,
-        body: {
-          category: data.category,
-          ticketPrice: Number(data.price),
-          quantity: Number(data.quantity),
-          ticketCurrency: "GBP",
-        },
-      },
-      {
-        onSuccess: (res) => {
-          if (res.data) {
-            setOpenEditEventLevel(false);
-            toast({
-              title: "Showing room eidted",
-              variant: "success",
-            });
-            queryClient.invalidateQueries({ queryKey: ["event-level"] });
-          }
-        },
-        onError: () => {
-          toast({
-            title: "Failed to edit showing room",
-            variant: "error",
-          });
-        },
-      }
-    );
+    updateEventLevel({
+      category: data.category,
+      ticketPrice: Number(data.price),
+      quantity: Number(data.quantity),
+      ticketCurrency: "GBP",
+      id: eventLevel.id,
+    });
+    setOpenEditEventLevel(false);
+    form.reset();
+    // mutate(
+    //   {
+    //     id: eventLevel.id,
+    //     body: {
+    //       category: data.category,
+    //       ticketPrice: Number(data.price),
+    //       quantity: Number(data.quantity),
+    //       ticketCurrency: "GBP",
+    //     },
+    //   },
+    //   {
+    //     onSuccess: (res) => {
+    //       if (res.data) {
+    //         setOpenEditEventLevel(false);
+    //         toast({
+    //           title: "Showing room eidted",
+    //           variant: "success",
+    //         });
+    //         queryClient.invalidateQueries({ queryKey: ["event-level"] });
+    //       }
+    //     },
+    //     onError: () => {
+    //       toast({
+    //         title: "Failed to edit showing room",
+    //         variant: "error",
+    //       });
+    //     },
+    //   }
+    // );
   };
 
   useEffect(() => {
@@ -130,10 +139,10 @@ export default function EditEventLevel(props: Props) {
         </DialogHeader>
         <DialogDescription className="space-y-1">
           <p className="text-[#13191C] text-lg font-medium text-center">
-            Showing room
+            Tickets
           </p>
           <p className="text-[#667185] text-sm text-center">
-            Edit room categories for movie tickets.
+            Edit different categories of event tickets.
           </p>
           <Form {...form}>
             <form
@@ -288,7 +297,7 @@ export default function EditEventLevel(props: Props) {
                   variant="default"
                   type="submit"
                 >
-                  {isPending ? <Loading className="w-5 h-5" /> : "Edit room"}
+                  {"Edit ticket"}
                 </Button>
               </div>
             </form>

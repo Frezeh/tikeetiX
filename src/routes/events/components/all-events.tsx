@@ -10,6 +10,7 @@ import {
   DialogFooter,
   DialogHeader,
 } from "@/components/ui/dialog";
+import displayStatusIcon from "@/components/ui/display-status-icon";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -38,13 +39,11 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { toast } from "@/hooks/use-toast";
-import { getAllEventLevel } from "@/services/api/event-level";
-import { deleteEvent, getEvents } from "@/services/api/events";
-import { Events } from "@/services/models/events";
+import { deleteEventTicket, getEventTickets } from "@/services/api/ticket";
+import { TicketEvents } from "@/services/models/ticket";
 import {
   useInfiniteQuery,
   useMutation,
-  useQuery,
   useQueryClient,
 } from "@tanstack/react-query";
 import { format } from "date-fns";
@@ -65,7 +64,6 @@ import {
 } from "react";
 import EventActions from "./event-actions";
 import ExportEvents from "./export-events";
-import displayStatusIcon from "@/components/ui/display-status-icon";
 
 type Props = {
   allEventsFilterValue: string;
@@ -87,7 +85,9 @@ export default function AllEvents(props: Props) {
 
   const [openFilter, setOpenFilter] = useState(false);
   const [openExport, setOpenExport] = useState(false);
-  const [selectedEvent, setSelectedEvent] = useState<Events>({} as Events);
+  const [selectedEvent, setSelectedEvent] = useState<TicketEvents>(
+    {} as TicketEvents
+  );
 
   const queryClient = useQueryClient();
 
@@ -105,7 +105,7 @@ export default function AllEvents(props: Props) {
   }, [allEventsFilterValue, allEventsSearchValue]);
 
   const { isPending: isDeleting, mutate: remove } = useMutation({
-    mutationFn: deleteEvent,
+    mutationFn: deleteEventTicket,
   });
   const {
     fetchNextPage,
@@ -118,39 +118,23 @@ export default function AllEvents(props: Props) {
     data,
   } = useInfiniteQuery({
     queryKey: ["events", currentPage],
-    queryFn: ({ pageParam }) => getEvents(pageParam, 20, queryParams),
+    queryFn: ({ pageParam }) => getEventTickets(pageParam, 20, queryParams),
     initialPageParam: currentPage,
     getNextPageParam: (lastPage) => lastPage.data.nextPage,
     getPreviousPageParam: (firstPage) => firstPage.data.prevPage,
-  });
-
-  const { data: eventLevel } = useQuery({
-    queryKey: ["event-level"],
-    queryFn: getAllEventLevel,
   });
 
   const loading = isFetching || isFetchingNextPage || isFetchingPreviousPage;
   const RESPONSE = data?.pages[data?.pages.length - 1];
   const EVENTS = RESPONSE?.data.foundItems || [];
 
-  const priceRange = useCallback(
-    (level: string[]) => {
-      let price: number[] = [];
+  const priceRange = useCallback((price?: number) => {
+    if (price === 0) {
+      return "Free";
+    }
 
-      eventLevel?.data.forEach((element) => {
-        if (level.includes(element.id)) {
-          price.push(element.ticketPrice);
-        }
-      });
-
-      if (price.length === 0) {
-        return "Free";
-      }
-
-      return `$${Math.min(...price)} - $${Math.max(...price)}`;
-    },
-    [eventLevel]
-  );
+    return String(price);
+  }, []);
 
   const deleteTicket = () => {
     remove(selectedEvent.id, {
@@ -387,22 +371,22 @@ export default function AllEvents(props: Props) {
                           <img
                             alt="Event image"
                             className="aspect-square rounded-md object-cover w-[43px] h-[43px]"
-                            src={event.image}
+                            src={event.ticket.image}
                           />
                           <div>
                             <p className="text-[#101928] font-medium">
-                              {event.title}
+                              {event.ticket.title}
                             </p>
                             <p className="text-sm text-[#667185]">
-                              {event.startTime
-                                ? format(event.startTime, "d MMM. yyyy")
+                              {event.ticket.startTime
+                                ? format(event.ticket.startTime, "d MMM. yyyy")
                                 : ""}
                             </p>
                           </div>
                         </div>
                       </TableCell>
                       <TableCell className="font-medium text-[#13191C]">
-                        {priceRange(event.eventLevels)}
+                        {priceRange(event.ticketPrice)}
                       </TableCell>
                       <TableCell className="text-[#475367]">{0}</TableCell>
                       <TableCell className="text-[#475367]">

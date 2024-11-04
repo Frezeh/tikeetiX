@@ -16,14 +16,14 @@ import {
 } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
+import { getEventTicketsWithoutParams } from "@/services/api/ticket";
+import { useQuery } from "@tanstack/react-query";
 import { CircleIcon } from "lucide-react";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import ActiveEvents from "./components/active-events";
 import AllEvents from "./components/all-events";
 import Overview from "./components/overview";
-import { useQuery } from "@tanstack/react-query";
-import { getEventsWithoutParams } from "@/services/api/events";
 
 export default function Events() {
   const [activeTab, setActiveTab] = useState("overview");
@@ -35,9 +35,13 @@ export default function Events() {
   const [ticketType, setTicketType] = useState("");
   const navigate = useNavigate();
 
+  // const { isPending, data } = useQuery({
+  //   queryKey: ["events"],
+  //   queryFn: getEventsWithoutParams,
+  // });
   const { isPending, data } = useQuery({
     queryKey: ["events"],
-    queryFn: getEventsWithoutParams,
+    queryFn: getEventTicketsWithoutParams,
   });
 
   return (

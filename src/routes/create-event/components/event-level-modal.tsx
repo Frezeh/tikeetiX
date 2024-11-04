@@ -16,7 +16,6 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import Loading from "@/components/ui/loading";
 import {
   Popover,
   PopoverContent,
@@ -30,15 +29,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { toast } from "@/hooks/use-toast";
-import { cn } from "@/lib/utils";
-import { createEventLevel } from "@/services/api/event-level";
+import { cn, generateRandomId } from "@/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Check, ChevronDown } from "lucide-react";
 import { Dispatch, SetStateAction } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
+import { EVENTLEVEL } from "../create-event";
 
 const FormSchema = z.object({
   category: z.string().min(1, { message: "Category name is required" }),
@@ -64,12 +61,11 @@ const LEVELTYPE = [
 type Props = {
   openLevel: boolean;
   setOpenLevel: Dispatch<SetStateAction<boolean>>;
+  addEventLevel: (level: EVENTLEVEL) => void;
 };
 
 export default function EventLevelModal(props: Props) {
-  const { openLevel, setOpenLevel } = props;
-  const queryClient = useQueryClient();
-  const { isPending, mutate } = useMutation({ mutationFn: createEventLevel });
+  const { openLevel, setOpenLevel, addEventLevel } = props;
 
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
@@ -81,32 +77,15 @@ export default function EventLevelModal(props: Props) {
   });
 
   const onSubmit = (data: z.infer<typeof FormSchema>) => {
-    mutate(
-      {
-        category: data.category,
-        ticketPrice: Number(data.price),
-        quantity: Number(data.quantity),
-        ticketCurrency: "GBP",
-      },
-      {
-        onSuccess: (res) => {
-          if (res.data) {
-            setOpenLevel(false);
-            toast({
-              title: "Ticket level created",
-              variant: "success",
-            });
-            queryClient.invalidateQueries({ queryKey: ["event-level"] });
-          }
-        },
-        onError: () => {
-          toast({
-            title: "Failed to add ticket level",
-            variant: "error",
-          });
-        },
-      }
-    );
+    addEventLevel({
+      category: data.category,
+      ticketPrice: Number(data.price),
+      quantity: Number(data.quantity),
+      ticketCurrency: "GBP",
+      id: generateRandomId(),
+    });
+    setOpenLevel(false);
+    form.reset();
   };
 
   return (
@@ -282,7 +261,7 @@ export default function EventLevelModal(props: Props) {
                   variant="default"
                   type="submit"
                 >
-                  {isPending ? <Loading className="w-5 h-5" /> : "Add ticket"}
+                  {"Add ticket"}
                 </Button>
               </div>
             </form>

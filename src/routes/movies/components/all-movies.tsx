@@ -19,6 +19,7 @@ import {
 import FilterItem from "@/components/ui/filter-item";
 import { Input } from "@/components/ui/input";
 import Loading from "@/components/ui/loading";
+import { LoadingMovieList } from "@/components/ui/loading-movie";
 import Pagination from "@/components/ui/pagination";
 import Ratings from "@/components/ui/ratings";
 import {
@@ -36,14 +37,11 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { toast } from "@/hooks/use-toast";
-import { LoadingMovieList } from "@/components/ui/loading-movie";
-import { getMovieRooms } from "@/services/api/movie-room";
-import { allMovieActivities, deleteMovie } from "@/services/api/movies";
+import { deleteMovieTicket, getMovieTickets } from "@/services/api/ticket";
 import { Movie } from "@/services/models/movies";
 import {
   useInfiniteQuery,
   useMutation,
-  useQuery,
   useQueryClient,
 } from "@tanstack/react-query";
 import {
@@ -100,7 +98,7 @@ export default function AllMovies(props: Props) {
   }, [allMoviesFilterValue, allMoviesSearchValue]);
 
   const { isPending: isDeleting, mutate: remove } = useMutation({
-    mutationFn: deleteMovie,
+    mutationFn: deleteMovieTicket,
   });
   const {
     fetchNextPage,
@@ -113,35 +111,23 @@ export default function AllMovies(props: Props) {
     data,
   } = useInfiniteQuery({
     queryKey: ["movies"],
-    queryFn: ({ pageParam }) => allMovieActivities(pageParam, 20, queryParams),
+    queryFn: ({ pageParam }) => getMovieTickets(pageParam, 20, queryParams),
     initialPageParam: currentPage,
     getNextPageParam: (lastPage) => lastPage.data.nextPage,
     getPreviousPageParam: (firstPage) => firstPage.data.prevPage,
-  });
-
-  const { data: showingRoom } = useQuery({
-    queryKey: ["movie-room"],
-    queryFn: getMovieRooms,
   });
 
   const loading = isFetching || isFetchingNextPage || isFetchingPreviousPage;
   const RESPONSE = data?.pages[data?.pages.length - 1];
   const MOVIES = RESPONSE?.data.foundItems || [];
 
-  const priceRange = useCallback(
-    (rooms: string[]) => {
-      let price: number[] = [];
+  const priceRange = useCallback((price?: number) => {
+    if (price === 0) {
+      return "Free";
+    }
 
-      showingRoom?.data.forEach((element) => {
-        if (rooms.includes(element.id)) {
-          price.push(element.ticketPrice);
-        }
-      });
-
-      return `$${Math.min(...price)} - $${Math.max(...price)}`;
-    },
-    [showingRoom]
-  );
+    return String(price);
+  }, []);
 
   const deleteTicket = () => {
     remove(selectedMovie.id, {
@@ -378,17 +364,17 @@ export default function AllMovies(props: Props) {
                           <img
                             alt="Movie image"
                             className="aspect-square rounded-md object-cover w-[43px] h-[43px]"
-                            src={movie.image}
+                            src={movie.ticket.image}
                           />
                           <div>
                             <p className="text-[#101928] font-medium">
-                              {movie.title}
+                              {movie.ticket.title}
                             </p>
                           </div>
                         </div>
                       </TableCell>
                       <TableCell className="font-medium text-[#13191C]">
-                        {priceRange(movie.movieRooms)}
+                        {priceRange(movie.ticketPrice)}
                       </TableCell>
                       <TableCell className="text-[#475367]">{0}</TableCell>
                       <TableCell className="text-[#475367]">

@@ -76,7 +76,7 @@ const DATA = [
   },
 ];
 
-export default function TicketsSold() {
+export default function TicketsSold({ ticketSold }: { ticketSold: number }) {
   const [currentPage, setCurrentPage] = useState(1);
 
   return (
@@ -88,7 +88,7 @@ export default function TicketsSold() {
               <CardContent className="flex justify-between items-center p-0">
                 <div className="space-y-2">
                   <p className="text-[#475367] text-sm">No. Tickets sold</p>
-                  <p className="text-[#344054] font-bold text-xl">0</p>
+                  <p className="text-[#344054] font-bold text-xl">{ticketSold}</p>
                 </div>
                 <div className="w-10 h-10 rounded-full bg-[#C7FFAC] border border-[#A8F285] flex justify-center items-center">
                   <TicketIcon fill="#133205" />

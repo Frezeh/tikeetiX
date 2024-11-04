@@ -28,11 +28,15 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { toast } from "@/hooks/use-toast";
-import { cn } from "@/lib/utils";
+import { cn, generateRandomId } from "@/lib/utils";
 import { uploadSingleFile } from "@/services/api/file-upload";
-import { deleteMovieRoom, getMovieRooms } from "@/services/api/movie-room";
-import { getMovie, updateMovie } from "@/services/api/movies";
+import {
+  getMovieTicket,
+  updateMovieDetails,
+  updateMovieTicket,
+} from "@/services/api/ticket";
 import { Movie } from "@/services/models/movies";
+import { MovieTicketBodyPayload } from "@/services/models/ticket";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
@@ -48,7 +52,9 @@ import { useEffect, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { z } from "zod";
+import EditShowingRoom from "../create-movie/components/edit-showing-room";
 import ShowingRoom from "../create-movie/components/showing-room";
+import { SHOWINGROOM } from "../create-movie/create-movie";
 import EditMovieDetails from "./edit-movie-details";
 
 export const EditMovieFormSchema = z.object({
@@ -59,6 +65,9 @@ export const EditMovieFormSchema = z.object({
   duration: z.string().min(1, { message: "Duration is required" }),
   location: z.string().min(1, { message: "Location is required" }),
   description: z.string().optional(),
+  startTime: z.date({
+    required_error: "Start time is required",
+  }),
 });
 
 export default function EditMovie() {
@@ -73,15 +82,15 @@ export default function EditMovie() {
   const [step, setStep] = useState<"details" | "room">("details");
   const [poster, setPoster] = useState<File | undefined | null>();
   const [room, setRoom] = useState<string>("");
-  const [selectedRoom, setSelectedRoom] = useState<string>("");
+  const [openEditRoom, setOpenEditRoom] = useState(false);
+  const [selectedRoom, setSelectedRoom] = useState<SHOWINGROOM>(
+    {} as SHOWINGROOM
+  );
+  const [showingRoom, setShowingRoom] = useState<SHOWINGROOM[]>([]);
 
-  const { isLoading, data: showingRoom } = useQuery({
-    queryKey: ["movie-room"],
-    queryFn: getMovieRooms,
-  });
-  const { isPending, mutate } = useMutation({ mutationFn: updateMovie });
-  const { isPending: isRemoving, mutate: remove } = useMutation({
-    mutationFn: deleteMovieRoom,
+  const { isPending, mutate } = useMutation({ mutationFn: updateMovieTicket });
+  const { isPending: isDetailsPending, mutate: updateDetails } = useMutation({
+    mutationFn: updateMovieDetails,
   });
   const {
     isLoading: isMovieLoading,
@@ -89,13 +98,13 @@ export default function EditMovie() {
     error,
   } = useQuery({
     queryKey: [`movie-${id}`],
-    queryFn: () => getMovie(id!),
+    queryFn: () => getMovieTicket(id!),
     enabled: !!id,
   });
   const { isPending: isUploading, mutate: upload } = useMutation({
     mutationFn: uploadSingleFile,
   });
-  const isCreating = isPending || isUploading;
+  const isCreating = isPending || isUploading || isDetailsPending;
 
   useEffect(() => {
     if (error) {
@@ -110,13 +119,26 @@ export default function EditMovie() {
 
   useEffect(() => {
     if (MOVIE) {
-      form.setValue("title", MOVIE.data.title);
-      form.setValue("description", MOVIE.data.description);
-      form.setValue("genre", MOVIE.data.genre);
-      form.setValue("rating", MOVIE.data.ageRating);
-      form.setValue("poster", MOVIE.data.image);
-      form.setValue("location", MOVIE.data.location);
+      form.setValue("title", MOVIE.data.ticket.title);
+      form.setValue("description", MOVIE.data.ticket.description);
+      form.setValue("genre", MOVIE.data.ticket.genre);
+      form.setValue("rating", MOVIE.data.ticket.ageRating);
+      form.setValue("poster", MOVIE.data.ticket.image);
+      form.setValue("location", MOVIE.data.ticket.location);
+      form.setValue("startTime", new Date(MOVIE.data.ticket.startTime));
       setPoster(null);
+      setShowingRoom([
+        {
+          roomName: MOVIE.data.name,
+          typeNumber: Number(MOVIE.data.typeNumber),
+          ticketPrice: Number(MOVIE.data.ticketPrice),
+          quantity: Number(MOVIE.data.quantity),
+          ticketCurrency: "GBP",
+          id: generateRandomId(),
+          user: "admin",
+          save: true,
+        },
+      ]);
     }
   }, [MOVIE]);
 
@@ -124,7 +146,7 @@ export default function EditMovie() {
     resolver: zodResolver(EditMovieFormSchema),
   });
 
-  const updateTicket = (data: Partial<Movie>) => {
+  const updateTicket = (data: Partial<MovieTicketBodyPayload>) => {
     mutate(
       { id: id!, body: data },
       {
@@ -136,7 +158,7 @@ export default function EditMovie() {
         },
         onError: () => {
           toast({
-            title: "Failed to create movie ticket",
+            title: "Failed to update movie ticket",
             variant: "error",
           });
         },
@@ -144,11 +166,29 @@ export default function EditMovie() {
     );
   };
 
+  const updateMovieDetail = (image: string) => {
+    updateDetails({
+      id: MOVIE?.data.ticket.id!,
+      body: {
+        isMovie: true,
+        movie: {
+          title: form.getValues("title"),
+          description: form.getValues("description") ?? "",
+          ageRating: form.getValues("rating"),
+          genre: form.getValues("genre"),
+          location: form.getValues("location"),
+          image,
+          startTime: form.getValues("startTime"),
+        },
+      },
+    });
+  };
+
   const publishTicket = () => {
     let file = new FormData();
     file.append("file", poster as File);
 
-    if (showingRoom?.data.length === 0) {
+    if (showingRoom?.length === 0) {
       toast({
         title: "Showing room not found",
         description: "Please add showing room first",
@@ -165,27 +205,25 @@ export default function EditMovie() {
       data["image"];
 
       if (!poster) {
+        updateMovieDetail(MOVIE?.data.ticket.image!);
         updateTicket({
-          title: form.getValues("title"),
-          description: form.getValues("description") ?? "",
-          genre: form.getValues("genre"),
-          ageRating: form.getValues("rating"),
-          location: form.getValues("location"),
-          image: MOVIE?.data.image,
-          movieRooms: showingRoom?.data.map((room) => room.id)!,
+          typeNumber: Number(showingRoom[0].typeNumber),
+          ticketPrice: Number(showingRoom[0].ticketPrice),
+          quantity: Number(showingRoom[0].quantity),
+          name: showingRoom[0].roomName,
+          ticketType: "Movies",
         });
       } else {
         upload(file, {
           onSuccess: (res) => {
             if (res.message) {
+              updateMovieDetail(res.data);
               updateTicket({
-                title: form.getValues("title"),
-                description: form.getValues("description") ?? "",
-                genre: form.getValues("genre"),
-                ageRating: form.getValues("rating"),
-                location: form.getValues("location"),
-                image: res.data,
-                movieRooms: showingRoom?.data.map((room) => room.id)!,
+                typeNumber: Number(showingRoom[0].typeNumber),
+                ticketPrice: Number(showingRoom[0].ticketPrice),
+                quantity: Number(showingRoom[0].quantity),
+                name: showingRoom[0].roomName,
+                ticketType: "Movies",
               });
             }
           },
@@ -206,7 +244,18 @@ export default function EditMovie() {
     return { name, price, currency };
   }, [room]);
 
-  if (isLoading || isMovieLoading) {
+  const addShowingRoom = (room: SHOWINGROOM) => {
+    setShowingRoom((prev) => [...prev, room]);
+  };
+
+  const removeShowingRoom = (room: SHOWINGROOM) => {
+    setShowingRoom((prev) => prev.filter((l) => l.id !== room.id));
+  };
+  const updateShowingRoom = (room: SHOWINGROOM) => {
+    setShowingRoom((prev) => prev.map((l) => (l.id === room.id ? room : l)));
+  };
+
+  if (isMovieLoading) {
     return <Loader />;
   }
 
@@ -253,8 +302,8 @@ export default function EditMovie() {
             <ScrollArea className="h-[80vh]">
               <div className="space-y-8 mt-5">
                 <div className="space-y-2 mr-5">
-                  {showingRoom?.data &&
-                    showingRoom?.data.map((room) => (
+                  {showingRoom &&
+                    showingRoom?.map((room) => (
                       <Card
                         className="p-4 border-[#D0D5DD] rounded-[8px]"
                         key={room.id}
@@ -269,12 +318,17 @@ export default function EditMovie() {
                             </p>
                           </div>
                           <div className="flex items-center justify-between gap-3">
-                            <button>
+                            <button
+                              onClick={() => {
+                                setSelectedRoom(room);
+                                setOpenEditRoom(true);
+                              }}
+                            >
                               <PencilIcon />
                             </button>
                             <button
                               onClick={() => {
-                                setSelectedRoom(room.id);
+                                setSelectedRoom(room);
                                 setOpenRemove(true);
                               }}
                             >
@@ -322,7 +376,18 @@ export default function EditMovie() {
                         <PlusCircleIcon size={20} color="#133205" />
                       </div>
                     }
-                    onClick={() => setOpenShowingRoom(true)}
+                    onClick={() => {
+                      if (showingRoom.length > 0) {
+                        toast({
+                          title: "Showing room already added",
+                          description:
+                            "Please remove existing showing room first",
+                          variant: "error",
+                        });
+                      } else {
+                        setOpenShowingRoom(true);
+                      }
+                    }}
                   >
                     Add showing room
                   </Button>
@@ -407,9 +472,9 @@ export default function EditMovie() {
                     />
                   </SelectTrigger>
                   <SelectContent>
-                    {showingRoom?.data && (
+                    {showingRoom && (
                       <SelectGroup>
-                        {showingRoom.data.map((room) => (
+                        {showingRoom.map((room) => (
                           <SelectItem
                             value={`${room.roomName},${room.ticketPrice},${room.ticketCurrency}`}
                             key={room.roomName}
@@ -561,30 +626,13 @@ export default function EditMovie() {
             <Button
               className="h-9 w-[178px]"
               variant="destructive"
-              onClick={() =>
-                remove(selectedRoom, {
-                  onSuccess: (res) => {
-                    if (res.message) {
-                      setOpenRemove(false);
-                      toast({
-                        title: "Showing room removed",
-                        variant: "success",
-                      });
-                      queryClient.invalidateQueries({
-                        queryKey: ["movie-room"],
-                      });
-                    }
-                  },
-                  onError: () => {
-                    toast({
-                      title: "Failed to remove showing room",
-                      variant: "error",
-                    });
-                  },
-                })
-              }
+              onClick={() => {
+                removeShowingRoom(selectedRoom);
+                setOpenRemove(false);
+                setSelectedRoom({} as SHOWINGROOM);
+              }}
             >
-              {isRemoving ? <Loading className="w-4 h-4" /> : "Yes, remove"}
+              {"Yes, remove"}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -634,6 +682,13 @@ export default function EditMovie() {
       <ShowingRoom
         openShowingRoom={openShowingRoom}
         setOpenShowingRoom={setOpenShowingRoom}
+        addShowingRoom={addShowingRoom}
+      />
+      <EditShowingRoom
+        room={selectedRoom}
+        openEditRoom={openEditRoom}
+        setOpenEditRoom={setOpenEditRoom}
+        updateShowingRoom={updateShowingRoom}
       />
     </div>
   );

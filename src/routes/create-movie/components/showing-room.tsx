@@ -18,7 +18,6 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import Loading from "@/components/ui/loading";
 import {
   Popover,
   PopoverContent,
@@ -32,15 +31,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { toast } from "@/hooks/use-toast";
-import { cn } from "@/lib/utils";
-import { createMovieRoom } from "@/services/api/movie-room";
+import { cn, generateRandomId } from "@/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Check, ChevronDown } from "lucide-react";
 import { Dispatch, SetStateAction } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
+import { SHOWINGROOM } from "../create-movie";
 
 const FormSchema = z.object({
   type: z.string().min(1, { message: "Room type name is required" }),
@@ -70,12 +67,11 @@ const ROOMTYPE = [
 type Props = {
   openShowingRoom: boolean;
   setOpenShowingRoom: Dispatch<SetStateAction<boolean>>;
+  addShowingRoom: (room: SHOWINGROOM) => void;
 };
 
 export default function ShowingRoom(props: Props) {
-  const { openShowingRoom, setOpenShowingRoom } = props;
-  const queryClient = useQueryClient();
-  const { isPending, mutate } = useMutation({ mutationFn: createMovieRoom });
+  const { openShowingRoom, setOpenShowingRoom, addShowingRoom } = props;
 
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
@@ -89,33 +85,18 @@ export default function ShowingRoom(props: Props) {
   });
 
   const onSubmit = (data: z.infer<typeof FormSchema>) => {
-    mutate(
-      {
-        roomName: data.type,
-        typeNumber: Number(data.numberofroom),
-        ticketPrice: Number(data.price),
-        quantity: Number(data.quantity),
-        ticketCurrency: "GBP",
-      },
-      {
-        onSuccess: (res) => {
-          if (res.data) {
-            setOpenShowingRoom(false);
-            toast({
-              title: "Showing room created",
-              variant: "success",
-            });
-            queryClient.invalidateQueries({ queryKey: ["movie-room"] });
-          }
-        },
-        onError: () => {
-          toast({
-            title: "Failed to add showing room",
-            variant: "error",
-          });
-        },
-      }
-    );
+    addShowingRoom({
+      roomName: data.type,
+      typeNumber: Number(data.numberofroom),
+      ticketPrice: Number(data.price),
+      quantity: Number(data.quantity),
+      ticketCurrency: "GBP",
+      id: generateRandomId(),
+      user: "admin",
+      save: data.save,
+    });
+    setOpenShowingRoom(false);
+    form.reset();
   };
 
   return (
@@ -333,7 +314,7 @@ export default function ShowingRoom(props: Props) {
                   variant="default"
                   type="submit"
                 >
-                  {isPending ? <Loading className="w-5 h-5" /> : "Add room"}
+                  {"Add room"}
                 </Button>
               </div>
             </form>

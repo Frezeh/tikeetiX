@@ -18,7 +18,6 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import Loading from "@/components/ui/loading";
 import {
   Popover,
   PopoverContent,
@@ -32,16 +31,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { toast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
-import { updateMovieRoom } from "@/services/api/movie-room";
-import { MovieRoomResponse } from "@/services/models/movies";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Check, ChevronDown } from "lucide-react";
 import { Dispatch, SetStateAction, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
+import { SHOWINGROOM } from "../create-movie";
 
 const FormSchema = z.object({
   type: z.string().min(1, { message: "Room type name is required" }),
@@ -69,51 +65,31 @@ const ROOMTYPE = [
 ];
 
 type Props = {
-  room: MovieRoomResponse;
+  room: SHOWINGROOM;
   openEditRoom: boolean;
   setOpenEditRoom: Dispatch<SetStateAction<boolean>>;
+  updateShowingRoom: (room: SHOWINGROOM) => void;
 };
 
 export default function EditShowingRoom(props: Props) {
-  const { openEditRoom, setOpenEditRoom, room } = props;
-  const queryClient = useQueryClient();
-  const { isPending, mutate } = useMutation({ mutationFn: updateMovieRoom });
+  const { openEditRoom, setOpenEditRoom, room, updateShowingRoom } = props;
 
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
   });
 
   const onSubmit = (data: z.infer<typeof FormSchema>) => {
-    mutate(
-      {
-        id: room.id,
-        body: {
-          roomName: data.type,
-          typeNumber: Number(data.numberofroom),
-          ticketPrice: Number(data.price),
-          quantity: Number(data.quantity),
-          ticketCurrency: "GBP",
-        },
-      },
-      {
-        onSuccess: (res) => {
-          if (res.data) {
-            setOpenEditRoom(false);
-            toast({
-              title: "Showing room eidted",
-              variant: "success",
-            });
-            queryClient.invalidateQueries({ queryKey: ["movie-room"] });
-          }
-        },
-        onError: () => {
-          toast({
-            title: "Failed to edit showing room",
-            variant: "error",
-          });
-        },
-      }
-    );
+    updateShowingRoom({
+      roomName: data.type,
+      typeNumber: Number(data.numberofroom),
+      ticketPrice: Number(data.price),
+      quantity: Number(data.quantity),
+      ticketCurrency: "GBP",
+      id: room.id,
+      user: "admin",
+    });
+    setOpenEditRoom(false);
+    form.reset();
   };
 
   useEffect(() => {
@@ -122,6 +98,7 @@ export default function EditShowingRoom(props: Props) {
       form.setValue("numberofroom", String(room.typeNumber));
       form.setValue("quantity", String(room.quantity));
       form.setValue("price", String(room.ticketPrice));
+      form.setValue("save", room.save);
     }
   }, [room]);
 
@@ -340,7 +317,7 @@ export default function EditShowingRoom(props: Props) {
                   variant="default"
                   type="submit"
                 >
-                  {isPending ? <Loading className="w-5 h-5" /> : "Edit room"}
+                  {"Edit room"}
                 </Button>
               </div>
             </form>

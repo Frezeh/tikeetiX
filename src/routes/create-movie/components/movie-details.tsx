@@ -1,5 +1,6 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Calendar } from "@/components/ui/calendar";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
   Form,
@@ -23,7 +24,15 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
-import { ChevronDown, Clock3, Download, MapPin, MoveLeft } from "lucide-react";
+import { format } from "date-fns";
+import {
+  CalendarIcon,
+  ChevronDown,
+  Clock3,
+  Download,
+  MapPin,
+  MoveLeft,
+} from "lucide-react";
 import {
   Dispatch,
   FormEvent,
@@ -44,6 +53,7 @@ type Props = {
       rating: string;
       duration: string;
       location: string;
+      startTime: Date;
       description?: string | undefined;
     },
     any,
@@ -241,7 +251,9 @@ function MovieDetails(props: Props) {
                     maxLength={800}
                   />
                 </FormControl>
-                <FormDescription className="text-[#667185] text-sm">Max of 800 words</FormDescription>
+                <FormDescription className="text-[#667185] text-sm">
+                  Max of 800 words
+                </FormDescription>
                 <FormMessage className="w-full" />
               </FormItem>
             )}
@@ -361,6 +373,66 @@ function MovieDetails(props: Props) {
                   />
                 </FormControl>
                 <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="startTime"
+            render={({ field }) => (
+              <FormItem className="flex flex-col">
+                <FormLabel className="text-[#101928]">Start time</FormLabel>
+                <Select onValueChange={field.onChange}>
+                  <FormControl>
+                    <SelectTrigger
+                      suffixIcon={
+                        <CalendarIcon
+                          className="ml-auto"
+                          color="#667185"
+                          size={20}
+                        />
+                      }
+                      className="border-[#D0D5DD] active:focus:outline-none h-14"
+                    >
+                      <Button
+                        variant={"ghost"}
+                        className={cn(
+                          "xl:w-[125px] 2xl:w-[145px] ml-[-20px] text-left items-start font-normal bg-transparent text-[#13191C]",
+                          !form.watch("startTime") && "text-[#667185]"
+                        )}
+                      >
+                        {form.watch("startTime") ? (
+                          format(form.watch("startTime"), "PP")
+                        ) : (
+                          <span className="text-[#667185]">24 Aug 2024</span>
+                        )}
+                      </Button>
+                    </SelectTrigger>
+                  </FormControl>
+
+                  <SelectContent
+                    className="w-auto h-auto p-0 rounded-[10px] shadow-lg mt-1 border-[0.3px] bg-card"
+                    align="start"
+                  >
+                    <Calendar
+                      mode="single"
+                      selected={field.value}
+                      onSelect={field.onChange}
+                      // selected={form.watch("end")}
+                      // onSelect={(d) => {
+                      //   form.setValue("end", d!);
+                      //   setOpenEndDate(false);
+                      // }}
+                      disabled={(date) => date < new Date()}
+                      fromDate={new Date()}
+                      toDate={new Date(Date.now() + 10000 * 60 * 60 * 24 * 365)}
+                      // fromYear={1800}
+                      // toYear={new Date().getFullYear()}
+                      initialFocus
+                    />
+                  </SelectContent>
+                </Select>
+                <FormMessage className="w-full" />
               </FormItem>
             )}
           />

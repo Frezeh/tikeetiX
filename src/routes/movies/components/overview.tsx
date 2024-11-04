@@ -18,7 +18,12 @@ import {
 } from "@/components/ui/dropdown-menu";
 import FilterItem from "@/components/ui/filter-item";
 import { Input } from "@/components/ui/input";
+import Loader from "@/components/ui/loader";
 import Loading from "@/components/ui/loading";
+import {
+  LoadingMovieGrid,
+  LoadingMovieList,
+} from "@/components/ui/loading-movie";
 import Pagination from "@/components/ui/pagination";
 import Ratings from "@/components/ui/ratings";
 import {
@@ -37,17 +42,11 @@ import {
 } from "@/components/ui/tooltip";
 import { toast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
-import {
-  LoadingMovieGrid,
-  LoadingMovieList,
-} from "@/components/ui/loading-movie";
-import { getMovieRooms } from "@/services/api/movie-room";
-import { allMovieActivities, deleteMovie } from "@/services/api/movies";
+import { deleteMovieTicket, getMovieTickets } from "@/services/api/ticket";
 import { Movie } from "@/services/models/movies";
 import {
   useInfiniteQuery,
   useMutation,
-  useQuery,
   useQueryClient,
 } from "@tanstack/react-query";
 import {
@@ -69,7 +68,6 @@ import {
 } from "react";
 import { useNavigate } from "react-router-dom";
 import MovieActions from "./movie-actions";
-import Loader from "@/components/ui/loader";
 
 type Props = {
   overviewFilterValue: string;
@@ -94,9 +92,8 @@ export default function Overview(props: Props) {
   const navigate = useNavigate();
 
   const { isPending: isDeleting, mutate: remove } = useMutation({
-    mutationFn: deleteMovie,
+    mutationFn: deleteMovieTicket,
   });
-  // const { mutate: removeRoom } = useMutation({ mutationFn: deleteMovieRoom });
 
   const queryParams = useMemo(() => {
     let params = "";
@@ -122,34 +119,23 @@ export default function Overview(props: Props) {
     data,
   } = useInfiniteQuery({
     queryKey: ["movies"],
-    queryFn: ({ pageParam }) => allMovieActivities(pageParam, 20, queryParams),
+    queryFn: ({ pageParam }) => getMovieTickets(pageParam, 20, queryParams),
     initialPageParam: currentPage,
     getNextPageParam: (lastPage) => lastPage.data.nextPage,
     getPreviousPageParam: (firstPage) => firstPage.data.prevPage,
-  });
-  const { data: showingRoom } = useQuery({
-    queryKey: ["movie-room"],
-    queryFn: getMovieRooms,
   });
 
   const loading = isFetching || isFetchingNextPage || isFetchingPreviousPage;
   const RESPONSE = data?.pages[data?.pages.length - 1];
   const MOVIES = RESPONSE?.data.foundItems || [];
 
-  const priceRange = useCallback(
-    (rooms: string[]) => {
-      let price: number[] = [];
+  const priceRange = useCallback((price?: number) => {
+    if (price === 0) {
+      return "Free";
+    }
 
-      showingRoom?.data.forEach((element) => {
-        if (rooms.includes(element.id)) {
-          price.push(element.ticketPrice);
-        }
-      });
-
-      return `$${Math.min(...price)} - $${Math.max(...price)}`;
-    },
-    [showingRoom]
-  );
+    return String(price);
+  }, []);
 
   const deleteTicket = () => {
     remove(selectedMovie.id, {
@@ -169,16 +155,6 @@ export default function Overview(props: Props) {
       },
     });
   };
-
-  // onSuccess: (res) => {
-
-  // },
-  // onError: () => {
-  //   toast({
-  //     title: "Failed to delete ticket",
-  //     variant: "error",
-  //   });
-  // },
 
   if (isPending) {
     return <Loader />;
@@ -394,18 +370,20 @@ export default function Overview(props: Props) {
                   >
                     <div
                       className="absolute inset-0 bg-cover bg-center bg-no-repeat blur-[20px] overflow-hidden rounded-[12px] w-full h-full pointer-events-none bg-[url('./assets/images/bad-boys.png')]"
-                      style={{ backgroundImage: "url(" + movie.image + ")" }}
+                      style={{
+                        backgroundImage: "url(" + movie.ticket.image + ")",
+                      }}
                     />
                     <div className="absolute top-4 left-0 right-0 w-full inline-flex overflow-hidden justify-center rounded-[10px] items-center z-20">
                       <img
-                        src={movie.image}
+                        src={movie.ticket.image}
                         alt="movie"
                         className="w-[147px] h-[170px] rounded-[10px]"
                       />
                     </div>
                     <div className="absolute bottom-0 left-0 right-0 w-full h-[40%] bg-[#13191C] backdrop-blur-md rounded-b-[12px] p-4 space-y-1">
                       <p className="text-lg font-medium text-white truncate ...">
-                        {movie.title}
+                        {movie.ticket.title}
                       </p>
                       <div className="flex items-center gap-2">
                         <TicketIcon fill="#667185" width={18} height={18} />
@@ -558,17 +536,17 @@ export default function Overview(props: Props) {
                             <img
                               alt="Movie image"
                               className="aspect-square rounded-md object-cover w-[43px] h-[43px]"
-                              src={movie.image}
+                              src={movie.ticket.image}
                             />
                             <div>
                               <p className="text-[#101928] font-medium">
-                                {movie.title}
+                                {movie.ticket.title}
                               </p>
                             </div>
                           </div>
                         </TableCell>
                         <TableCell className="font-medium text-[#13191C]">
-                          {priceRange(movie.movieRooms)}
+                          {priceRange(movie.ticketPrice)}
                         </TableCell>
                         <TableCell className="text-[#475367]">{0}</TableCell>
                         <TableCell className="text-[#475367]">

@@ -1,20 +1,21 @@
 import BellIcon from "@/assets/icons/bell-icon";
 import CopyIcon from "@/assets/icons/copy-icon";
 import GBP from "@/assets/icons/gbp.svg";
-import LiveIcon from "@/assets/icons/live-icon";
 import MovieIcon from "@/assets/icons/movie-icon";
 import PencilIcon from "@/assets/icons/pencil-icon";
 import TicketIcon from "@/assets/icons/ticket-icon";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import displayStatusIcon from "@/components/ui/display-status-icon";
 import { Input } from "@/components/ui/input";
 import Loader from "@/components/ui/loader";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import UserProfile from "@/components/user-profile";
 import { toast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
-import { getMovie } from "@/services/api/movies";
+import { getMovieTicket } from "@/services/api/ticket";
 import { useQuery } from "@tanstack/react-query";
+import { format } from "date-fns";
 import {
   ChevronLeft,
   ChevronRight,
@@ -36,7 +37,7 @@ export default function MovieDetails() {
     error,
   } = useQuery({
     queryKey: [`movie-${id}`],
-    queryFn: () => getMovie(id!),
+    queryFn: () => getMovieTicket(id!),
     enabled: !!id,
     //refetchOnWindowFocus: false,
   });
@@ -126,14 +127,14 @@ export default function MovieDetails() {
       <div className="px-5 pt-5 pb-10 border-b border-[#E4E7EC] flex items-center gap-20">
         <div className="flex items-center gap-4 w-[40%]">
           <img
-            src={MOVIE?.data.image}
+            src={MOVIE?.data.ticket.image}
             alt="movie"
             className="w-20 h-20 rounded-[8px]"
           />
           <div className="space-y-3">
             <p className="text-[#475367] text-sm">name</p>
             <p className="text-[#13191C] text-xl font-medium">
-              {MOVIE?.data.title}
+              {MOVIE?.data.ticket.title}
             </p>
           </div>
         </div>
@@ -149,10 +150,10 @@ export default function MovieDetails() {
         </div>
         <div className="space-y-3">
           <p className="text-[#475367] text-sm">Status</p>
-          <div className="flex items-center gap-2">
-            <LiveIcon width={16} height={16} />
-            <span className="text-[#475367] text-sm">Live</span>
-          </div>
+          <span className="flex items-center gap-2 text-[#475367] text-sm">
+            {displayStatusIcon(MOVIE?.data.status!)?.icon}{" "}
+            {displayStatusIcon(MOVIE?.data?.status!)?.text}
+          </span>
         </div>
       </div>
 
@@ -171,32 +172,37 @@ export default function MovieDetails() {
                   <div className="space-y-1">
                     <p className="text-[#667185] text-sm">Description</p>
                     <p className="text-[#13191C] text-sm">
-                      {MOVIE?.data.description}
+                      {MOVIE?.data.ticket.description}
                     </p>
                   </div>
                   <div className={cn("grid grid-cols-2 gap-7")}>
                     <div>
                       <p className="text-[#667185] text-sm">Genre</p>
                       <p className="text-[#13191C] text-sm font-medium">
-                        {MOVIE?.data.genre}
+                        {MOVIE?.data.ticket.genre}
                       </p>
                     </div>
                     <div>
                       <p className="text-[#667185] text-sm">Ticket price</p>
                       <div className="flex items-center gap-1">
-                        <img src={GBP} alt="gbp" className="w-3 h-3" />
-                        {/* <p className="text-[#667185] text-[15px] font-medium">
-                          {getRoomDetails.currency}{" "}
-                          <span className="text-[#13191C]">
-                            {getRoomDetails.price}
-                          </span>
-                        </p> */}
+                        {MOVIE?.data?.ticketPrice !== 0 ? (
+                          <p className="flex items-center gap-1 text-[15px] font-medium">
+                            <img src={GBP} alt="gbp" className="w-3 h-3" />
+                            <span className="text-[#13191C]">
+                              {MOVIE?.data?.ticketPrice}
+                            </span>
+                          </p>
+                        ) : (
+                          <p className="text-[#13191C] text-[15px] font-medium">
+                            Free
+                          </p>
+                        )}
                       </div>
                     </div>
                     <div>
                       <p className="text-[#667185] text-sm">Age rating</p>
                       <p className="text-[#13191C] text-sm font-medium">
-                        {MOVIE?.data.ageRating}
+                        {MOVIE?.data.ticket.ageRating}
                       </p>
                     </div>
                     <div>
@@ -204,7 +210,9 @@ export default function MovieDetails() {
                         Playtime/Duration
                       </p>
                       <p className="text-[#13191C] text-sm font-medium">
-                        {MOVIE?.data.startTime}
+                        {MOVIE?.data.ticket.startTime
+                          ? format(MOVIE?.data.ticket.startTime, "PP")
+                          : "---"}
                       </p>
                     </div>
                     <div>
@@ -220,12 +228,14 @@ export default function MovieDetails() {
                       <MapPin size={20} color="#98A2B3" />
                     </div>
                     <p className="text-[#13191C] text-sm font-medium">
-                      {MOVIE?.data.location}
+                      {MOVIE?.data.ticket.location}
                     </p>
                   </div>
                   <div>
                     <p className="text-[#667185] text-sm">Organizer</p>
-                    <p className="text-[#13191C] text-sm font-medium">---</p>
+                    <p className="text-[#13191C] text-sm font-medium">
+                      {MOVIE?.data.ticket.organizerName ?? "---"}
+                    </p>
                   </div>
                 </div>
               </div>
@@ -233,7 +243,7 @@ export default function MovieDetails() {
           </ScrollArea>
         </div>
 
-        <TicketsSold />
+        <TicketsSold ticketSold={MOVIE?.data.ticketSold ?? 0} />
       </div>
     </div>
   );

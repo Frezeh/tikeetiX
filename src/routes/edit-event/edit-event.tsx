@@ -14,7 +14,6 @@ import {
   DialogHeader,
 } from "@/components/ui/dialog";
 import Loader from "@/components/ui/loader";
-import Loading from "@/components/ui/loading";
 import {
   Select,
   SelectContent,
@@ -24,11 +23,14 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { toast } from "@/hooks/use-toast";
-import { cn } from "@/lib/utils";
-import { deleteEventLevel, getAllEventLevel } from "@/services/api/event-level";
-import { getEvent, updateEvent } from "@/services/api/events";
+import { cn, generateRandomId } from "@/lib/utils";
 import { uploadSingleFile } from "@/services/api/file-upload";
-import { Events, TEventLevel } from "@/services/models/events";
+import {
+  getEventTicket,
+  updateEventDetails,
+  updateEventTicket,
+} from "@/services/api/ticket";
+import { EventTicketBodyPayload } from "@/services/models/ticket";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ChevronDown, ChevronLeft, ChevronRight, MapPin } from "lucide-react";
@@ -37,11 +39,12 @@ import { useEffect, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { z } from "zod";
+import EditEventLevel from "../create-event/components/edit-event-level";
 import EditImage from "../create-event/components/edit-image";
 import EventLevelModal from "../create-event/components/event-level-modal";
+import { EVENTLEVEL, TICKETPRICE } from "../create-event/create-event";
 import EditEventDetails from "./edit-event-details";
 import EventLevel from "./event-level";
-import EditEventLevel from "../create-event/components/edit-event-level";
 
 export const CreateEventFormSchema = z.object({
   poster: z.string().min(1, { message: "Required" }),
@@ -58,12 +61,16 @@ export const CreateEventFormSchema = z.object({
 
 export const AddEventLevelFormSchema = z.object({
   price: z.string().min(1, { message: "Required" }),
-  start: z.date({
-    required_error: "Sales start date is required",
-  }),
-  end: z.date({
-    required_error: "Sales end date is required",
-  }),
+  start: z
+    .date({
+      required_error: "Sales start date is required",
+    })
+    .optional(),
+  end: z
+    .date({
+      required_error: "Sales end date is required",
+    })
+    .optional(),
   maxpurchase: z.string().min(1, { message: "Max purchase is required" }),
 });
 
@@ -81,17 +88,15 @@ export default function EditEvent() {
   const [poster, setPoster] = useState<File | undefined>();
   const [event, setEvent] = useState("");
   const [openEditImage, setOpenEditImage] = useState(false);
-  const [selectedLevel, setSelectedLevel] = useState<TEventLevel>(
-    {} as TEventLevel
+  const [selectedLevel, setSelectedLevel] = useState<EVENTLEVEL>(
+    {} as EVENTLEVEL
   );
+  const [eventLevel, setEventLevel] = useState<EVENTLEVEL[]>([]);
+  const [price, setPrice] = useState(TICKETPRICE[0]);
 
-  const { isLoading, data: eventLevel } = useQuery({
-    queryKey: ["event-level"],
-    queryFn: getAllEventLevel,
-  });
-  const { isPending, mutate } = useMutation({ mutationFn: updateEvent });
-  const { isPending: isRemoving, mutate: remove } = useMutation({
-    mutationFn: deleteEventLevel,
+  const { isPending, mutate } = useMutation({ mutationFn: updateEventTicket });
+  const { isPending: isDetailsPending, mutate: updateDetails } = useMutation({
+    mutationFn: updateEventDetails,
   });
   const { isPending: isUploading, mutate: upload } = useMutation({
     mutationFn: uploadSingleFile,
@@ -102,11 +107,11 @@ export default function EditEvent() {
     error,
   } = useQuery({
     queryKey: [`event-${id}`],
-    queryFn: () => getEvent(id!),
+    queryFn: () => getEventTicket(id!),
     enabled: !!id,
   });
 
-  const isCreating = isPending || isUploading;
+  const isCreating = isPending || isUploading || isDetailsPending;
 
   const form = useForm<z.infer<typeof CreateEventFormSchema>>({
     resolver: zodResolver(CreateEventFormSchema),
@@ -144,37 +149,44 @@ export default function EditEvent() {
 
   useEffect(() => {
     if (EVENT) {
-      form.setValue("title", EVENT.data.title);
-      form.setValue("description", EVENT.data.description);
-      form.setValue("category", EVENT.data.category);
-      form.setValue("type", EVENT.data.type);
-      form.setValue("poster", EVENT.data.image);
-      form.setValue("location", EVENT.data.location);
-      form.setValue("name", EVENT.data.organizerName);
-      form.setValue(
-        "startTime",
-        EVENT.data.startTime
-          ? new Date(EVENT.data.startTime)
-          : EVENT.data.startTime
-      );
+      form.setValue("title", EVENT.data.ticket.title);
+      form.setValue("description", EVENT.data.ticket.description);
+      form.setValue("category", EVENT.data.ticket.category);
+      form.setValue("type", EVENT.data.ticket.type);
+      form.setValue("poster", EVENT.data.ticket.image);
+      form.setValue("location", EVENT.data.ticket.location);
+      form.setValue("name", EVENT.data.ticket.organizerName);
+      form.setValue("startTime", new Date(EVENT.data.ticket.startTime));
       levelForm.setValue(
         "end",
-        EVENT.data.salesEndDate
-          ? new Date(EVENT.data.salesEndDate)
-          : EVENT.data.salesEndDate
+        EVENT.data.ticket.salesEndDate
+          ? new Date(EVENT.data.ticket.salesEndDate)
+          : undefined
       );
       levelForm.setValue(
         "start",
-        EVENT.data.salesStartDate
-          ? new Date(EVENT.data.salesStartDate)
-          : EVENT.data.salesStartDate
+        EVENT.data.ticket.salesStartDate
+          ? new Date(EVENT.data.ticket.salesStartDate)
+          : undefined
       );
-      levelForm.setValue("maxpurchase", String(EVENT.data.maxPurchasePerUser));
+      levelForm.setValue(
+        "maxpurchase",
+        String(EVENT.data.ticket.maxPurchasePerUser)
+      );
       setPoster(undefined);
+      setEventLevel([
+        {
+          category: EVENT.data.name,
+          ticketPrice: EVENT.data.ticketPrice,
+          quantity: EVENT.data.quantity,
+          ticketCurrency: "GBP",
+          id: generateRandomId(),
+        },
+      ]);
     }
   }, [EVENT]);
 
-  const updateTicket = (data: Partial<Events>) => {
+  const updateTicket = (data: Partial<EventTicketBodyPayload>) => {
     mutate(
       { id: id!, body: data },
       {
@@ -194,43 +206,69 @@ export default function EditEvent() {
     );
   };
 
+  const updateEventDetail = (image: string) => {
+    updateDetails({
+      id: EVENT?.data.ticket.id!,
+      body: {
+        isMovie: false,
+        event: {
+          title: form.getValues("title"),
+          description: form.getValues("description") ?? "",
+          location: form.getValues("location"),
+          startTime: form.getValues("startTime"),
+          image,
+          maxPurchasePerUser: Number(levelForm.getValues("maxpurchase")),
+          organizerName: form.getValues("name") ?? "",
+          type: form.getValues("type"),
+          salesStartDate: levelForm.getValues("start"),
+          salesEndDate: levelForm.getValues("end"),
+          category: form.getValues("category"),
+        },
+      },
+    });
+  };
+
   const publishTicket = () => {
     let file = new FormData();
     file.append("file", poster as File);
 
     if (!poster) {
-      updateTicket({
-        title: form.getValues("title"),
-        description: form.getValues("description") ?? "",
-        eventLevels: eventLevel?.data.map((event) => event.id)!,
-        type: form.getValues("type"),
-        organizerName: form.getValues("name") ?? "",
-        location: form.getValues("location"),
-        category: form.getValues("category"),
-        maxPurchasePerUser: Number(levelForm.getValues("maxpurchase")),
-        salesStartDate: levelForm.getValues("start"),
-        salesEndDate: levelForm.getValues("end"),
-        image: EVENT?.data.image,
-        startTime: form.getValues("startTime"),
-      });
+      updateEventDetail(EVENT?.data.ticket.image!);
+      updateTicket(
+        price === "Paid event"
+          ? {
+              name: eventLevel[0]?.category,
+              ticketPrice: Number(eventLevel[0]?.ticketPrice),
+              quantity: Number(eventLevel[0]?.quantity),
+              ticketType: "Events",
+            }
+          : {
+              name: "Free event",
+              ticketPrice: 0,
+              quantity: 0,
+              ticketType: "Events",
+            }
+      );
     } else {
       upload(file, {
         onSuccess: (res) => {
           if (res.message) {
-            updateTicket({
-              title: form.getValues("title"),
-              description: form.getValues("description") ?? "",
-              eventLevels: eventLevel?.data.map((event) => event.id)!,
-              type: form.getValues("type"),
-              organizerName: form.getValues("name") ?? "",
-              location: form.getValues("location"),
-              category: form.getValues("category"),
-              maxPurchasePerUser: Number(levelForm.getValues("maxpurchase")),
-              salesStartDate: levelForm.getValues("start"),
-              salesEndDate: levelForm.getValues("end"),
-              image: res.data,
-              startTime: form.getValues("startTime"),
-            });
+            updateEventDetail(res.data);
+            updateTicket(
+              price === "Paid event"
+                ? {
+                    name: eventLevel[0]?.category,
+                    ticketPrice: Number(eventLevel[0]?.ticketPrice),
+                    quantity: Number(eventLevel[0]?.quantity),
+                    ticketType: "Events",
+                  }
+                : {
+                    name: "Free event",
+                    ticketPrice: 0,
+                    quantity: 0,
+                    ticketType: "Events",
+                  }
+            );
           }
         },
         onError: () => {
@@ -249,7 +287,18 @@ export default function EditEvent() {
     return { name, price, currency };
   }, [event]);
 
-  if (isLoading || isEventLoading) {
+  const addEventLevel = (level: EVENTLEVEL) => {
+    setEventLevel((prev) => [...prev, level]);
+  };
+
+  const removeEventLevel = (level: EVENTLEVEL) => {
+    setEventLevel((prev) => prev.filter((l) => l.id !== level.id));
+  };
+  const updateEventLevel = (level: EVENTLEVEL) => {
+    setEventLevel((prev) => prev.map((l) => (l.id === level.id ? level : l)));
+  };
+
+  if (isEventLoading) {
     return <Loader />;
   }
 
@@ -303,7 +352,9 @@ export default function EditEvent() {
               openRemoveTicketLevel={() => setOpenRemove(true)}
               setSelectedLevel={setSelectedLevel}
               isCreating={isCreating}
-              eventLevel={eventLevel?.data ?? []}
+              eventLevel={eventLevel ?? []}
+              price={price}
+              setPrice={setPrice}
             />
           )}
         </div>
@@ -356,13 +407,13 @@ export default function EditEvent() {
                   >
                     <SelectValue
                       className="placeholder:text-[#344054] text-sm"
-                      placeholder={isLoading ? "Loading..." : "ticket class"}
+                      placeholder={"ticket class"}
                     />
                   </SelectTrigger>
                   <SelectContent>
-                    {eventLevel?.data && (
+                    {eventLevel && (
                       <SelectGroup>
-                        {eventLevel.data.map((event) => (
+                        {eventLevel.map((event) => (
                           <SelectItem
                             value={`${event.category},${event.ticketPrice},${event.ticketCurrency}`}
                             key={event.category}
@@ -517,30 +568,13 @@ export default function EditEvent() {
             <Button
               className="h-9 w-[178px]"
               variant="destructive"
-              onClick={() =>
-                remove(selectedLevel.id, {
-                  onSuccess: (res) => {
-                    if (res.message) {
-                      setOpenRemove(false);
-                      toast({
-                        title: "Ticket level removed",
-                        variant: "success",
-                      });
-                      queryClient.invalidateQueries({
-                        queryKey: ["event-level"],
-                      });
-                    }
-                  },
-                  onError: () => {
-                    toast({
-                      title: "Failed to remove ticket level",
-                      variant: "error",
-                    });
-                  },
-                })
-              }
+              onClick={() => {
+                removeEventLevel(selectedLevel);
+                setOpenRemove(false);
+                setSelectedLevel({} as EVENTLEVEL);
+              }}
             >
-              {isRemoving ? <Loading className="w-4 h-4" /> : "Yes, remove"}
+              {"Yes, remove"}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -589,11 +623,16 @@ export default function EditEvent() {
         </DialogContent>
       </Dialog>
 
-      <EventLevelModal openLevel={openLevel} setOpenLevel={setOpenLevel} />
+      <EventLevelModal
+        openLevel={openLevel}
+        setOpenLevel={setOpenLevel}
+        addEventLevel={addEventLevel}
+      />
       <EditEventLevel
         eventLevel={selectedLevel}
         openEditEventLevel={openEditLevel}
         setOpenEditEventLevel={setOpenEditLevel}
+        updateEventLevel={updateEventLevel}
       />
       <EditImage
         openEditImage={openEditImage}

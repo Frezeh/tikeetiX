@@ -13,7 +13,6 @@ import {
   DialogFooter,
   DialogHeader,
 } from "@/components/ui/dialog";
-import Loading from "@/components/ui/loading";
 import {
   Select,
   SelectContent,
@@ -24,12 +23,12 @@ import {
 } from "@/components/ui/select";
 import { toast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
-import { deleteEventLevel, getAllEventLevel } from "@/services/api/event-level";
-import { createEvent } from "@/services/api/events";
 import { uploadSingleFile } from "@/services/api/file-upload";
-import { EventBody, TEventLevel } from "@/services/models/events";
+import { createEventTicket } from "@/services/api/ticket";
+import { TEventLevel } from "@/services/models/events";
+import { EventTicketBody } from "@/services/models/ticket";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { ChevronDown, ChevronLeft, ChevronRight, MapPin } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
 import { useMemo, useState } from "react";
@@ -41,6 +40,9 @@ import EditImage from "./components/edit-image";
 import EventDetails from "./components/event-details";
 import EventLevel from "./components/event-level";
 import EventLevelModal from "./components/event-level-modal";
+
+export type EVENTLEVEL = Omit<TEventLevel, "createdBy">;
+export const TICKETPRICE = ["Free event", "Paid event", "Donation"];
 
 export const CreateEventFormSchema = z.object({
   poster: z.string().min(1, { message: "Required" }),
@@ -78,21 +80,23 @@ export default function CreateEvent() {
   const [poster, setPoster] = useState<File | undefined>();
   const [event, setEvent] = useState("");
   const [openEditImage, setOpenEditImage] = useState(false);
-  const [selectedLevel, setSelectedLevel] = useState<TEventLevel>(
-    {} as TEventLevel
+  const [selectedLevel, setSelectedLevel] = useState<EVENTLEVEL>(
+    {} as EVENTLEVEL
   );
+  const [eventLevel, setEventLevel] = useState<EVENTLEVEL[]>([]);
+  const [price, setPrice] = useState(TICKETPRICE[0]);
 
   const [id, setId] = useState("");
   const queryClient = useQueryClient();
 
-  const { isLoading, data: eventLevel } = useQuery({
-    queryKey: ["event-level"],
-    queryFn: getAllEventLevel,
-  });
-  const { isPending, mutate } = useMutation({ mutationFn: createEvent });
-  const { isPending: isRemoving, mutate: remove } = useMutation({
-    mutationFn: deleteEventLevel,
-  });
+  // const { isLoading, data: eventLevel } = useQuery({
+  //   queryKey: ["event-level"],
+  //   queryFn: getAllEventLevel,
+  // });
+  const { isPending, mutate } = useMutation({ mutationFn: createEventTicket });
+  // const { isPending: isRemoving, mutate: remove } = useMutation({
+  //   mutationFn: deleteEventLevel,
+  // });
   const { isPending: isUploading, mutate: upload } = useMutation({
     mutationFn: uploadSingleFile,
   });
@@ -121,13 +125,13 @@ export default function CreateEvent() {
     },
   });
 
-  const createTicket = (data: EventBody) => {
+  const createTicket = (data: EventTicketBody) => {
     mutate(data, {
       onSuccess: (res) => {
         if (res.message) {
           form.reset();
           setOpenPublish(true);
-          setId(res.data.id);
+          setId(res.data[0].id);
           queryClient.invalidateQueries({ queryKey: ["events"] });
         }
       },
@@ -148,18 +152,38 @@ export default function CreateEvent() {
       onSuccess: (res) => {
         if (res.message) {
           createTicket({
-            title: form.getValues("title"),
-            description: form.getValues("description") ?? "",
-            eventLevels: eventLevel?.data.map((event) => event.id)!,
-            type: form.getValues("type"),
-            organizerName: form.getValues("name") ?? "",
-            location: form.getValues("location"),
-            category: form.getValues("category"),
-            maxPurchasePerUser: Number(levelForm.getValues("maxpurchase")),
-            salesStartDate: levelForm.getValues("start"),
-            salesEndDate: levelForm.getValues("end"),
-            image: res.data,
-            startTime: form.getValues("startTime"),
+            isMovie: false,
+            event: {
+              title: form.getValues("title"),
+              description: form.getValues("description") ?? "",
+              location: form.getValues("location"),
+              startTime: form.getValues("startTime"),
+              image: res.data,
+              maxPurchasePerUser: Number(levelForm.getValues("maxpurchase")),
+              organizerName: form.getValues("name") ?? "",
+              type: form.getValues("type"),
+              salesStartDate: levelForm.getValues("start"),
+              salesEndDate: levelForm.getValues("end"),
+              category: form.getValues("category"),
+            },
+            ticketPayload:
+              price === "Paid event"
+                ? eventLevel.map((event) => {
+                    return {
+                      name: event.category,
+                      ticketPrice: Number(event.ticketPrice),
+                      quantity: Number(event.quantity),
+                      ticketType: "Events",
+                    };
+                  })
+                : [
+                    {
+                      name: "Free event",
+                      ticketPrice: 0,
+                      quantity: 0,
+                      ticketType: "Events",
+                    },
+                  ],
           });
         }
       },
@@ -177,6 +201,17 @@ export default function CreateEvent() {
 
     return { name, price, currency };
   }, [event]);
+
+  const addEventLevel = (level: EVENTLEVEL) => {
+    setEventLevel((prev) => [...prev, level]);
+  };
+
+  const removeEventLevel = (level: EVENTLEVEL) => {
+    setEventLevel((prev) => prev.filter((l) => l.id !== level.id));
+  };
+  const updateEventLevel = (level: EVENTLEVEL) => {
+    setEventLevel((prev) => prev.map((l) => (l.id === level.id ? level : l)));
+  };
 
   return (
     <div className="w-full h-screen overflow-hidden">
@@ -228,7 +263,9 @@ export default function CreateEvent() {
               openRemoveTicketLevel={() => setOpenRemove(true)}
               setSelectedLevel={setSelectedLevel}
               isCreating={isCreating}
-              eventLevel={eventLevel?.data ?? []}
+              eventLevel={eventLevel ?? []}
+              price={price}
+              setPrice={setPrice}
             />
           )}
         </div>
@@ -281,13 +318,13 @@ export default function CreateEvent() {
                   >
                     <SelectValue
                       className="placeholder:text-[#344054] text-sm"
-                      placeholder={isLoading ? "Loading..." : "ticket class"}
+                      placeholder={"ticket class"}
                     />
                   </SelectTrigger>
                   <SelectContent>
-                    {eventLevel?.data && (
+                    {eventLevel && (
                       <SelectGroup>
-                        {eventLevel.data.map((event) => (
+                        {eventLevel.map((event) => (
                           <SelectItem
                             value={`${event.category},${event.ticketPrice},${event.ticketCurrency}`}
                             key={event.category}
@@ -422,7 +459,7 @@ export default function CreateEvent() {
             </div>
           </DialogHeader>
           <DialogDescription className="text-center text-[#13191C] text-lg font-medium">
-            Remove event
+            Remove ticket
           </DialogDescription>
 
           <DialogFooter className="flex justify-between items-center pt-2">
@@ -436,30 +473,13 @@ export default function CreateEvent() {
             <Button
               className="h-9 w-[178px]"
               variant="destructive"
-              onClick={() =>
-                remove(selectedLevel.id, {
-                  onSuccess: (res) => {
-                    if (res.message) {
-                      setOpenRemove(false);
-                      toast({
-                        title: "Ticket level removed",
-                        variant: "success",
-                      });
-                      queryClient.invalidateQueries({
-                        queryKey: ["event-level"],
-                      });
-                    }
-                  },
-                  onError: () => {
-                    toast({
-                      title: "Failed to remove ticket level",
-                      variant: "error",
-                    });
-                  },
-                })
-              }
+              onClick={() => {
+                removeEventLevel(selectedLevel);
+                setOpenRemove(false);
+                setSelectedLevel({} as EVENTLEVEL);
+              }}
             >
-              {isRemoving ? <Loading className="w-4 h-4" /> : "Yes, remove"}
+              {"Yes, remove"}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -504,11 +524,16 @@ export default function CreateEvent() {
         </DialogContent>
       </Dialog>
 
-      <EventLevelModal openLevel={openLevel} setOpenLevel={setOpenLevel} />
+      <EventLevelModal
+        openLevel={openLevel}
+        setOpenLevel={setOpenLevel}
+        addEventLevel={addEventLevel}
+      />
       <EditEventLevel
         eventLevel={selectedLevel}
         openEditEventLevel={openEditLevel}
         setOpenEditEventLevel={setOpenEditLevel}
+        updateEventLevel={updateEventLevel}
       />
       <EditImage
         openEditImage={openEditImage}

@@ -7,14 +7,14 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Events } from "@/services/models/events";
+import { TicketEvents } from "@/services/models/ticket";
 import { MoreVertical } from "lucide-react";
 import { Dispatch, SetStateAction, memo, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 
 type Props = {
-  setSelectedEvent: Dispatch<SetStateAction<Events>>;
-  event: Events;
+  setSelectedEvent: Dispatch<SetStateAction<TicketEvents>>;
+  event: TicketEvents;
   setOpenRemove: Dispatch<SetStateAction<boolean>>;
   setOpenHold: Dispatch<SetStateAction<boolean>>;
 };

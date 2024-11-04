@@ -275,7 +275,7 @@ function EditEventDetails(props: Props) {
                         suffixIcon={<ChevronDown size={24} color="#667185" />}
                       >
                         {field.value ? (
-                          <SelectValue placeholder="Adventure" />
+                          <SelectValue placeholder={form.watch("category")} />
                         ) : (
                           <span className="text-[#667185] text-sm">
                             Food & drinks
@@ -320,7 +320,7 @@ function EditEventDetails(props: Props) {
                         suffixIcon={<ChevronDown size={24} color="#667185" />}
                       >
                         {field.value ? (
-                          <SelectValue placeholder="PG 13" />
+                          <SelectValue placeholder={form.watch("type")} />
                         ) : (
                           <span className="text-[#667185] text-sm">
                             Physical

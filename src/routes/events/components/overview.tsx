@@ -8,14 +8,14 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { EventsData } from "@/services/models/events";
+import { TicketEventData } from "@/services/models/ticket";
 import { GenericResponse } from "@/services/request";
 import { format } from "date-fns";
 import { CalendarIcon, ChevronLeftIcon, ChevronRightIcon } from "lucide-react";
 import { createRef, useState } from "react";
 
 type Props = {
-  data: GenericResponse<EventsData> | undefined;
+  data: GenericResponse<TicketEventData> | undefined;
   isPending: boolean;
 };
 export default function Overview({ data, isPending }: Props) {
@@ -25,7 +25,7 @@ export default function Overview({ data, isPending }: Props) {
     data?.data?.foundItems.filter((t) => {
       //@ts-ignore
       let difference =
-        (Number(new Date(t.startTime)) - Number(new Date())) /
+        (Number(new Date(t.ticket.startTime)) - Number(new Date())) /
         (1000 * 3600 * 24);
       return difference > -1;
     }) || [];
@@ -155,20 +155,20 @@ export default function Overview({ data, isPending }: Props) {
                       <div className="flex items-center gap-4">
                         <div className="my-[15px]">
                           <img
-                            src={d.image}
+                            src={d.ticket.image}
                             alt="ticket"
                             className="w-[43px] h-[74px] rounded-l-[5px]"
                           />
                         </div>
                         <div className="flex flex-col justify-between gap-[6px] my-[15px]">
                           <p className="text-[#101928] lg:max-w-28 2xl:max-w-52  flex-wrap font-medium text-sm truncate ...">
-                            {d.title}
+                            {d.ticket.title}
                           </p>
                           <div className="flex items-center gap-1">
                             <CalendarIcon size={12} color="#667185" />
                             <p className="text-[#667185] text-xs">
-                              {d.startTime
-                                ? format(d.startTime, "MMM dd, h:mm a")
+                              {d.ticket.startTime
+                                ? format(d.ticket.startTime, "MMM dd, h:mm a")
                                 : ""}
                             </p>
                           </div>
