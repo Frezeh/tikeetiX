@@ -50,14 +50,14 @@ const CURRENCY = [
 function Root() {
   const { pathname } = useLocation();
   const route = pathname;
-  // const { isRefreshing, isLoading } = useAuth();
+  const { isRefreshing, isLoading } = useAuth();
   const { profile } = useProfileContext();
   const [showFAQ, setShowFAQ] = useState(true);
   const { id } = useParams();
 
-  // if (isRefreshing || isLoading) {
-  //   return <Loader />;
-  // }
+  if (isRefreshing || isLoading) {
+    return <Loader />;
+  }
 
   return (
     <main className="flex w-screen h-screen bg-[#F7F9FC] overflow-hidden">
