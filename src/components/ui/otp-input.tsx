@@ -34,6 +34,16 @@ const OtpInput = ({ className, onUpdate, length, ...props }: InputProps) => {
     }
   };
 
+  const handleCopyAndPaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
+    e.preventDefault();
+    const pastedData = e.clipboardData.getData("Text");
+    if (pastedData.length === length) {
+      const newOtp = pastedData.split("");
+      setOtp(newOtp);
+      onUpdate(newOtp.join(""));
+    }
+  }
+
   return (
     <div className="flex space-x-3 w-full">
       {otp.map((value, index) => (
@@ -45,6 +55,7 @@ const OtpInput = ({ className, onUpdate, length, ...props }: InputProps) => {
           value={value}
           onChange={(e) => handleChange(e, index)}
           onKeyDown={(e) => handleKeyDown(e, index)}
+          onPaste={handleCopyAndPaste}
           className={cn(
             "w-1/4 h-14 border border-[#F0F2F5] bg-[#F0F2F5] rounded-[6px] text-center text-xl ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 transition-all duration-300",
             className

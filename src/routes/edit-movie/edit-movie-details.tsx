@@ -1,3 +1,4 @@
+import TimePicker from "@/components/time-picker";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
@@ -22,9 +23,16 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { cn } from "@/lib/utils";
+import { cn, handleDaySelect } from "@/lib/utils";
 import { format } from "date-fns";
-import { CalendarIcon, ChevronDown, Clock3, Download, MapPin, MoveLeft } from "lucide-react";
+import {
+  CalendarIcon,
+  ChevronDown,
+  Clock3,
+  Download,
+  MapPin,
+  MoveLeft,
+} from "lucide-react";
 import {
   Dispatch,
   FormEvent,
@@ -55,10 +63,23 @@ type Props = {
   >;
   poster: File | undefined | null;
   setPoster: Dispatch<SetStateAction<File | undefined | null>>;
+  selected: Date | undefined;
+  timeValue: string;
+  setSelected: Dispatch<SetStateAction<Date | undefined>>;
+  setTimeValue: Dispatch<SetStateAction<string>>;
 };
 
 function EditMovieDetails(props: Props) {
-  const { moveToNext, form, poster, setPoster } = props;
+  const {
+    moveToNext,
+    form,
+    poster,
+    setPoster,
+    selected,
+    timeValue,
+    setSelected,
+    setTimeValue,
+  } = props;
 
   const onSubmit = () => {
     moveToNext();
@@ -397,10 +418,22 @@ function EditMovieDetails(props: Props) {
                     className="w-auto h-auto p-0 rounded-[10px] shadow-lg mt-1 border-[0.3px] bg-card"
                     align="start"
                   >
+                    <TimePicker
+                      selected={selected}
+                      setSelected={setSelected}
+                      timeValue={timeValue}
+                      setTimeValue={setTimeValue}
+                    />
                     <Calendar
                       mode="single"
-                      selected={field.value}
-                      onSelect={field.onChange}
+                      selected={selected}
+                      onSelect={(d) => {
+                        setSelected(handleDaySelect(d, timeValue));
+                        form.setValue(
+                          "startTime",
+                          handleDaySelect(d, timeValue)!
+                        );
+                      }}
                       // selected={form.watch("end")}
                       // onSelect={(d) => {
                       //   form.setValue("end", d!);
@@ -430,7 +463,7 @@ function EditMovieDetails(props: Props) {
                     {...field}
                     type="text"
                     placeholder="Select location"
-                    className="bg-white border text-sm border-[#D0D5DD] h-14 placeholder:text-[#98A2B3] w-full pr-12"
+                    className="bg-white border text-sm border-[#D0D5DD] h-14 placeholder:text-[#98A2B3] w-full pr-14"
                     error={!!form.formState.errors.location}
                     suffixitem={
                       <MapPin

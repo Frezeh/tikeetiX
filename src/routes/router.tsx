@@ -19,6 +19,7 @@ import Events from "./events/events";
 import CreateEvent from "./create-event/create-event";
 import EventDetails from "./event-details/event-details";
 import EditEvent from "./edit-event/edit-event";
+import ManageWithdrawalAccounts from "./finance/manage-withdrawal-accounts";
 
 export const router = createBrowserRouter([
   {
@@ -69,6 +70,10 @@ export const router = createBrowserRouter([
       {
         path: "/finance",
         element: <Finance />,
+      },
+      {
+        path: "/finance/withdraw-accounts",
+        element: <ManageWithdrawalAccounts />,
       },
       {
         path: "/reporting",

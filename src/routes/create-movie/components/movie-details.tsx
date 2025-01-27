@@ -1,3 +1,4 @@
+import TimePicker from "@/components/time-picker";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
@@ -23,7 +24,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { cn } from "@/lib/utils";
+import { cn, handleDaySelect } from "@/lib/utils";
 import { format } from "date-fns";
 import {
   CalendarIcon,
@@ -41,6 +42,7 @@ import {
   useCallback,
   useMemo,
 } from "react";
+import { usePlacesWidget } from "react-google-autocomplete";
 import { UseFormReturn } from "react-hook-form";
 
 type Props = {
@@ -61,13 +63,26 @@ type Props = {
   >;
   poster: File | undefined;
   setPoster: Dispatch<SetStateAction<File | undefined>>;
+  selected: Date | undefined;
+  timeValue: string;
+  setSelected: Dispatch<SetStateAction<Date | undefined>>;
+  setTimeValue: Dispatch<SetStateAction<string>>;
 };
 
 const GENRES = ["Action", "Comedy", "Drama", "Horror", "Romance"];
 const RATINGS = ["PG 13", "R", "PG", "G"];
 
 function MovieDetails(props: Props) {
-  const { moveToNext, form, poster, setPoster } = props;
+  const {
+    moveToNext,
+    form,
+    poster,
+    setPoster,
+    selected,
+    timeValue,
+    setSelected,
+    setTimeValue,
+  } = props;
 
   const onSubmit = () => {
     moveToNext();
@@ -117,6 +132,13 @@ function MovieDetails(props: Props) {
     setPoster(target);
   }, []);
 
+  const { ref: locationRef } = usePlacesWidget({
+    apiKey: import.meta.env.VITE_GOOGLE_MAPS_API_KEY,
+    onPlaceSelected: (place) =>
+      form.setValue("location", place.formatted_address),
+    options: { types: ["address"] },
+  });
+  
   return (
     <ScrollArea className="h-[80vh]">
       <Form {...form}>
@@ -414,10 +436,22 @@ function MovieDetails(props: Props) {
                     className="w-auto h-auto p-0 rounded-[10px] shadow-lg mt-1 border-[0.3px] bg-card"
                     align="start"
                   >
+                    <TimePicker
+                      selected={selected}
+                      setSelected={setSelected}
+                      timeValue={timeValue}
+                      setTimeValue={setTimeValue}
+                    />
                     <Calendar
                       mode="single"
-                      selected={field.value}
-                      onSelect={field.onChange}
+                      selected={selected}
+                      onSelect={(d) => {
+                        setSelected(handleDaySelect(d, timeValue));
+                        form.setValue(
+                          "startTime",
+                          handleDaySelect(d, timeValue)!
+                        );
+                      }}
                       // selected={form.watch("end")}
                       // onSelect={(d) => {
                       //   form.setValue("end", d!);
@@ -445,9 +479,11 @@ function MovieDetails(props: Props) {
                 <FormControl>
                   <Input
                     {...field}
+                    //@ts-expect-error
+                    ref={locationRef}
                     type="text"
                     placeholder="Select location"
-                    className="bg-white border text-sm border-[#D0D5DD] h-14 placeholder:text-[#98A2B3] w-full pr-12 focus-visible:ml-0.5 transition-opacity duration-100"
+                    className="bg-white border text-sm border-[#D0D5DD] h-14 placeholder:text-[#98A2B3] w-full pr-14 focus-visible:ml-0.5 transition-opacity duration-100"
                     error={!!form.formState.errors.location}
                     suffixitem={
                       <MapPin

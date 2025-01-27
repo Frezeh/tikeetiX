@@ -1,3 +1,4 @@
+import TimePicker from "@/components/time-picker";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
@@ -23,7 +24,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { cn } from "@/lib/utils";
+import { cn, handleDaySelect } from "@/lib/utils";
 import { format } from "date-fns";
 import {
   CalendarIcon,
@@ -40,6 +41,7 @@ import {
   useCallback,
   useMemo,
 } from "react";
+import { usePlacesWidget } from "react-google-autocomplete";
 import { UseFormReturn } from "react-hook-form";
 
 type Props = {
@@ -61,18 +63,49 @@ type Props = {
   poster: File | undefined;
   setCroppedPoster: Dispatch<SetStateAction<File | undefined>>;
   setOpenEditImage: Dispatch<SetStateAction<boolean>>;
+  selected: Date | undefined;
+  timeValue: string;
+  setSelected: Dispatch<SetStateAction<Date | undefined>>;
+  setTimeValue: Dispatch<SetStateAction<string>>;
 };
 
-const CATEGORIES = ["Art and festival", "Food & drinks"];
-const TYPE = ["Physical", "Virtual", "Hybrid (physical & virtual)"];
+const CATEGORIES = [
+  "Socials",
+  "Cultural",
+  "Business",
+  "Educational",
+  "Virtual",
+  "Sports",
+  "Well-being",
+  "Political",
+  "Religious",
+];
+const TYPE = ["Physical", "Virtual", "Hybrid"];
 
 function EventDetails(props: Props) {
-  const { moveToNext, form, poster, setCroppedPoster, setOpenEditImage } =
-    props;
+  const {
+    moveToNext,
+    form,
+    poster,
+    setCroppedPoster,
+    setOpenEditImage,
+    selected,
+    timeValue,
+    setSelected,
+    setTimeValue,
+  } = props;
+  props;
 
   const onSubmit = () => {
     moveToNext();
   };
+
+  const { ref: locationRef } = usePlacesWidget({
+    apiKey: import.meta.env.VITE_GOOGLE_MAPS_API_KEY,
+    onPlaceSelected: (place) =>
+      form.setValue("location", place.formatted_address),
+    options: { types: ["address"] },
+  });
 
   const validate = useMemo(() => {
     let imageFormat = poster?.type.split("/")[1];
@@ -321,13 +354,21 @@ function EventDetails(props: Props) {
                     <SelectContent className="w-auto h-auto max-h-[400px] p-0 m-0 border-[#E4E7EC]">
                       <SelectGroup>
                         {TYPE.map((add, i) => (
-                          <SelectItem
-                            value={add}
-                            key={i}
-                            className="text-xs text-[#13191C]"
-                          >
-                            {add}
-                          </SelectItem>
+                          <>
+                            <SelectItem
+                              value={add}
+                              key={i}
+                              className="text-xs text-[#13191C]"
+                              disabled={add !== "Physical"}
+                            >
+                              {add}
+                              {add !== "Physical" && (
+                                <Badge className="absolute top-2 right-0 text-[8px] font-medium text-[#344054] bg-[#D0D5DD] rounded-[10px] h-[15px]">
+                                  Coming soon
+                                </Badge>
+                              )}
+                            </SelectItem>
+                          </>
                         ))}
                       </SelectGroup>
                     </SelectContent>
@@ -346,9 +387,11 @@ function EventDetails(props: Props) {
                 <FormControl>
                   <Input
                     {...field}
+                    //@ts-expect-error
+                    ref={locationRef}
                     type="text"
                     placeholder="Select location"
-                    className="bg-white border text-sm border-[#D0D5DD] h-14 placeholder:text-[#98A2B3] w-full pr-12 focus-visible:ml-0.5 transition-opacity duration-100"
+                    className="bg-white border text-sm border-[#D0D5DD] h-14 placeholder:text-[#98A2B3] w-full pr-14 focus-visible:ml-0.5 transition-opacity duration-100"
                     error={!!form.formState.errors.location}
                     suffixitem={
                       <MapPin
@@ -359,7 +402,7 @@ function EventDetails(props: Props) {
                     }
                   />
                 </FormControl>
-                <FormMessage />
+                <FormMessage className="w-full" />
               </FormItem>
             )}
           />
@@ -401,10 +444,22 @@ function EventDetails(props: Props) {
                     className="w-auto h-auto p-0 rounded-[10px] shadow-lg mt-1 border-[0.3px] bg-card"
                     align="start"
                   >
+                    <TimePicker
+                      selected={selected}
+                      setSelected={setSelected}
+                      timeValue={timeValue}
+                      setTimeValue={setTimeValue}
+                    />
                     <Calendar
                       mode="single"
-                      selected={field.value}
-                      onSelect={field.onChange}
+                      selected={selected}
+                      onSelect={(d) => {
+                        setSelected(handleDaySelect(d, timeValue));
+                        form.setValue(
+                          "startTime",
+                          handleDaySelect(d, timeValue)!
+                        );
+                      }}
                       // selected={form.watch("end")}
                       // onSelect={(d) => {
                       //   form.setValue("end", d!);

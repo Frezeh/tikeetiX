@@ -73,6 +73,34 @@ export function generateRandomId() {
   );
 }
 
+export const handleDaySelect = (date: Date | undefined, timeValue: string) => {
+  if (!timeValue || !date) {
+    return date;
+  } else {
+    const [hours, minutes] = timeValue
+      .split(":")
+      .map((str) => parseInt(str, 10));
+    const newDate = new Date(
+      date.getFullYear(),
+      date.getMonth(),
+      date.getDate(),
+      hours,
+      minutes
+    );
+
+    return newDate;
+  }
+};
+
+export const __flattenData = <T,>(arr: T[]) => {
+  return arr.reduce((acc: T[], item: any) => {
+    if (Array.isArray(item.data.foundItems)) {
+      return [...acc, ...item.data.foundItems];
+    }
+    return [...acc, item.data.foundItems];
+  }, []);
+};
+
 export function ticketRoutes(id?: string) {
   return [
     "/events",
@@ -94,5 +122,6 @@ export function routesWithoutHeader(id?: string) {
     `/movie-details/${id}`,
     `/event-details/${id}`,
     `/edit-event/${id}`,
+    "/finance/withdraw-accounts",
   ];
 }

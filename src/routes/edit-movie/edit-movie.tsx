@@ -56,6 +56,7 @@ import EditShowingRoom from "../create-movie/components/edit-showing-room";
 import ShowingRoom from "../create-movie/components/showing-room";
 import { SHOWINGROOM } from "../create-movie/create-movie";
 import EditMovieDetails from "./edit-movie-details";
+import { format, setHours, setMinutes } from "date-fns";
 
 export const EditMovieFormSchema = z.object({
   poster: z.string().min(1, { message: "Required" }),
@@ -87,6 +88,8 @@ export default function EditMovie() {
     {} as SHOWINGROOM
   );
   const [showingRoom, setShowingRoom] = useState<SHOWINGROOM[]>([]);
+  const [selected, setSelected] = useState<Date>();
+  const [timeValue, setTimeValue] = useState("00:00");
 
   const { isPending, mutate } = useMutation({ mutationFn: updateMovieTicket });
   const { isPending: isDetailsPending, mutate: updateDetails } = useMutation({
@@ -140,7 +143,16 @@ export default function EditMovie() {
         },
       ]);
     }
+    handleTimeChange(MOVIE?.data.ticket.startTime!);
   }, [MOVIE]);
+
+  const handleTimeChange = (date: Date) => {
+    const time = format(date, "hh:mm")
+    const [hours, minutes] = time.split(":").map((str) => parseInt(str, 10));
+    const newSelectedDate = setHours(setMinutes(date, minutes), hours);
+    setSelected(newSelectedDate);
+    setTimeValue(time);
+  };
 
   const form = useForm<z.infer<typeof EditMovieFormSchema>>({
     resolver: zodResolver(EditMovieFormSchema),
@@ -178,7 +190,7 @@ export default function EditMovie() {
           genre: form.getValues("genre"),
           location: form.getValues("location"),
           image,
-          startTime: form.getValues("startTime"),
+          startTime: selected,
         },
       },
     });
@@ -296,6 +308,10 @@ export default function EditMovie() {
               form={form}
               poster={poster}
               setPoster={setPoster}
+              selected={selected}
+              timeValue={timeValue}
+              setSelected={setSelected}
+              setTimeValue={setTimeValue}
             />
           )}
           {step === "room" && (

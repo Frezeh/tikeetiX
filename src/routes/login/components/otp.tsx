@@ -3,10 +3,10 @@ import Loading from "@/components/ui/loading";
 import OtpInput from "@/components/ui/otp-input";
 import { useToast } from "@/hooks/use-toast";
 import { useProfileContext } from "@/provider/profile-provider";
-import { completeLogin } from "@/services/api/auth";
+import { completeLogin, sendEmailOtp } from "@/services/api/auth";
 import { User } from "@/services/models/auth";
 import { useMutation } from "@tanstack/react-query";
-import Cookies from 'js-cookie';
+import Cookies from "js-cookie";
 import { ChevronLeft } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
@@ -21,7 +21,31 @@ export default function Otp({ goBack, userPayload }: Props) {
   const { updateProfile } = useProfileContext();
   const { toast } = useToast();
   const { isPending, mutate } = useMutation({ mutationFn: completeLogin });
+  const { isPending: isSending, mutate: sendOtp } = useMutation({
+    mutationFn: sendEmailOtp,
+  });
   const [otp, setOtp] = useState("");
+  const [timer, setTimer] = useState(120);
+  const [resendOtp, setResendOtp] = useState(false);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (timer > 0) {
+        setTimer((prev) => prev - 1);
+      } else {
+        setResendOtp(true);
+        clearInterval(interval);
+      }
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [timer]);
+
+  const formatTime = (time: number) => {
+    const minutes = Math.floor(time / 60);
+    const seconds = time % 60;
+    return `${minutes}:${seconds < 10 ? `0${seconds}` : seconds}`;
+  };
 
   const handleOtpChange = (value: string) => {
     setOtp(value);
@@ -38,8 +62,8 @@ export default function Otp({ goBack, userPayload }: Props) {
         onSuccess: (res) => {
           if (res) {
             updateProfile(res.data.user);
-            Cookies.set('accessToken', res.data.accessToken);
-            Cookies.set('refreshToken', res.data.refreshToken);
+            Cookies.set("accessToken", res.data.accessToken);
+            Cookies.set("refreshToken", res.data.refreshToken);
             navigate("/");
           } else {
             toast({
@@ -51,6 +75,32 @@ export default function Otp({ goBack, userPayload }: Props) {
         onError: () => {
           toast({
             title: "Failed to login",
+            variant: "error",
+          });
+        },
+      }
+    );
+  };
+
+  const resendOTP = () => {
+    sendOtp(
+      { email: userPayload.email! },
+      {
+        onSuccess: (res) => {
+          if (res.data) {
+            toast({
+              title: "OTP sent successfully",
+              variant: "success",
+            });
+            setResendOtp(false);
+            setTimer(120);
+          }
+        },
+        onError: (err: any) => {
+          toast({
+            title: err?.error?.message
+              ? err?.error?.message
+              : "Failed to send OTP",
             variant: "error",
           });
         },
@@ -82,9 +132,19 @@ export default function Otp({ goBack, userPayload }: Props) {
             Enter the OTP Code sent to your email below
           </p>
           <OtpInput length={5} onUpdate={handleOtpChange} />
+          {!resendOtp && (
+            <div className="pt-2 justify-center items-center flex w-full gap-1">
+              <p className="text-center text-[#98A2B3] text-xs">
+                Resend OTP in
+              </p>
+              <span className="text-center text-[#98A2B3] text-xs w-4">
+                {formatTime(timer)}
+              </span>
+            </div>
+          )}
         </div>
 
-        <div className="w-full pt-4">
+        <div className="w-full pt-4 space-y-4">
           <Button
             variant="gradient"
             className="w-full h-14"
@@ -93,6 +153,15 @@ export default function Otp({ goBack, userPayload }: Props) {
           >
             {isPending ? <Loading /> : "Submit"}
           </Button>
+          {resendOtp && (
+            <Button
+              className="w-full h-14 bg-white border border-[#D0D5DD] text-[#475367]"
+              disabled={isSending}
+              onClick={resendOTP}
+            >
+              {isSending ? <Loading /> : "Resend OTP"}
+            </Button>
+          )}
         </div>
       </div>
 

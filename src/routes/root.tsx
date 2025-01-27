@@ -50,14 +50,14 @@ const CURRENCY = [
 function Root() {
   const { pathname } = useLocation();
   const route = pathname;
-  const { isRefreshing, isLoading } = useAuth();
+  // const { isRefreshing, isLoading } = useAuth();
   const { profile } = useProfileContext();
   const [showFAQ, setShowFAQ] = useState(true);
   const { id } = useParams();
 
-  if (isRefreshing || isLoading) {
-    return <Loader />;
-  }
+  // if (isRefreshing || isLoading) {
+  //   return <Loader />;
+  // }
 
   return (
     <main className="flex w-screen h-screen bg-[#F7F9FC] overflow-hidden">
@@ -220,12 +220,12 @@ function Root() {
               to="/finance"
               className={cn(
                 "flex gap-[14px] group items-center px-4 text-sm w-full h-11 transition-all duration-100 hover:bg-primary hover:text-background text-[#98A2B3] bg-transparent rounded-sm",
-                route === "/finance" && "text-background font-medium bg-primary"
+                (route === "/finance" || route === "/finance/withdraw-accounts") && "text-background font-medium bg-primary"
               )}
             >
               <BarChart
                 className="group-hover:[&>path]:fill-background"
-                fill={route === "/finance" ? "#FFFFFF" : "#98A2B3"}
+                fill={(route === "/finance" || route === "/finance/withdraw-accounts") ? "#FFFFFF" : "#98A2B3"}
               />
               Finance
             </Link>

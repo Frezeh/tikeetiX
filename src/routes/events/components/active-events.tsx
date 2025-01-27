@@ -69,6 +69,7 @@ import {
 } from "react";
 import EventActions from "./event-actions";
 import ExportEvents from "./export-events";
+import { __flattenData } from "@/lib/utils";
 
 type Props = {
   activeEventsFilterValue: string;
@@ -161,6 +162,7 @@ export default function ActiveEvents(props: Props) {
   const loading = isFetching || isFetchingNextPage || isFetchingPreviousPage;
   const RESPONSE = data?.pages[data?.pages.length - 1];
   const EVENTS = RESPONSE?.data.foundItems || [];
+  // const EVENTS = __flattenData(data?.pages ?? [])
 
   const priceRange = useCallback((price?: number) => {
     if (price === 0) {

@@ -124,26 +124,12 @@ export default function EventLevelModal(props: Props) {
                       defaultValue={field.value}
                     >
                       <FormControl>
-                        <SelectTrigger
-                          className={cn(
-                            "bg-white border border-[#C7FFAC] focus:ring-0 h-14 placeholder:text-input w-full sm:w-[357px]",
-                            !!form.formState.errors.category &&
-                              "border-[#E26E6A]"
-                          )}
-                          suffixIcon={
-                            <div className="w-[45px] border-l border-[#D0D5DD] flex justify-end items-center">
-                              <ChevronDown size={24} color="#667185" />
-                            </div>
-                          }
-                        >
-                          {field.value ? (
-                            <SelectValue placeholder="Select Trading Country *" />
-                          ) : (
-                            <span className="text-[#D0D5DD] text-sm">
-                              i.e Regular
-                            </span>
-                          )}
-                        </SelectTrigger>
+                        <Input
+                          {...field}
+                          placeholder="Regular"
+                          className="bg-[#F0F2F5] border text-sm border-[#F0F2F5] h-14 placeholder:text-input w-full sm:w-[357px] pr-12"
+                          error={!!form.formState.errors.category}
+                        />
                       </FormControl>
                       <SelectContent className="w-auto h-auto max-h-[400px] p-0 m-0 border-[#E4E7EC]">
                         <SelectGroup>
@@ -176,11 +162,11 @@ export default function EventLevelModal(props: Props) {
                         {...field}
                         type="number"
                         placeholder="49.99"
-                        className=" bg-[#F0F2F5] border text-sm border-[#F0F2F5] h-14 placeholder:text-[#667185] placeholder:font-medium w-full sm:w-[357px] pl-[46px] pr-12"
+                        className=" bg-[#F0F2F5] border text-sm border-[#F0F2F5] h-14 placeholder:text-[#667185] placeholder:font-medium w-full sm:w-[357px] pl-[36px] pr-12"
                         error={!!form.formState.errors.price}
                         prefixItem={
-                          <div className="absolute top-[0.6px] left-0 lg:mt-[18px] lg:mr-8 ml-4">
-                            <p className="text-[#98A2B3] text-sm">GBP</p>
+                          <div className="absolute top-0 left-0 lg:mt-[16px] lg:mr-8 ml-4">
+                            <p className="text-[#98A2B3] text-base">£</p>
                           </div>
                         }
                         suffixitem={

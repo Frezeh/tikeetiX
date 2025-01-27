@@ -45,6 +45,7 @@ import EventLevelModal from "../create-event/components/event-level-modal";
 import { EVENTLEVEL, TICKETPRICE } from "../create-event/create-event";
 import EditEventDetails from "./edit-event-details";
 import EventLevel from "./event-level";
+import { format, setHours, setMinutes } from "date-fns";
 
 export const CreateEventFormSchema = z.object({
   poster: z.string().min(1, { message: "Required" }),
@@ -93,6 +94,8 @@ export default function EditEvent() {
   );
   const [eventLevel, setEventLevel] = useState<EVENTLEVEL[]>([]);
   const [price, setPrice] = useState(TICKETPRICE[0]);
+  const [selected, setSelected] = useState<Date>();
+  const [timeValue, setTimeValue] = useState("00:00");
 
   const { isPending, mutate } = useMutation({ mutationFn: updateEventTicket });
   const { isPending: isDetailsPending, mutate: updateDetails } = useMutation({
@@ -183,8 +186,17 @@ export default function EditEvent() {
           id: generateRandomId(),
         },
       ]);
+      handleTimeChange(EVENT.data.ticket.startTime);
     }
   }, [EVENT]);
+
+  const handleTimeChange = (date: Date) => {
+    const time = format(date, "hh:mm")
+    const [hours, minutes] = time.split(":").map((str) => parseInt(str, 10));
+    const newSelectedDate = setHours(setMinutes(date, minutes), hours);
+    setSelected(newSelectedDate);
+    setTimeValue(time);
+  };
 
   const updateTicket = (data: Partial<EventTicketBodyPayload>) => {
     mutate(
@@ -215,7 +227,7 @@ export default function EditEvent() {
           title: form.getValues("title"),
           description: form.getValues("description") ?? "",
           location: form.getValues("location"),
-          startTime: form.getValues("startTime"),
+          startTime: selected,
           image,
           maxPurchasePerUser: Number(levelForm.getValues("maxpurchase")),
           organizerName: form.getValues("name") ?? "",
@@ -340,6 +352,10 @@ export default function EditEvent() {
               poster={poster}
               setCroppedPoster={setCroppedPoster}
               setOpenEditImage={setOpenEditImage}
+              selected={selected}
+              timeValue={timeValue}
+              setSelected={setSelected}
+              setTimeValue={setTimeValue}
             />
           )}
           {step === "level" && (

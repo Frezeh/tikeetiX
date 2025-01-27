@@ -92,6 +92,8 @@ export default function CreateMovie() {
   const [showingRoom, setShowingRoom] = useState<SHOWINGROOM[]>([]);
   const [id, setId] = useState("");
   const queryClient = useQueryClient();
+  const [selected, setSelected] = useState<Date>();
+  const [timeValue, setTimeValue] = useState("00:00");
 
   const { isPending, mutate } = useMutation({ mutationFn: createMovieTicket });
   const { isPending: isUploading, mutate: upload } = useMutation({
@@ -155,7 +157,7 @@ export default function CreateMovie() {
                 genre: form.getValues("genre"),
                 location: form.getValues("location"),
                 image: res.data,
-                startTime: form.getValues("startTime"),
+                startTime: selected!,
               },
               ticketPayload: showingRoom
                 ? showingRoom?.map((movie) => {
@@ -235,6 +237,10 @@ export default function CreateMovie() {
               form={form}
               poster={poster}
               setPoster={setPoster}
+              selected={selected}
+              timeValue={timeValue}
+              setSelected={setSelected}
+              setTimeValue={setTimeValue}
             />
           )}
           {step === "showing-room" && (
@@ -428,11 +434,13 @@ export default function CreateMovie() {
               >
                 <div className="p-4 w-full flex items-center gap-4 bg-[#F7F9FC] rounded-t-[16px]">
                   {poster && (
-                    <img
-                      src={poster ? URL.createObjectURL(poster) : undefined}
-                      alt="Movie"
-                      className="w-20 h-20 rounded-[8px]"
-                    />
+                    <div className="w-20 h-20 rounded-[8px] inline-flex">
+                      <img
+                        src={poster ? URL.createObjectURL(poster) : undefined}
+                        alt="Movie"
+                        className="w-20 h-20 rounded-[8px]"
+                      />
+                    </div>
                   )}
                   {form.watch("title") && (
                     <div className="space-1">

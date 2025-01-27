@@ -2,11 +2,13 @@ export interface EventTicketBody {
   isMovie: boolean;
   event: TicketEventPayload;
   ticketPayload: EventTicketBodyPayload[];
+  discounts?: Discount[];
 }
 export interface MovieTicketBody {
   isMovie: boolean;
   movie: TicketMoviePayload;
   ticketPayload: MovieTicketBodyPayload[];
+  discounts?: Discount[];
 }
 
 export interface TicketMoviePayload {
@@ -152,4 +154,13 @@ export interface MovieEvent {
   updatedAt: string;
   id: string;
   organizerName?: string;
+}
+
+export interface Discount {
+  code: string
+  quantity: number
+  amount: number
+  rangeType: "percentage" | "constant"
+  startDate: Date
+  endDate: Date
 }

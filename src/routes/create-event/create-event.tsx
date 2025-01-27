@@ -40,8 +40,20 @@ import EditImage from "./components/edit-image";
 import EventDetails from "./components/event-details";
 import EventLevel from "./components/event-level";
 import EventLevelModal from "./components/event-level-modal";
+import PromoCodeModal from "@/components/promo-code";
+import RemovePromoCode from "@/components/remove-promo-code";
+import EditPromoCodeModal from "@/components/edit-promo-code";
 
 export type EVENTLEVEL = Omit<TEventLevel, "createdBy">;
+export type PROMOCODE = {
+  id: string;
+  promocode: string;
+  quantity: string;
+  amount: string;
+  start: Date;
+  end: Date;
+  type: "constant" | "percentage";
+};
 export const TICKETPRICE = ["Free event", "Paid event", "Donation"];
 
 export const CreateEventFormSchema = z.object({
@@ -83,20 +95,22 @@ export default function CreateEvent() {
   const [selectedLevel, setSelectedLevel] = useState<EVENTLEVEL>(
     {} as EVENTLEVEL
   );
+  const [selectedPromoCode, setSelectedPromoCode] = useState<PROMOCODE>(
+    {} as PROMOCODE
+  );
   const [eventLevel, setEventLevel] = useState<EVENTLEVEL[]>([]);
+  const [promoCode, setPromoCode] = useState<PROMOCODE[]>([]);
   const [price, setPrice] = useState(TICKETPRICE[0]);
+  const [selected, setSelected] = useState<Date>();
+  const [timeValue, setTimeValue] = useState("00:00");
+  const [openPromoCode, setOpenPromoCode] = useState(false);
+  const [openRemovePromoCode, setOpenRemovePromoCode] = useState(false);
+  const [openEditPromoCode, setOpenEditPromoCode] = useState(false);
 
   const [id, setId] = useState("");
   const queryClient = useQueryClient();
 
-  // const { isLoading, data: eventLevel } = useQuery({
-  //   queryKey: ["event-level"],
-  //   queryFn: getAllEventLevel,
-  // });
   const { isPending, mutate } = useMutation({ mutationFn: createEventTicket });
-  // const { isPending: isRemoving, mutate: remove } = useMutation({
-  //   mutationFn: deleteEventLevel,
-  // });
   const { isPending: isUploading, mutate: upload } = useMutation({
     mutationFn: uploadSingleFile,
   });
@@ -157,7 +171,7 @@ export default function CreateEvent() {
               title: form.getValues("title"),
               description: form.getValues("description") ?? "",
               location: form.getValues("location"),
-              startTime: form.getValues("startTime"),
+              startTime: selected,
               image: res.data,
               maxPurchasePerUser: Number(levelForm.getValues("maxpurchase")),
               organizerName: form.getValues("name") ?? "",
@@ -184,6 +198,16 @@ export default function CreateEvent() {
                       ticketType: "Events",
                     },
                   ],
+            discounts: promoCode.map((promo) => {
+              return {
+                code: promo.promocode,
+                quantity: Number(promo.quantity),
+                amount: Number(promo.amount),
+                rangeType: promo.type,
+                startDate: promo.start,
+                endDate: promo.end,
+              };
+            }),
           });
         }
       },
@@ -211,6 +235,17 @@ export default function CreateEvent() {
   };
   const updateEventLevel = (level: EVENTLEVEL) => {
     setEventLevel((prev) => prev.map((l) => (l.id === level.id ? level : l)));
+  };
+
+  const addPromoCode = (level: PROMOCODE) => {
+    setPromoCode((prev) => [...prev, level]);
+  };
+
+  const removePromoCode = (level: PROMOCODE) => {
+    setPromoCode((prev) => prev.filter((l) => l.id !== level.id));
+  };
+  const updatePromoCode = (level: PROMOCODE) => {
+    setPromoCode((prev) => prev.map((l) => (l.id === level.id ? level : l)));
   };
 
   return (
@@ -251,6 +286,10 @@ export default function CreateEvent() {
               poster={poster}
               setCroppedPoster={setCroppedPoster}
               setOpenEditImage={setOpenEditImage}
+              selected={selected}
+              timeValue={timeValue}
+              setSelected={setSelected}
+              setTimeValue={setTimeValue}
             />
           )}
           {step === "level" && (
@@ -261,11 +300,16 @@ export default function CreateEvent() {
               openTicketLevel={() => setOpenLevel(true)}
               openEditTicketLevel={() => setOpenEditLevel(true)}
               openRemoveTicketLevel={() => setOpenRemove(true)}
+              openPromoCode={() => setOpenPromoCode(true)}
+              openRemovePromoCode={() => setOpenRemovePromoCode(true)}
               setSelectedLevel={setSelectedLevel}
               isCreating={isCreating}
               eventLevel={eventLevel ?? []}
               price={price}
               setPrice={setPrice}
+              promoCode={promoCode}
+              setSelectedPromoCode={setSelectedPromoCode}
+              setOpenEditPromoCode={setOpenEditPromoCode}
             />
           )}
         </div>
@@ -346,11 +390,13 @@ export default function CreateEvent() {
               >
                 <div className="p-4 w-full flex items-center gap-4 bg-[#F7F9FC] rounded-t-[16px]">
                   {poster && (
-                    <img
-                      src={poster ? URL.createObjectURL(poster) : undefined}
-                      alt="Event"
-                      className="w-20 h-20 rounded-[8px]"
-                    />
+                    <div className="w-20 h-20 rounded-[8px] inline-flex">
+                      <img
+                        src={poster ? URL.createObjectURL(poster) : undefined}
+                        alt="Event"
+                        className="w-full h-auto rounded-[8px]"
+                      />
+                    </div>
                   )}
                   {form.watch("title") && (
                     <div className="space-1">
@@ -541,6 +587,23 @@ export default function CreateEvent() {
         croppedPoster={croppedPoster}
         setPoster={setPoster}
         cropPoster={(name: string) => form.setValue("poster", name)}
+      />
+      <PromoCodeModal
+        openPromoCode={openPromoCode}
+        setOpenPromoCode={setOpenPromoCode}
+        addPromoCode={addPromoCode}
+      />
+      <RemovePromoCode
+        openRemove={openRemovePromoCode}
+        setOpenRemove={setOpenRemovePromoCode}
+        removePromoCode={removePromoCode}
+        selectedPromoCode={selectedPromoCode}
+      />
+      <EditPromoCodeModal
+        openEditPromoCode={openEditPromoCode}
+        setOpenEditPromoCode={setOpenEditPromoCode}
+        updatePromoCode={updatePromoCode}
+        promoCode={selectedPromoCode}
       />
     </div>
   );

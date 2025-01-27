@@ -1,3 +1,4 @@
+import TimePicker from "@/components/time-picker";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
@@ -23,7 +24,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { cn } from "@/lib/utils";
+import { cn, handleDaySelect } from "@/lib/utils";
 import { format } from "date-fns";
 import {
   CalendarIcon,
@@ -39,6 +40,7 @@ import {
   memo,
   useCallback,
   useMemo,
+  useState,
 } from "react";
 import { UseFormReturn } from "react-hook-form";
 
@@ -61,21 +63,44 @@ type Props = {
   poster: File | undefined;
   setCroppedPoster: Dispatch<SetStateAction<File | undefined>>;
   setOpenEditImage: Dispatch<SetStateAction<boolean>>;
+  selected: Date | undefined;
+  timeValue: string;
+  setSelected: Dispatch<SetStateAction<Date | undefined>>;
+  setTimeValue: Dispatch<SetStateAction<string>>;
 };
 
-const CATEGORIES = ["Art and festival", "Food & drinks"];
+const CATEGORIES = [
+  "Socials",
+  "Cultural",
+  "Business",
+  "Educational",
+  "Virtual",
+  "Sports",
+  "Well-being",
+  "Political",
+  "Religious",
+];
 const TYPE = ["Physical", "Virtual", "Hybrid (physical & virtual)"];
 
 function EditEventDetails(props: Props) {
-  const { moveToNext, form, poster, setCroppedPoster, setOpenEditImage } =
-    props;
+  const {
+    moveToNext,
+    form,
+    poster,
+    setCroppedPoster,
+    setOpenEditImage,
+    selected,
+    timeValue,
+    setSelected,
+    setTimeValue,
+  } = props;
 
   const onSubmit = () => {
     moveToNext();
   };
 
   const validate = useMemo(() => {
-    if (poster === undefined )
+    if (poster === undefined)
       return {
         format: true,
         size: true,
@@ -358,7 +383,7 @@ function EditEventDetails(props: Props) {
                     {...field}
                     type="text"
                     placeholder="Select location"
-                    className="bg-white border text-sm border-[#D0D5DD] h-14 placeholder:text-[#98A2B3] w-full pr-12 focus-visible:ml-0.5 transition-opacity duration-100"
+                    className="bg-white border text-sm border-[#D0D5DD] h-14 placeholder:text-[#98A2B3] w-full pr-14 focus-visible:ml-0.5 transition-opacity duration-100"
                     error={!!form.formState.errors.location}
                     suffixitem={
                       <MapPin
@@ -411,10 +436,22 @@ function EditEventDetails(props: Props) {
                     className="w-auto h-auto p-0 rounded-[10px] shadow-lg mt-1 border-[0.3px] bg-card"
                     align="start"
                   >
+                    <TimePicker
+                      selected={selected}
+                      setSelected={setSelected}
+                      timeValue={timeValue}
+                      setTimeValue={setTimeValue}
+                    />
                     <Calendar
                       mode="single"
-                      selected={field.value}
-                      onSelect={field.onChange}
+                      selected={selected}
+                      onSelect={(d) => {
+                        setSelected(handleDaySelect(d, timeValue));
+                        form.setValue(
+                          "startTime",
+                          handleDaySelect(d, timeValue)!
+                        );
+                      }}
                       // selected={form.watch("end")}
                       // onSelect={(d) => {
                       //   form.setValue("end", d!);
