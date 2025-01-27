@@ -40,7 +40,6 @@ import {
   memo,
   useCallback,
   useMemo,
-  useState,
 } from "react";
 import { UseFormReturn } from "react-hook-form";
 
@@ -139,7 +138,6 @@ function EditEventDetails(props: Props) {
     setOpenEditImage(true);
   }, []);
 
-  
   return (
     <ScrollArea className="h-[80vh]">
       <Form {...form}>

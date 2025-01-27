@@ -3,9 +3,7 @@ import AirplaneIcon from "@/assets/icons/airplane";
 import ChatIcon from "@/assets/icons/chat-icon";
 import FilmRoolIcon from "@/assets/icons/film-rool";
 import LoudSpeaker from "@/assets/icons/loud-speaker";
-import MovieIcon from "@/assets/icons/movie-icon";
 import TicketIcon from "@/assets/icons/ticket-icon";
-import TicketIconFilled from "@/assets/icons/ticket-icon-filled";
 import TikeetiEventIcon from "@/assets/icons/tikeeti-event";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -15,7 +13,6 @@ import {
   Dialog,
   DialogContent,
   DialogDescription,
-  DialogFooter,
   DialogHeader,
 } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";

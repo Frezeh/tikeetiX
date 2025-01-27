@@ -1,5 +1,3 @@
-import * as React from "react";
-
 function IntegrationIcon({ ...props }) {
   return (
     <svg width={201} height={79} viewBox="0 0 201 79" fill="none" {...props}>

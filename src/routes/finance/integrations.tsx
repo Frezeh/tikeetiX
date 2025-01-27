@@ -1,9 +1,8 @@
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
-import IntegrationIcon from "./integration-icon";
-import { Redo } from "lucide-react";
-import StripeIcon from "./stripe";
 import { Switch } from "@/components/ui/switch";
 import { useState } from "react";
+import IntegrationIcon from "./integration-icon";
+import StripeIcon from "./stripe";
 
 export default function Integrations() {
   const [manage, setManage] = useState<

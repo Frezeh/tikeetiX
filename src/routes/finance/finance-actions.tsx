@@ -1,9 +1,7 @@
 import BankIcon from "@/assets/icons/bank-icon";
 import GBP from "@/assets/icons/gbp.svg";
-import MoneyIcon from "@/assets/icons/money-icon";
 import ProcessingIcon from "@/assets/icons/processsing-icon";
 import TicketIcon from "@/assets/icons/ticket-icon";
-import Globe from "@/assets/images/bad-boys.png";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -22,7 +20,6 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
 import {
-  CheckCircle2Icon,
   CircleCheck,
   HistoryIcon,
   MapPin,

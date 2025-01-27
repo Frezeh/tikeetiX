@@ -1,7 +1,7 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useState } from "react";
-import ManageFinance from "./manage-finance";
 import Integrations from "./integrations";
+import ManageFinance from "./manage-finance";
 
 const DATA = [
   {
@@ -64,7 +64,7 @@ export default function Finance() {
             filterValue={filterValue}
             searchValue={searchValue}
             setFilterValue={setFilterValue}
-            setSearchValue={setFilterValue}
+            setSearchValue={setSearchValue}
           />
         </TabsContent>
         <TabsContent value="integrations" className="mt-2">

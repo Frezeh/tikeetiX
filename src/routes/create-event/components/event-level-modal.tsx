@@ -26,10 +26,8 @@ import {
   SelectContent,
   SelectGroup,
   SelectItem,
-  SelectTrigger,
-  SelectValue,
 } from "@/components/ui/select";
-import { cn, generateRandomId } from "@/lib/utils";
+import { generateRandomId } from "@/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Check, ChevronDown } from "lucide-react";
 import { Dispatch, SetStateAction } from "react";

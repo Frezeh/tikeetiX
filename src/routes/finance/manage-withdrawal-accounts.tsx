@@ -13,12 +13,11 @@ import {
   SearchIcon,
 } from "lucide-react";
 import { useState } from "react";
-import { Link, useNavigate, useParams } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import AddSettlementAccount from "./add-settlement-account";
 
 export default function ManageWithdrawalAccounts() {
   const navigate = useNavigate();
-  const { id } = useParams();
   const [addSettlementAccountModal, setAddSettlementAccountModal] =
     useState(false);
 

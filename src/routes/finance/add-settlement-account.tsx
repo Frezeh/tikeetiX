@@ -35,7 +35,7 @@ import { sendEmailOtp } from "@/services/api/auth";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
 import { ChevronDown, WalletIcon } from "lucide-react";
-import React, { Dispatch } from "react";
+import React, { Dispatch, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
@@ -88,7 +88,7 @@ export default function AddSettlementAccount({
 }) {
   const [level, setLevel] = React.useState(1);
   //TODO: Lift state to parent
-  const [otp, setOtp] = React.useState("");
+  const [_, setOtp] = React.useState("");
   const [timer, setTimer] = React.useState(120);
   const [resendOtp, setResendOtp] = React.useState(false);
   const { profile } = useProfileContext();
@@ -97,18 +97,18 @@ export default function AddSettlementAccount({
     mutationFn: sendEmailOtp,
   });
 
-  //   useEffect(() => {
-  //     const interval = setInterval(() => {
-  //       if (timer > 0) {
-  //         setTimer((prev) => prev - 1);
-  //       } else {
-  //         setResendOtp(true);
-  //         clearInterval(interval);
-  //       }
-  //     }, 1000);
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (timer > 0) {
+        setTimer((prev) => prev - 1);
+      } else {
+        setResendOtp(true);
+        clearInterval(interval);
+      }
+    }, 1000);
 
-  //     return () => clearInterval(interval);
-  //   }, [timer]);
+    return () => clearInterval(interval);
+  }, [timer]);
 
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
@@ -516,14 +516,14 @@ export default function AddSettlementAccount({
           <div className="pt-5 space-y-1">
             <p className="text-[#101928] text-sm font-medium">Enter OTP</p>
             <OtpInput length={5} onUpdate={handleOtpChange} />
-            {/* <div className="pt-1 justify-center items-center flex w-full gap-1">
+            <div className="pt-1 justify-center items-center flex w-full gap-1">
               {resendOtp ? (
                 <button
-                  className="w-full h-14 bg-white border border-[#D0D5DD] text-[#475367]"
+                  className="w-full"
                   disabled={isSending}
                   onClick={resendOTP}
                 >
-                  <p className="text-center text-[#98A2B3] text-xs">
+                  <p className="text-center text-[#98A2B3] text-xs font-medium">
                     {isSending ? "Resending OTP...." : "Resend OTP"}
                   </p>
                 </button>
@@ -537,7 +537,7 @@ export default function AddSettlementAccount({
                   </span>
                 </>
               )}
-            </div> */}
+            </div>
           </div>
         </DialogDescription>
         <DialogFooter className="flex justify-between items-center pt-[15px]">

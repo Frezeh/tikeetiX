@@ -1,6 +1,7 @@
-import MoneyMultipleIcon from "@/assets/icons/money-multiple-icon";
-import TicketIcon from "@/assets/icons/ticket-icon";
+import BubbleIcon from "@/assets/icons/bubble";
+import CreateNewFolderIcon from "@/assets/icons/create-new-folder";
 import VisibleIcon from "@/assets/icons/visible-icon";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import {
   DropdownMenu,
@@ -20,63 +21,46 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import {
-  Tooltip,
-  TooltipArrow,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
-import { TicketEvents } from "@/services/models/ticket";
-import { useQueryClient } from "@tanstack/react-query";
 import {
-  ArrowRightIcon,
   ChevronLeft,
   ChevronRight,
-  ChevronsUpDown,
   CircleCheck,
-  CircleX,
   Filter,
-  MoveDownLeft,
-  MoveRightIcon,
   MoveUpRight,
   SearchIcon,
   Upload,
   WalletIcon,
   XIcon,
 } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useState } from "react";
+import { Link } from "react-router-dom";
 import ExportEvents from "../events/components/export-events";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Link, useNavigate } from "react-router-dom";
-import { Button } from "@/components/ui/button";
-import CreateNewFolderIcon from "@/assets/icons/create-new-folder";
-import BubbleIcon from "@/assets/icons/bubble";
-import FinanceWithdrawal from "./finance-withdrawal";
 import FinanceActions from "./finance-actions";
+import FinanceWithdrawal from "./finance-withdrawal";
 
-const DATA = [
-  {
-    id: 1,
-    order_id: "#01234/10",
-    ticket_name: "AI Meetup with Autogon",
-    name: "Billy Butcher",
-    email: "customer@mail.com",
-    amount: "GBP999,999",
-    status: "Completed",
-    category: "Event",
-  },
-  {
-    id: 2,
-    order_id: "#01234/10",
-    ticket_name: "AI Meetup with Autogon",
-    name: "Billy Butcher",
-    email: "customer@email.com",
-    amount: "GBP999,999",
-    status: "Completed",
-    category: "Event",
-  },
-] as const;
+// const DATA = [
+//   {
+//     id: 1,
+//     order_id: "#01234/10",
+//     ticket_name: "AI Meetup with Autogon",
+//     name: "Billy Butcher",
+//     email: "customer@mail.com",
+//     amount: "GBP999,999",
+//     status: "Completed",
+//     category: "Event",
+//   },
+//   {
+//     id: 2,
+//     order_id: "#01234/10",
+//     ticket_name: "AI Meetup with Autogon",
+//     name: "Billy Butcher",
+//     email: "customer@email.com",
+//     amount: "GBP999,999",
+//     status: "Completed",
+//     category: "Event",
+//   },
+// ] as const;
 
 export function getItemColor(status: string) {
   switch (status) {
@@ -117,27 +101,27 @@ export default function ManageFinance({
   const [openExport, setOpenExport] = useState(false);
   const [openModal, setOpenModal] = useState(false);
   const [openWithdrawalModal, setOpenWithdrawalModal] = useState(false);
-  const [activeTab, setActiveTab] = useState("finance");
+  // const [activeTab, setActiveTab] = useState("finance");
 
-  const [selectedEvent, setSelectedEvent] = useState<(typeof DATA)[number]>(
-    {} as (typeof DATA)[number]
-  );
+  // const [selectedEvent, setSelectedEvent] = useState<(typeof DATA)[number]>(
+  //   {} as (typeof DATA)[number]
+  // );
 
-  const queryClient = useQueryClient();
-  const navigate = useNavigate();
+  // const queryClient = useQueryClient();
+  // const navigate = useNavigate();
 
-  const queryParams = useMemo(() => {
-    let params = "";
+  // const queryParams = useMemo(() => {
+  //   let params = "";
 
-    if (filterValue) {
-      params = params + `&status=${filterValue}`;
-    }
-    if (searchValue) {
-      params = params + `&searchTerm=${searchValue}`;
-    }
+  //   if (filterValue) {
+  //     params = params + `&status=${filterValue}`;
+  //   }
+  //   if (searchValue) {
+  //     params = params + `&searchTerm=${searchValue}`;
+  //   }
 
-    return params;
-  }, [filterValue, searchValue]);
+  //   return params;
+  // }, [filterValue, searchValue]);
 
   //   const {
   //     fetchNextPage,
@@ -494,7 +478,7 @@ export default function ManageFinance({
                           className="w-8 h-8 rounded-[8px] flex items-center justify-center border border-[#E4E7EC] bg-white"
                           onClick={() => {
                             setOpenModal(true);
-                            setSelectedEvent(data);
+                            // setSelectedEvent(data);
                           }}
                         >
                           <VisibleIcon className="h-4 w-4" color="#475367" />

@@ -1,4 +1,7 @@
-import React, { Dispatch, SetStateAction } from "react";
+import RemoveIcon from "@/assets/icons/remove-icon";
+import { PROMOCODE } from "@/routes/create-event/create-event";
+import { Dispatch, SetStateAction } from "react";
+import { Button } from "./ui/button";
 import {
   Dialog,
   DialogContent,
@@ -6,9 +9,6 @@ import {
   DialogFooter,
   DialogHeader,
 } from "./ui/dialog";
-import RemoveIcon from "@/assets/icons/remove-icon";
-import { Button } from "./ui/button";
-import { PROMOCODE } from "@/routes/create-event/create-event";
 
 type Props = {
   openRemove: boolean;

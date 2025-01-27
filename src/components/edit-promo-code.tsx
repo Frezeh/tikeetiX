@@ -20,16 +20,16 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { Select, SelectContent, SelectTrigger } from "@/components/ui/select";
-import { cn, generateRandomId } from "@/lib/utils";
+import { cn } from "@/lib/utils";
+import { PROMOCODE } from "@/routes/create-event/create-event";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { format, set } from "date-fns";
+import { format } from "date-fns";
 import { CalendarIcon, Check, ChevronDown, Percent } from "lucide-react";
 import { Dispatch, SetStateAction, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { Calendar } from "./ui/calendar";
 import { Checkbox } from "./ui/checkbox";
-import { PROMOCODE } from "@/routes/create-event/create-event";
 
 const FormSchema = z.object({
   promocode: z.string().min(1, { message: "Promo code is required" }),
@@ -77,7 +77,7 @@ export default function EditPromoCodeModal(props: Props) {
       start: data.start,
       end: data.end,
       id: promoCode.id,
-      type
+      type,
     });
     setOpenEditPromoCode(false);
     form.reset();
@@ -196,7 +196,9 @@ export default function EditPromoCodeModal(props: Props) {
                               <PopoverTrigger asChild>
                                 <button className="flex items-center gap-1">
                                   <span className="pl-1 text-[#667185] text-sm font-medium">
-                                  {type === "percentage" ? "Percentage" : "Amount"}
+                                    {type === "percentage"
+                                      ? "Percentage"
+                                      : "Amount"}
                                   </span>
                                   <ChevronDown size={24} color="#667185" />
                                 </button>

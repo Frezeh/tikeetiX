@@ -27,8 +27,6 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
-import { TicketEvents } from "@/services/models/ticket";
-import { useQueryClient } from "@tanstack/react-query";
 import {
   ChevronLeft,
   ChevronRight,
@@ -41,7 +39,7 @@ import {
   Upload,
   XIcon,
 } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import ExportEvents from "../events/components/export-events";
 import ManageOrdersActions from "./manage-order-actions";
 
@@ -76,24 +74,24 @@ export default function ManageOrders() {
   const [openExport, setOpenExport] = useState(false);
   const [openModal, setOpenModal] = useState(false);
 
-  const [selectedEvent, setSelectedEvent] = useState<(typeof DATA)[number]>(
-    {} as (typeof DATA)[number]
-  );
+  // const [selectedEvent, setSelectedEvent] = useState<(typeof DATA)[number]>(
+  //   {} as (typeof DATA)[number]
+  // );
 
-  const queryClient = useQueryClient();
+  // const queryClient = useQueryClient();
 
-  const queryParams = useMemo(() => {
-    let params = "";
+  // const queryParams = useMemo(() => {
+  //   let params = "";
 
-    if (filterValue) {
-      params = params + `&status=${filterValue}`;
-    }
-    if (searchValue) {
-      params = params + `&searchTerm=${searchValue}`;
-    }
+  //   if (filterValue) {
+  //     params = params + `&status=${filterValue}`;
+  //   }
+  //   if (searchValue) {
+  //     params = params + `&searchTerm=${searchValue}`;
+  //   }
 
-    return params;
-  }, [filterValue, searchValue]);
+  //   return params;
+  // }, [filterValue, searchValue]);
 
   //   const {
   //     fetchNextPage,
@@ -436,7 +434,7 @@ export default function ManageOrders() {
                           className="w-8 h-8 rounded-[8px] flex items-center justify-center border border-[#E4E7EC] bg-white"
                           onClick={() => {
                             setOpenModal(true);
-                            setSelectedEvent(data);
+                            //setSelectedEvent(data);
                           }}
                         >
                           <VisibleIcon className="h-4 w-4" color="#475367" />
