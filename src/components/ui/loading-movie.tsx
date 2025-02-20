@@ -18,7 +18,7 @@ export const LoadingMovieGrid = () => {
   );
 };
 
-export const LoadingMovieList = () => {
+export const LoadingList = () => {
   return (
     <TableBody className="[&_tr:last-child]:border-1">
       {new Array(4).fill(null).map((_, index) => (

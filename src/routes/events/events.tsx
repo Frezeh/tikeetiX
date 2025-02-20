@@ -1,48 +1,16 @@
-import AiStars from "@/assets/icons/ai-stars";
-import BarChart from "@/assets/icons/bar-chart";
 import ButtonGradient from "@/assets/icons/button-gradient";
-import ClipboardIcon from "@/assets/icons/clipboard-icon";
-import TicketIcon from "@/assets/icons/ticket-icon";
-import TicketIconFilled from "@/assets/icons/ticket-icon-filled";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-} from "@/components/ui/dialog";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { cn } from "@/lib/utils";
-import { getEventTicketsWithoutParams } from "@/services/api/ticket";
-import { useQuery } from "@tanstack/react-query";
-import { CircleIcon } from "lucide-react";
+// import { getEvents } from "@/services/api/events";
+// import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import ActiveEvents from "./components/active-events";
-import AllEvents from "./components/all-events";
+import { CreateEventDialog } from "./components/create-event-dialog";
 import Overview from "./components/overview";
 
 export default function Events() {
-  const [activeTab, setActiveTab] = useState("overview");
-  const [activeEventsFilterValue, setActiveEventsFilterValue] = useState("");
-  const [activeEventsSearchValue, setActiveEventsSearchValue] = useState("");
-  const [allEventsFilterValue, setAllEventsFilterValue] = useState("");
-  const [allEventsSearchValue, setAllEventsSearchValue] = useState("");
-  const [openTicketModal, setOpenTicketModal] = useState(false);
-  const [ticketType, setTicketType] = useState("");
-  const navigate = useNavigate();
-
-  // const { isPending, data } = useQuery({
-  //   queryKey: ["events"],
-  //   queryFn: getEventsWithoutParams,
-  // });
-  const { isPending, data } = useQuery({
-    queryKey: ["events"],
-    queryFn: getEventTicketsWithoutParams,
-  });
+  const [filterValue, setFilterValue] = useState("");
+  const [searchValue, setSearchValue] = useState("");
+  const [openCreateEventModal, setOpenCreateEventModal] = useState(false);
+  const [eventType, setEventType] = useState("");
 
   return (
     <div className="pb-20">
@@ -57,7 +25,7 @@ export default function Events() {
           <Button
             className="h-[53px] w-[173px] rounded-[8px] text-base bg-gradient-to-r from-primary to-primary flex"
             variant={"gradient"}
-            onClick={() => setOpenTicketModal(true)}
+            onClick={() => setOpenCreateEventModal(true)}
           >
             <span className="flex items-center gap-2">
               Create a ticket
@@ -66,7 +34,29 @@ export default function Events() {
           </Button>
         </div>
       </div>
-      <Tabs defaultValue={"overview"} className="mb-10">
+
+      <Overview
+        filterValue={filterValue}
+        setFilterValue={setFilterValue}
+        searchValue={searchValue}
+        setSearchValue={setSearchValue}
+      />
+      <div>
+        {/* <AllEvents
+          allEventsFilterValue={allEventsFilterValue}
+          setAllEventsFilterValue={setAllEventsFilterValue}
+          allEventsSearchValue={allEventsSearchValue}
+          setAllEventsSearchValue={setAllEventsSearchValue}
+        /> */}
+      </div>
+
+      <CreateEventDialog
+        openCreateEventModal={openCreateEventModal}
+        setOpenCreateEventModal={setOpenCreateEventModal}
+        setEventType={setEventType}
+        eventType={eventType}
+      />
+      {/* <Tabs defaultValue={"overview"} className="mb-10">
         <TabsList className="lg:grid w-fit max-w-[589px] lg:grid-cols-3 rounded-none bg-transparent h-[52px] border-b border-b-[#E4E7EC] mx-5">
           <TabsTrigger
             value="overview"
@@ -118,162 +108,9 @@ export default function Events() {
           />
         </TabsContent>
         <TabsContent value="all-events" className="mt-5">
-          <AllEvents
-            allEventsFilterValue={allEventsFilterValue}
-            setAllEventsFilterValue={setAllEventsFilterValue}
-            allEventsSearchValue={allEventsSearchValue}
-            setAllEventsSearchValue={setAllEventsSearchValue}
-          />
+          
         </TabsContent>
-      </Tabs>
-
-      <Dialog open={openTicketModal} onOpenChange={setOpenTicketModal}>
-        <DialogContent
-          className="w-3/4 sm:max-w-[400px] justify-center items-center gap-2 rounded-[8px] px-5 py-[15px] space-y-2"
-          closeStyle="bg-white w-[34px] h-[34px] p-0 top-0 right-[-10%] top-[-8px] flex justify-center items-center rounded-[8px]"
-        >
-          <DialogHeader className="self-center">
-            <div className="w-full flex items-center justify-center self-center">
-              <div className="w-12 h-12 bg-[#F0F2F5] rounded-[10px] flex justify-center items-center">
-                <TicketIcon fill="#13191C" width={24} height={24} />
-              </div>
-            </div>
-          </DialogHeader>
-          <DialogDescription className="text-center space-y-2">
-            <p className="text-[#13191C] text-lg font-medium">
-              Create a ticket
-            </p>
-            <p className="text-[#667185] text-sm">
-              Create an event to sell tickets
-            </p>
-          </DialogDescription>
-
-          <DialogDescription className="text-center space-y-3">
-            <div
-              role="button"
-              onClick={() => setTicketType("custom")}
-              className={cn(
-                "w-full p-4 rounded-[12px] border flex items-center justify-between gap-1 transition-all duration-200 cursor-pointer",
-                ticketType === "custom"
-                  ? "bg-[#F5FFF0] border-[#9DF316]"
-                  : "bg-white border-[#D0D5DD]"
-              )}
-            >
-              <div className="w-8 h-8 border border-[#A8F285] bg-white rounded-[8px] flex justify-center items-center">
-                <TicketIconFilled width={16} height={16} className="" />
-              </div>
-              <div>
-                <p
-                  className={cn(
-                    "font-medium text-sm text-left",
-                    ticketType === "custom" ? "text-primary" : "text-[#13191C]"
-                  )}
-                >
-                  Create custom ticket
-                </p>
-                <p
-                  className={cn(
-                    "text-sm text-left",
-                    ticketType === "custom"
-                      ? "text-primary font-medium"
-                      : "text-[#13191C]"
-                  )}
-                >
-                  Create and configure custom events.
-                </p>
-              </div>
-              {ticketType === "custom" ? (
-                <Checkbox
-                  id="custom"
-                  className="transition-all duration-150 w-[14px] h-[14px] rounded-full"
-                  iconStyle="w-3 h-3"
-                  checked={true}
-                />
-              ) : (
-                <CircleIcon
-                  color="#D0D5DD"
-                  size={16}
-                  className="transition-all duration-150"
-                />
-              )}
-            </div>
-            <div
-              role="button"
-              className={cn(
-                "w-full p-4 rounded-[12px] border flex items-center justify-between gap-1 transition-all duration-200 cursor-pointer",
-                ticketType === "AI"
-                  ? "bg-[#F5FFF0] border-[#9DF316]"
-                  : "bg-white border-[#D0D5DD]"
-              )}
-            >
-              <div className="w-8 h-8 rounded-[8px] ai-gradient flex justify-center items-center">
-                <div className="w-[30px] h-[30px] flex justify-center items-center bg-white rounded-[8px]">
-                  <AiStars gradient />
-                </div>
-              </div>
-              <div>
-                <div className="flex items-center gap-2">
-                  <p
-                    className={cn(
-                      "font-medium text-sm text-left",
-                      ticketType === "AI" ? "text-primary" : "text-[#13191C]"
-                    )}
-                  >
-                    AI Ticket maker
-                  </p>
-                  <Badge className="text-[10px] font-medium text-[#98A2B3] bg-[#E4E7EC] rounded-[10px] h-[15px]">
-                    COMING SOON
-                  </Badge>
-                </div>
-                <p
-                  className={cn(
-                    "text-sm text-left",
-                    ticketType === "AI"
-                      ? "text-primary font-medium"
-                      : "text-[#13191C]"
-                  )}
-                >
-                  Ticket creation with A.I ticket maker
-                </p>
-              </div>
-              {ticketType === "AI" ? (
-                <Checkbox
-                  id="custom"
-                  className="transition-all duration-150 w-[14px] h-[14px] rounded-full"
-                  iconStyle="w-3 h-3"
-                  checked={true}
-                />
-              ) : (
-                <CircleIcon
-                  color="#D0D5DD"
-                  size={16}
-                  className="transition-all duration-150"
-                />
-              )}
-            </div>
-          </DialogDescription>
-
-          <DialogFooter className="flex justify-between items-center pt-2">
-            <Button
-              className="h-9 w-[178px] bg-white border-[#D0D5DD] border rounded-[8px]"
-              variant="ghost"
-              onClick={() => setOpenTicketModal(false)}
-            >
-              Cancel
-            </Button>
-            <Button
-              className="h-9 w-[178px]"
-              onClick={() => {
-                if (ticketType === "custom") {
-                  navigate("/create-event");
-                }
-              }}
-            >
-              Confirm
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      </Tabs> */}
     </div>
   );
 }

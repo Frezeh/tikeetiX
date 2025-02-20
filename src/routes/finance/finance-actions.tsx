@@ -18,7 +18,8 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { cn } from "@/lib/utils";
+import { capitalizeFirstLetter, cn } from "@/lib/utils";
+import { Transaction } from "@/services/models/transaction";
 import {
   CircleCheck,
   HistoryIcon,
@@ -32,20 +33,14 @@ import { getItemColor } from "./manage-finance";
 type Props = {
   openModal: boolean;
   setOpenModal: Dispatch<SetStateAction<boolean>>;
+  data: Transaction;
 };
 
-const data = {
-  id: 1,
-  order_id: "#01234/10",
-  ticket_name: "AI Meetup with Autogon",
-  name: "Billy Butcher",
-  email: "customer@mail.com",
-  amount: "GBP999,999",
-  status: "Completed",
-  category: "Event",
-};
-
-export default function FinanceActions({ setOpenModal, openModal }: Props) {
+export default function FinanceActions({
+  setOpenModal,
+  openModal,
+  data,
+}: Props) {
   return (
     <Dialog open={openModal} onOpenChange={setOpenModal}>
       <DialogContent
@@ -92,7 +87,7 @@ export default function FinanceActions({ setOpenModal, openModal }: Props) {
             </div>
             <div>
               <p className="text-[#98A2B3] text-[28px] font-bold">
-                GBP <span className="text-[#13191C]">2,000</span>
+                GBP <span className="text-[#13191C]">{data?.amount || 0}</span>
               </p>
             </div>
           </DialogDescription>
@@ -111,12 +106,12 @@ export default function FinanceActions({ setOpenModal, openModal }: Props) {
               <div className="flex justify-between items-center">
                 <div
                   className={cn(
-                    `flex items-center gap-1 px-3 py-1 rounded-[12px] w-[116px] bg-[${
-                      getItemColor(data.status.toLowerCase()).bgColor
-                    }]`
+                    `flex items-center gap-1 px-3 py-1 rounded-[12px] w-[116px] ${
+                      getItemColor(data?.status?.toLowerCase()).bgColor
+                    }`
                   )}
                 >
-                  {data.status.toLowerCase() === "completed" ? (
+                  {data?.status?.toLowerCase() === "completed" ? (
                     <CircleCheck size={16} color="#036B26" />
                   ) : (
                     <svg
@@ -139,27 +134,27 @@ export default function FinanceActions({ setOpenModal, openModal }: Props) {
                   <p
                     className={cn(
                       "text-sm font-medium",
-                      data.status.toLowerCase() === "completed"
+                      data?.status?.toLowerCase() === "completed"
                         ? "text-[#036B26]"
-                        : data.status.toLowerCase() === "processing"
+                        : data?.status?.toLowerCase() === "processing"
                         ? "text-[#865503]"
                         : "text-[#E72113]"
                     )}
                   >
-                    {data.status}
+                    {capitalizeFirstLetter(data?.status ?? "")}
                   </p>
                 </div>
               </div>
             </div>
             <div className="flex justify-between items-center">
               <p className="text-base text-[#667185]">Account name</p>
-              <p className="text-base text-[#13191C]">9018275991</p>
-            </div>
-            <div className="flex justify-between items-center">
-              <p className="text-base text-[#667185]">Account number</p>
               <p className="text-base text-[#13191C]">
                 John Doe D. Rockefeller
               </p>
+            </div>
+            <div className="flex justify-between items-center">
+              <p className="text-base text-[#667185]">Account number</p>
+              <p className="text-base text-[#13191C]">9018275991</p>
             </div>
             <div className="flex justify-between items-center">
               <p className="text-base text-[#667185]">Sort code</p>

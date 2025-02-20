@@ -54,7 +54,6 @@ export default function EnterPassword({ moveToNext, setEmail }: Props) {
           }
         },
         onError: (err: any) => {
-          console.log("err", err.message);
           toast({
             title: err?.error?.message
               ? err?.error?.message

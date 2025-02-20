@@ -10,7 +10,7 @@ export default function Integrations() {
       id: number;
       selected: boolean;
     }[]
-  >(new Array(10).fill("").map((_, index) => ({ id: index, selected: false })));
+  >(new Array(0).fill("").map((_, index) => ({ id: index, selected: false })));
 
   return (
     <div className="pb-20 pt-3">
@@ -23,7 +23,7 @@ export default function Integrations() {
       </div>
 
       <div className="grid grid-cols-4 gap-2 p-5">
-        {new Array(10).fill("").map((_, index) => (
+        {new Array(0).fill("").map((_, index) => (
           <Card
             key={index}
             x-chunk="dashboard-06-chunk-0"

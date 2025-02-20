@@ -18,6 +18,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import Loading from "@/components/ui/loading";
 import OtpInput from "@/components/ui/otp-input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
@@ -29,13 +30,15 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { toast } from "@/hooks/use-toast";
+import { BANKS } from "@/lib/banks";
 import { cn } from "@/lib/utils";
 import { useProfileContext } from "@/provider/profile-provider";
-import { sendEmailOtp } from "@/services/api/auth";
+import { sendEmailOtp, verifyEmail } from "@/services/api/auth";
+import { createSettlementAccount } from "@/services/api/finance";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { ChevronDown, WalletIcon } from "lucide-react";
-import React, { Dispatch, useEffect } from "react";
+import React, { Dispatch, SetStateAction, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
@@ -60,25 +63,6 @@ const TYPE = [
   },
 ];
 
-const BANKS = [
-  {
-    value: "Barclays",
-    label: "Barclays",
-  },
-  {
-    value: "HSBC Holdings",
-    label: "HSBC Holdings",
-  },
-  {
-    value: "Lloyds Banking Group",
-    label: "Lloyds Banking Group",
-  },
-  {
-    value: "NatWest Group",
-    label: "NatWest Group",
-  },
-];
-
 export default function AddSettlementAccount({
   addSettlementAccountModal,
   setAddSettlementAccountModal,
@@ -87,28 +71,11 @@ export default function AddSettlementAccount({
   setAddSettlementAccountModal: Dispatch<boolean>;
 }) {
   const [level, setLevel] = React.useState(1);
-  //TODO: Lift state to parent
-  const [_, setOtp] = React.useState("");
-  const [timer, setTimer] = React.useState(120);
-  const [resendOtp, setResendOtp] = React.useState(false);
   const { profile } = useProfileContext();
 
   const { isPending: isSending, mutate: sendOtp } = useMutation({
     mutationFn: sendEmailOtp,
   });
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      if (timer > 0) {
-        setTimer((prev) => prev - 1);
-      } else {
-        setResendOtp(true);
-        clearInterval(interval);
-      }
-    }, 1000);
-
-    return () => clearInterval(interval);
-  }, [timer]);
 
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
@@ -133,43 +100,7 @@ export default function AddSettlementAccount({
     form.reset();
   };
 
-  const formatTime = (time: number) => {
-    const minutes = Math.floor(time / 60);
-    const seconds = time % 60;
-    return `${minutes}:${seconds < 10 ? `0${seconds}` : seconds}`;
-  };
-
-  const handleOtpChange = (value: string) => {
-    setOtp(value);
-  };
-
-  const resendOTP = () => {
-    sendOtp(
-      { email: profile?.email! },
-      {
-        onSuccess: (res) => {
-          if (res.data) {
-            toast({
-              title: "OTP sent successfully",
-              variant: "success",
-            });
-            setResendOtp(false);
-            setTimer(120);
-          }
-        },
-        onError: (err: any) => {
-          toast({
-            title: err?.error?.message
-              ? err?.error?.message
-              : "Failed to send OTP",
-            variant: "error",
-          });
-        },
-      }
-    );
-  };
-
-  function level1() {
+  function Level1() {
     return (
       <ScrollArea className="max-h-[90vh]">
         <DialogHeader className="self-center">
@@ -252,11 +183,11 @@ export default function AddSettlementAccount({
                         <SelectGroup>
                           {BANKS.map((add, i) => (
                             <SelectItem
-                              value={add.value}
+                              value={add}
                               key={i}
                               className="text-sm text-[#13191C]"
                             >
-                              {add.label}
+                              {add}
                             </SelectItem>
                           ))}
                         </SelectGroup>
@@ -426,7 +357,7 @@ export default function AddSettlementAccount({
     );
   }
 
-  function level2() {
+  function Level2() {
     return (
       <>
         <DialogHeader className="self-center">
@@ -457,34 +388,50 @@ export default function AddSettlementAccount({
               Account Details
             </p>
           </div>
-          <div className="flex justify-between items-center">
-            <p className="text-base text-[#667185]">Account name</p>
-            <p className="text-base text-[#13191C] font-medium">
-              John Doe D. Rockefeller
-            </p>
-          </div>
+          {form.getValues("accountname") && (
+            <div className="flex justify-between items-center">
+              <p className="text-base text-[#667185]">Account name</p>
+              <p className="text-base text-[#13191C] font-medium">
+                {form.getValues("accountname")}
+              </p>
+            </div>
+          )}
           <div className="flex justify-between items-center">
             <p className="text-base text-[#667185]">Account number</p>
             <p className="text-base text-[#13191C] font-medium">9018275991</p>
           </div>
-          <div className="flex justify-between items-center">
-            <p className="text-base text-[#667185]">Bank name</p>
-            <p className="text-base text-[#13191C] font-medium">
-              JP Morgan & Chase
-            </p>
-          </div>
-          <div className="flex justify-between items-center">
-            <p className="text-base text-[#667185]">Sort code</p>
-            <p className="text-base text-[#13191C] font-medium">181042</p>
-          </div>
-          <div className="flex justify-between items-center">
-            <p className="text-base text-[#667185]">Post code</p>
-            <p className="text-base text-[#13191C] font-medium">181042</p>
-          </div>
-          <div className="flex justify-between items-center">
-            <p className="text-base text-[#667185]">Account type</p>
-            <p className="text-base text-[#13191C] font-medium">Private</p>
-          </div>
+          {form.getValues("bank") && (
+            <div className="flex justify-between items-center">
+              <p className="text-base text-[#667185]">Bank name</p>
+              <p className="text-base text-[#13191C] font-medium">
+                {form.getValues("bank")}
+              </p>
+            </div>
+          )}
+          {form.getValues("sortcode") && (
+            <div className="flex justify-between items-center">
+              <p className="text-base text-[#667185]">Sort code</p>
+              <p className="text-base text-[#13191C] font-medium">
+                {form.getValues("sortcode")}
+              </p>
+            </div>
+          )}
+          {form.getValues("postcode") && (
+            <div className="flex justify-between items-center">
+              <p className="text-base text-[#667185]">Post code</p>
+              <p className="text-base text-[#13191C] font-medium">
+                {form.getValues("postcode")}
+              </p>
+            </div>
+          )}
+          {form.getValues("type") && (
+            <div className="flex justify-between items-center">
+              <p className="text-base text-[#667185]">Account type</p>
+              <p className="text-base text-[#13191C] font-medium">
+                {form.getValues("type")}
+              </p>
+            </div>
+          )}
         </DialogDescription>
         <DialogFooter className="flex justify-between items-center pt-[15px]">
           <Button
@@ -494,69 +441,34 @@ export default function AddSettlementAccount({
           >
             Back
           </Button>
-          <Button className="h-9 w-1/2" onClick={() => setLevel(3)}>
-            Confirm request
-          </Button>
-        </DialogFooter>
-      </>
-    );
-  }
-
-  function level3() {
-    return (
-      <>
-        <DialogDescription className="self-center text-center space-y-2 pt-5">
-          <p className="text-[#13191C] text-lg font-medium text-center">
-            Confirm withdrawal account
-          </p>
-          <p className="text-[#667185] text-sm text-center">
-            We have sent an OTP to your registered email, please enter it below
-            to confirm your request.
-          </p>
-          <div className="pt-5 space-y-1">
-            <p className="text-[#101928] text-sm font-medium">Enter OTP</p>
-            <OtpInput length={5} onUpdate={handleOtpChange} />
-            <div className="pt-1 justify-center items-center flex w-full gap-1">
-              {resendOtp ? (
-                <button
-                  className="w-full"
-                  disabled={isSending}
-                  onClick={resendOTP}
-                >
-                  <p className="text-center text-[#98A2B3] text-xs font-medium">
-                    {isSending ? "Resending OTP...." : "Resend OTP"}
-                  </p>
-                </button>
-              ) : (
-                <>
-                  <p className="text-center text-[#98A2B3] text-xs">
-                    Resend OTP in
-                  </p>
-                  <span className="text-center text-[#98A2B3] text-xs w-4">
-                    {formatTime(timer)}
-                  </span>
-                </>
-              )}
-            </div>
-          </div>
-        </DialogDescription>
-        <DialogFooter className="flex justify-between items-center pt-[15px]">
           <Button
-            className="h-9 w-1/2 bg-white border-[#D0D5DD] border rounded-[8px]"
-            variant="ghost"
-            onClick={() => setLevel(1)}
+            className="h-9 w-1/2"
+            disabled={isSending}
+            onClick={() => {
+              sendOtp(
+                { email: profile?.email! },
+                {
+                  onSuccess: (res) => {
+                    if (res.data) setLevel(3);
+                  },
+                  onError: () => {
+                    toast({
+                      variant: "error",
+                      title: "Failed to confirm request",
+                    });
+                  },
+                }
+              );
+            }}
           >
-            Cancel
-          </Button>
-          <Button className="h-9 w-1/2" onClick={() => setLevel(4)}>
-            Confirm
+            {isSending ? <Loading /> : "Confirm request"}
           </Button>
         </DialogFooter>
       </>
     );
   }
 
-  function level4() {
+  function Level4() {
     return (
       <>
         <DialogHeader className="justify-center items-center">
@@ -591,11 +503,208 @@ export default function AddSettlementAccount({
         className="w-3/4 sm:max-w-[400px] gap-2 rounded-[8px] px-5 py-[15px] space-y-2"
         closeStyle="bg-white w-[34px] h-[34px] p-0 top-0 right-[-10%] top-[-8px] flex justify-center items-center rounded-[8px]"
       >
-        {level === 1 && level1()}
-        {level === 2 && level2()}
-        {level === 3 && level3()}
-        {level === 4 && level4()}
+        {level === 1 && <Level1 />}
+        {level === 2 && <Level2 />}
+        {level === 3 && (
+          <Level3
+            setLevel={setLevel}
+            accountNumber={form.getValues("accountnumber")}
+            bankName={form.getValues("bank")}
+            sortCode={form.getValues("sortcode")}
+          />
+        )}
+        {level === 4 && <Level4 />}
       </DialogContent>
     </Dialog>
+  );
+}
+
+function Level3({
+  setLevel,
+  accountNumber,
+  bankName,
+  sortCode,
+}: {
+  setLevel: Dispatch<SetStateAction<number>>;
+  accountNumber: string;
+  bankName: string;
+  sortCode: string;
+}) {
+  const [otp, setOtp] = React.useState("");
+  const [timer, setTimer] = React.useState(120);
+  const [resendOtp, setResendOtp] = React.useState(false);
+  const { profile } = useProfileContext();
+  const queryClient = useQueryClient();
+
+  const { isPending: isVerifyingOtp, mutate: verifyOtp } = useMutation({
+    mutationFn: verifyEmail,
+  });
+  const { isPending: isCreatingAccount, mutate: createAccount } = useMutation({
+    mutationFn: createSettlementAccount,
+  });
+  const { isPending: isSending, mutate: sendOtp } = useMutation({
+    mutationFn: sendEmailOtp,
+  });
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (timer > 0) {
+        setTimer((prev) => prev - 1);
+      } else {
+        setResendOtp(true);
+        clearInterval(interval);
+      }
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [timer]);
+
+  useEffect(() => {
+    if (otp.length === 5) {
+      verifyOTP();
+    }
+  }, [otp]);
+
+  const handleOtpChange = (value: string) => {
+    setOtp(value);
+  };
+
+  const formatTime = (time: number) => {
+    const minutes = Math.floor(time / 60);
+    const seconds = time % 60;
+    return `${minutes}:${seconds < 10 ? `0${seconds}` : seconds}`;
+  };
+
+  const verifyOTP = () => {
+    verifyOtp(
+      { email: profile?.email!, code: otp },
+      {
+        onSuccess: (res) => {
+          if (res.data) {
+            createAccount(
+              {
+                accountNumber,
+                bankName,
+                sortCode,
+              },
+              {
+                onSuccess: (res) => {
+                  if (res.data) {
+                    queryClient.invalidateQueries();
+                    setLevel(4);
+                  } else {
+                    toast({
+                      title: "Failed to create account",
+                      variant: "error",
+                    });
+                  }
+                },
+                onError: () => {
+                  toast({
+                    title: "Failed to create account",
+                    variant: "error",
+                  });
+                },
+              }
+            );
+          } else {
+            toast({
+              title: "Failed to verify otp",
+              variant: "error",
+            });
+          }
+        },
+        onError: () => {
+          toast({
+            title: "Failed to verify otp",
+            variant: "error",
+          });
+        },
+      }
+    );
+  };
+
+  const resendOTP = () => {
+    sendOtp(
+      { email: profile?.email! },
+      {
+        onSuccess: (res) => {
+          if (res.data) {
+            toast({
+              title: "OTP sent successfully",
+              variant: "success",
+            });
+            setResendOtp(false);
+            setTimer(120);
+          }
+        },
+        onError: (err: any) => {
+          toast({
+            title: err?.error?.message
+              ? err?.error?.message
+              : "Failed to send OTP",
+            variant: "error",
+          });
+        },
+      }
+    );
+  };
+
+  const loading = isVerifyingOtp || isCreatingAccount;
+
+  return (
+    <>
+      <DialogDescription className="self-center text-center space-y-2 pt-5">
+        <p className="text-[#13191C] text-lg font-medium text-center">
+          Confirm withdrawal account
+        </p>
+        <p className="text-[#667185] text-sm text-center">
+          We have sent an OTP to your registered email, please enter it below to
+          confirm your request.
+        </p>
+        <div className="pt-5 space-y-1">
+          <p className="text-[#101928] text-sm font-medium">Enter OTP</p>
+          <OtpInput length={5} onUpdate={handleOtpChange} />
+          <div className="pt-1 justify-center items-center flex w-full gap-1">
+            {resendOtp ? (
+              <button
+                className="w-full h-14 bg-white border border-[#D0D5DD] text-[#475367]"
+                disabled={isSending}
+                onClick={resendOTP}
+              >
+                <p className="text-center text-[#98A2B3] text-xs">
+                  {isSending ? "Resending OTP...." : "Resend OTP"}
+                </p>
+              </button>
+            ) : (
+              <>
+                <p className="text-center text-[#98A2B3] text-xs">
+                  Resend OTP in
+                </p>
+                <span className="text-center text-[#98A2B3] text-xs w-4">
+                  {formatTime(timer)}
+                </span>
+              </>
+            )}
+          </div>
+        </div>
+      </DialogDescription>
+      <DialogFooter className="flex justify-between items-center pt-[15px]">
+        <Button
+          className="h-9 w-1/2 bg-white border-[#D0D5DD] border rounded-[8px]"
+          variant="ghost"
+          onClick={() => setLevel(1)}
+        >
+          Cancel
+        </Button>
+        <Button
+          className="h-9 w-1/2"
+          disabled={loading || otp.length < 5}
+          onClick={verifyOTP}
+        >
+          {loading ? <Loading /> : "Confirm"}
+        </Button>
+      </DialogFooter>
+    </>
   );
 }

@@ -28,7 +28,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
-import { LoadingMovieList } from "@/components/ui/loading-movie";
+import { LoadingList } from "@/components/ui/loading-movie";
 import {
   ChevronLeft,
   ChevronRight,
@@ -88,7 +88,9 @@ export default function TicketsSold({ ticketSold }: { ticketSold: number }) {
               <CardContent className="flex justify-between items-center p-0">
                 <div className="space-y-2">
                   <p className="text-[#475367] text-sm">No. Tickets sold</p>
-                  <p className="text-[#344054] font-bold text-xl">{ticketSold}</p>
+                  <p className="text-[#344054] font-bold text-xl">
+                    {ticketSold}
+                  </p>
                 </div>
                 <div className="w-10 h-10 rounded-full bg-[#C7FFAC] border border-[#A8F285] flex justify-center items-center">
                   <TicketIcon fill="#133205" />
@@ -237,7 +239,7 @@ export default function TicketsSold({ ticketSold }: { ticketSold: number }) {
               </TableRow>
             </TableHeader>
             {false ? (
-              <LoadingMovieList />
+              <LoadingList />
             ) : (
               <TableBody className="[&_tr:last-child]:border-1">
                 {DATA.map((data) => (

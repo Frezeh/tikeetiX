@@ -18,6 +18,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import Loading from "@/components/ui/loading";
 import {
   Select,
   SelectContent,
@@ -26,10 +27,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { toast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
+import { getSettlementAccounts, requestPayout } from "@/services/api/finance";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { ChevronDown, WalletIcon } from "lucide-react";
-import React, { Dispatch } from "react";
+import React, { Dispatch, SetStateAction } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
@@ -37,20 +41,6 @@ const FormSchema = z.object({
   amount: z.string().min(1, { message: "Amount is required" }),
   account: z.string().min(1, { message: "Settlement account is required" }),
 });
-const ACCOUNT = [
-  {
-    value: "first-class",
-    label: "First class",
-  },
-  {
-    value: "business-class",
-    label: "Business class",
-  },
-  {
-    value: "economy-class",
-    label: "Economy class",
-  },
-];
 
 export default function FinanceWithdrawal({
   openWithDrawalModal,
@@ -60,6 +50,11 @@ export default function FinanceWithdrawal({
   setOpenWithDrawalModal: Dispatch<boolean>;
 }) {
   const [level, setLevel] = React.useState(1);
+
+  const { isLoading, data } = useQuery({
+    queryKey: ["settlement-accounts"],
+    queryFn: getSettlementAccounts,
+  });
 
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
@@ -79,7 +74,7 @@ export default function FinanceWithdrawal({
     form.reset();
   };
 
-  function level1() {
+  function Level1() {
     return (
       <>
         <DialogHeader className="self-center">
@@ -138,15 +133,23 @@ export default function FinanceWithdrawal({
                       </FormControl>
                       <SelectContent className="w-auto h-auto max-h-[400px] p-0 m-0 border-[#E4E7EC]">
                         <SelectGroup>
-                          {ACCOUNT.map((add, i) => (
-                            <SelectItem
-                              value={add.value}
-                              key={i}
-                              className="text-xs text-[#13191C]"
-                            >
-                              {add.label}
-                            </SelectItem>
-                          ))}
+                          {isLoading ? (
+                            <Loading />
+                          ) : data?.data && data?.data?.length > 0 ? (
+                            data?.data.map((add, i) => (
+                              <SelectItem
+                                value={add.id}
+                                key={i}
+                                className="text-xs text-[#13191C]"
+                              >
+                                {add.accountNumber}
+                              </SelectItem>
+                            ))
+                          ) : (
+                            <p className="text-center self-center">
+                              No settlement account
+                            </p>
+                          )}
                         </SelectGroup>
                       </SelectContent>
                     </Select>
@@ -213,75 +216,7 @@ export default function FinanceWithdrawal({
     );
   }
 
-  function level2() {
-    return (
-      <>
-        <DialogHeader className="justify-center items-center border-b border-[#E4E7EC] self-center p-3">
-          <p className="text-[#667185] font-medium text-lg">Request preview</p>
-        </DialogHeader>
-        <DialogDescription className="justify-center items-center text-center space-y-4 border-b border-[#E4E7EC] pb-3">
-          <div className="flex items-center justify-center gap-2">
-            <img src={GBP} alt="currency" className="w-4 h-4" />
-            <p className="text-[#13191C] text-sm font-medium">GBP</p>
-          </div>
-          <div>
-            <p className="text-[#98A2B3] text-[28px] font-bold">
-              GBP <span className="text-[#13191C]">2,000</span>
-            </p>
-          </div>
-        </DialogDescription>
-
-        <DialogDescription className="flex flex-col gap-4">
-          <div className="flex items-center gap-2">
-            <div className="w-6 h-6 bg-white border border-[#E4E7EC] rounded-[8px] flex justify-center items-center">
-              <BankIcon fill="#13191C" />
-            </div>
-            <p className="text-[#13191C] font-medium text-base">
-              Account Details
-            </p>
-          </div>
-          <div className="flex justify-between items-center">
-            <p className="text-base text-[#667185]">Status</p>
-            <p className="text-base text-[#13191C] font-medium">9018275991</p>
-          </div>
-          <div className="flex justify-between items-center">
-            <p className="text-base text-[#667185]">Account name</p>
-            <p className="text-base text-[#13191C] font-medium">9018275991</p>
-          </div>
-          <div className="flex justify-between items-center">
-            <p className="text-base text-[#667185]">Account number</p>
-            <p className="text-base text-[#13191C] font-medium">
-              John Doe D. Rockefeller
-            </p>
-          </div>
-          <div className="flex justify-between items-center">
-            <p className="text-base text-[#667185]">Sort code</p>
-            <p className="text-base text-[#13191C] font-medium">181042</p>
-          </div>
-          <div className="flex justify-between items-center">
-            <p className="text-base text-[#667185]">Bank name</p>
-            <p className="text-base text-[#13191C] font-medium">
-              JP Morgan & Chase
-            </p>
-          </div>
-        </DialogDescription>
-        <DialogFooter className="flex justify-between items-center pt-[15px]">
-          <Button
-            className="h-9 w-1/2 bg-white border-[#D0D5DD] border rounded-[8px]"
-            variant="ghost"
-            onClick={() => setLevel(1)}
-          >
-            Back
-          </Button>
-          <Button className="h-9 w-1/2" onClick={() => setLevel(3)}>
-            Send request
-          </Button>
-        </DialogFooter>
-      </>
-    );
-  }
-
-  function level3() {
+  function Level3() {
     return (
       <>
         <DialogHeader className="justify-center items-center">
@@ -315,10 +250,119 @@ export default function FinanceWithdrawal({
         className="w-3/4 sm:max-w-[400px]  gap-2 rounded-[8px] px-5 py-[15px] space-y-2"
         closeStyle="bg-white w-[34px] h-[34px] p-0 top-0 right-[-10%] top-[-8px] flex justify-center items-center rounded-[8px]"
       >
-        {level === 1 && level1()}
-        {level === 2 && level2()}
-        {level === 3 && level3()}
+        {level === 1 && <Level1 />}
+        {level === 2 && (
+          <Level2
+            setLevel={setLevel}
+            amount={Number(form.getValues("amount"))}
+            settlementAccountId={form.getValues("account")}
+          />
+        )}
+        {level === 3 && <Level3 />}
       </DialogContent>
     </Dialog>
+  );
+}
+
+function Level2({
+  setLevel,
+  amount,
+  settlementAccountId,
+}: {
+  setLevel: Dispatch<SetStateAction<number>>;
+  amount: number;
+  settlementAccountId: string;
+}) {
+  const { isPending, mutate } = useMutation({ mutationFn: requestPayout });
+
+  const sendRequest = () => {
+    mutate(
+      {
+        amount,
+        settlementAccountId,
+      },
+      {
+        onSuccess: (res) => {
+          if (res.data) {
+            setLevel(3);
+          } else {
+            toast({
+              title: "Failed to send request",
+            });
+          }
+        },
+        onError: () => {
+          toast({
+            title: "Failed to send request",
+          });
+        },
+      }
+    );
+  };
+
+  return (
+    <>
+      <DialogHeader className="justify-center items-center border-b border-[#E4E7EC] self-center p-3">
+        <p className="text-[#667185] font-medium text-lg">Request preview</p>
+      </DialogHeader>
+      <DialogDescription className="justify-center items-center text-center space-y-4 border-b border-[#E4E7EC] pb-3">
+        <div className="flex items-center justify-center gap-2">
+          <img src={GBP} alt="currency" className="w-4 h-4" />
+          <p className="text-[#13191C] text-sm font-medium">GBP</p>
+        </div>
+        <div>
+          <p className="text-[#98A2B3] text-[28px] font-bold">
+            GBP <span className="text-[#13191C]">2,000</span>
+          </p>
+        </div>
+      </DialogDescription>
+
+      <DialogDescription className="flex flex-col gap-4">
+        <div className="flex items-center gap-2">
+          <div className="w-6 h-6 bg-white border border-[#E4E7EC] rounded-[8px] flex justify-center items-center">
+            <BankIcon fill="#13191C" />
+          </div>
+          <p className="text-[#13191C] font-medium text-base">
+            Account Details
+          </p>
+        </div>
+        <div className="flex justify-between items-center">
+          <p className="text-base text-[#667185]">Account name</p>
+          <p className="text-base text-[#13191C] font-medium">9018275991</p>
+        </div>
+        <div className="flex justify-between items-center">
+          <p className="text-base text-[#667185]">Account number</p>
+          <p className="text-base text-[#13191C] font-medium">
+            John Doe D. Rockefeller
+          </p>
+        </div>
+        <div className="flex justify-between items-center">
+          <p className="text-base text-[#667185]">Sort code</p>
+          <p className="text-base text-[#13191C] font-medium">181042</p>
+        </div>
+        <div className="flex justify-between items-center">
+          <p className="text-base text-[#667185]">Bank name</p>
+          <p className="text-base text-[#13191C] font-medium">
+            JP Morgan & Chase
+          </p>
+        </div>
+      </DialogDescription>
+      <DialogFooter className="flex justify-between items-center pt-[15px]">
+        <Button
+          className="h-9 w-1/2 bg-white border-[#D0D5DD] border rounded-[8px]"
+          variant="ghost"
+          onClick={() => setLevel(1)}
+        >
+          Back
+        </Button>
+        <Button
+          className="h-9 w-1/2"
+          onClick={sendRequest}
+          disabled={isPending}
+        >
+          {isPending ? <Loading /> : "Send request"}
+        </Button>
+      </DialogFooter>
+    </>
   );
 }

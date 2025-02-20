@@ -12,7 +12,8 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import UserProfile from "@/components/user-profile";
 import { toast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
-import { getEventTicket } from "@/services/api/ticket";
+import { getEvent } from "@/services/api/events";
+import { Ticket } from "@/services/models/events";
 import { useQuery } from "@tanstack/react-query";
 import { format } from "date-fns";
 import {
@@ -22,7 +23,7 @@ import {
   MapPin,
   SearchIcon,
 } from "lucide-react";
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import TicketsSold from "./components/tickets-sold";
 
@@ -36,7 +37,7 @@ export default function EventDetails() {
     error,
   } = useQuery({
     queryKey: [`event-${id}`],
-    queryFn: () => getEventTicket(id!),
+    queryFn: () => getEvent(id!),
     enabled: !!id,
   });
 
@@ -50,6 +51,32 @@ export default function EventDetails() {
       navigate("/events");
     }
   }, [error, navigate]);
+
+  const ticketPrice = useMemo(() => {
+    const tickets = EVENT?.data?.event?.tickets;
+
+    if (!tickets || tickets?.length < 1) {
+      return "Free";
+    }
+
+    return `£${Math.min(...tickets.map((t) => t.ticketPrice))} - £${Math.max(
+      ...tickets.map((t) => t.ticketPrice)
+    )}`;
+  }, [EVENT]);
+
+  const quantitySold = useMemo(() => {
+    const tickets = EVENT?.data?.event?.tickets;
+
+    if (!tickets || tickets?.length < 1) {
+      return 0;
+    }
+
+    const quantitySold = tickets.reduce((acc: number, cur: Ticket) => {
+      return acc + cur.ticketSold;
+    }, 0);
+
+    return quantitySold;
+  }, [EVENT]);
 
   if (isLoading) {
     return <Loader />;
@@ -125,14 +152,14 @@ export default function EventDetails() {
       <div className="px-5 pt-5 pb-10 border-b border-[#E4E7EC] flex items-center gap-20">
         <div className="flex items-center gap-4 w-[40%]">
           <img
-            src={EVENT?.data.ticket.image}
+            src={EVENT?.data?.event?.image}
             alt="movie"
             className="w-20 h-20 rounded-[8px]"
           />
           <div className="space-y-3">
-            <p className="text-[#475367] text-sm">name</p>
+            <p className="text-[#475367] text-sm">Name</p>
             <p className="text-[#13191C] text-xl font-medium">
-              {EVENT?.data.ticket.title}
+              {EVENT?.data?.event?.title}
             </p>
           </div>
         </div>
@@ -149,8 +176,8 @@ export default function EventDetails() {
         <div className="space-y-3">
           <p className="text-[#475367] text-sm">Status</p>
           <span className="flex items-center gap-2 text-[#475367] text-sm">
-            {displayStatusIcon(EVENT?.data.status!)?.icon}{" "}
-            {displayStatusIcon(EVENT?.data?.status!)?.text}
+            {displayStatusIcon(EVENT?.data?.event?.status!)?.icon}{" "}
+            {displayStatusIcon(EVENT?.data?.event?.status!)?.text}
           </span>
         </div>
       </div>
@@ -170,24 +197,24 @@ export default function EventDetails() {
                   <div className="space-y-1">
                     <p className="text-[#667185] text-sm">Description</p>
                     <p className="text-[#13191C] text-sm">
-                      {EVENT?.data.ticket.description}
+                      {EVENT?.data?.event?.description}
                     </p>
                   </div>
                   <div className={cn("grid grid-cols-2 gap-7")}>
                     <div>
                       <p className="text-[#667185] text-sm">Category</p>
                       <p className="text-[#13191C] text-sm font-medium">
-                        {EVENT?.data?.ticket.category}
+                        {EVENT?.data?.event?.category}
                       </p>
                     </div>
                     <div>
                       <p className="text-[#667185] text-sm">Ticket price</p>
                       <div className="flex items-center gap-1">
-                        {EVENT?.data?.ticketPrice !== 0 ? (
+                        {ticketPrice !== "Free" ? (
                           <p className="flex items-center gap-1 text-[15px] font-medium">
                             <img src={GBP} alt="gbp" className="w-3 h-3" />
                             <span className="text-[#13191C]">
-                              {EVENT?.data?.ticketPrice}
+                              {ticketPrice}
                             </span>
                           </p>
                         ) : (
@@ -200,14 +227,14 @@ export default function EventDetails() {
                     <div>
                       <p className="text-[#667185] text-sm">Type</p>
                       <p className="text-[#13191C] text-sm font-medium">
-                        {EVENT?.data.ticket.type}
+                        {EVENT?.data?.event?.type}
                       </p>
                     </div>
                     <div>
                       <p className="text-[#667185] text-sm">Start time</p>
                       <p className="text-[#13191C] text-sm font-medium">
-                        {EVENT?.data.ticket.startTime
-                          ? format(EVENT?.data.ticket.startTime, "PP")
+                        {EVENT?.data?.event?.startTime
+                          ? format(EVENT?.data?.event?.startTime, "PP")
                           : "---"}
                       </p>
                     </div>
@@ -224,13 +251,13 @@ export default function EventDetails() {
                       <MapPin size={20} color="#98A2B3" />
                     </div>
                     <p className="text-[#13191C] text-sm font-medium">
-                      {EVENT?.data.ticket.location}
+                      {EVENT?.data?.event?.location}
                     </p>
                   </div>
                   <div>
                     <p className="text-[#667185] text-sm">Organizer</p>
                     <p className="text-[#13191C] text-sm font-medium">
-                      {EVENT?.data.ticket.organizerName ?? "---"}
+                      {EVENT?.data?.event?.organizerName ?? "---"}
                     </p>
                   </div>
                 </div>
@@ -239,7 +266,7 @@ export default function EventDetails() {
           </ScrollArea>
         </div>
 
-        <TicketsSold ticketSold={EVENT?.data.ticketSold ?? 0} />
+        <TicketsSold ticketSold={quantitySold ?? 0} />
       </div>
     </div>
   );

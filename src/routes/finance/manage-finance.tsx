@@ -12,7 +12,10 @@ import {
 } from "@/components/ui/dropdown-menu";
 import FilterItem from "@/components/ui/filter-item";
 import { Input } from "@/components/ui/input";
-import { LoadingMovieList } from "@/components/ui/loading-movie";
+import Loader from "@/components/ui/loader";
+import { LoadingList } from "@/components/ui/loading-movie";
+import Pagination from "@/components/ui/pagination";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   Table,
   TableBody,
@@ -21,10 +24,12 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { cn } from "@/lib/utils";
+import { capitalizeFirstLetter, cn } from "@/lib/utils";
+import { getTransactions } from "@/services/api/transaction";
+import { getWallet } from "@/services/api/wallet";
+import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
+import { format } from "date-fns";
 import {
-  ChevronLeft,
-  ChevronRight,
   CircleCheck,
   Filter,
   MoveUpRight,
@@ -33,120 +38,84 @@ import {
   WalletIcon,
   XIcon,
 } from "lucide-react";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import ExportEvents from "../events/components/export-events";
 import FinanceActions from "./finance-actions";
 import FinanceWithdrawal from "./finance-withdrawal";
-
-// const DATA = [
-//   {
-//     id: 1,
-//     order_id: "#01234/10",
-//     ticket_name: "AI Meetup with Autogon",
-//     name: "Billy Butcher",
-//     email: "customer@mail.com",
-//     amount: "GBP999,999",
-//     status: "Completed",
-//     category: "Event",
-//   },
-//   {
-//     id: 2,
-//     order_id: "#01234/10",
-//     ticket_name: "AI Meetup with Autogon",
-//     name: "Billy Butcher",
-//     email: "customer@email.com",
-//     amount: "GBP999,999",
-//     status: "Completed",
-//     category: "Event",
-//   },
-// ] as const;
 
 export function getItemColor(status: string) {
   switch (status) {
     case "completed":
       return {
         color: "#036B26",
-        bgColor: "#E7F6EC",
+        bgColor: "bg-[#E7F6EC]",
       };
     case "processing":
       return {
         color: "#865503",
-        bgColor: "#FEF6E7",
+        bgColor: "bg-[#FEF6E7]",
       };
     default: {
       return {
         color: "#E72113",
-        bgColor: "#FFEBEC",
+        bgColor: "bg-[#FFEBEC]",
       };
     }
   }
 }
 
-export default function ManageFinance({
-  DATA,
-  filterValue,
-  searchValue,
-  setFilterValue,
-  setSearchValue,
-}: {
-  DATA: any[];
-  filterValue: string;
-  searchValue: string;
-  setFilterValue: (value: string) => void;
-  setSearchValue: (value: string) => void;
-}) {
+export default function ManageFinance() {
   const [currentPage, setCurrentPage] = useState(1);
   const [openFilter, setOpenFilter] = useState(false);
   const [openExport, setOpenExport] = useState(false);
   const [openModal, setOpenModal] = useState(false);
   const [openWithdrawalModal, setOpenWithdrawalModal] = useState(false);
-  // const [activeTab, setActiveTab] = useState("finance");
+  const [filterValue, setFilterValue] = useState("");
+  const [searchValue, setSearchValue] = useState("");
 
-  // const [selectedEvent, setSelectedEvent] = useState<(typeof DATA)[number]>(
-  //   {} as (typeof DATA)[number]
-  // );
+  const [selectedEvent, setSelectedEvent] = useState<(typeof DATA)[number]>(
+    {} as (typeof DATA)[number]
+  );
 
-  // const queryClient = useQueryClient();
-  // const navigate = useNavigate();
+  const queryParams = useMemo(() => {
+    let params = "";
 
-  // const queryParams = useMemo(() => {
-  //   let params = "";
+    if (filterValue) {
+      params = params + `&status=${filterValue}`;
+    }
+    if (searchValue) {
+      params = params + `&searchTerm=${searchValue}`;
+    }
 
-  //   if (filterValue) {
-  //     params = params + `&status=${filterValue}`;
-  //   }
-  //   if (searchValue) {
-  //     params = params + `&searchTerm=${searchValue}`;
-  //   }
+    return params;
+  }, [filterValue, searchValue]);
 
-  //   return params;
-  // }, [filterValue, searchValue]);
+  const { isLoading: isLoadingWallet, data: WALLET } = useQuery({
+    queryKey: ["wallet"],
+    queryFn: () => getWallet(),
+  });
 
-  //   const {
-  //     fetchNextPage,
-  //     fetchPreviousPage,
-  //     refetch,
-  //     isFetching,
-  //     isFetchingNextPage,
-  //     isFetchingPreviousPage,
-  //     isPending,
-  //     data,
-  //   } = useInfiniteQuery({
-  //     queryKey: ["events", currentPage],
-  //     queryFn: ({ pageParam }) => getEventTickets(pageParam, 20, queryParams),
-  //     initialPageParam: currentPage,
-  //     getNextPageParam: (lastPage) => lastPage.data.nextPage,
-  //     getPreviousPageParam: (firstPage) => firstPage.data.prevPage,
-  //   });
+  const {
+    fetchNextPage,
+    fetchPreviousPage,
+    refetch,
+    isFetching,
+    isFetchingNextPage,
+    isFetchingPreviousPage,
+    isPending,
+    data,
+  } = useInfiniteQuery({
+    queryKey: ["transactions", currentPage],
+    queryFn: ({ pageParam }) => getTransactions(pageParam, 20, queryParams),
+    initialPageParam: currentPage,
+    getNextPageParam: (lastPage) => lastPage.data.nextPage,
+    getPreviousPageParam: (firstPage) => firstPage.data.prevPage,
+  });
 
-  //   const loading = isFetching || isFetchingNextPage || isFetchingPreviousPage;
-  //   const RESPONSE = data?.pages[data?.pages.length - 1];
-  //   const EVENTS = RESPONSE?.data.foundItems || [];
-
-  //   if (isPending) {
-  //     return <Loader />;
-  //   }
+  const RESPONSE = data?.pages[data?.pages.length - 1];
+  const DATA = data?.pages.flatMap((page) => page.data.data) || [];
+  const loading = isFetching || isFetchingNextPage || isFetchingPreviousPage;
 
   return (
     <div className="pb-20">
@@ -158,66 +127,91 @@ export default function ManageFinance({
           </p>
         </div>
       </div>
-      <div className="flex justify-between items-start pt-4 mr-5">
-        <div className="grid grid-cols-2 xl:flex xl:items-center gap-3">
-          <Card className="border-[#F5FFF0] w-[320px] p-3 rounded-[12px] ml-5 bg-[#F5FFF0]">
-            <CardContent className="flex justify-between p-0">
-              <div className="flex flex-col justify-between gap-4">
-                <div className="space-y-1">
-                  <div className="w-6 h-6 rounded-[8px] bg-white border border-[#E4E7EC] flex justify-center items-center">
-                    <MoveUpRight size={12} color="#13191C" />
-                  </div>
-                  <p className="text-sm text-[#667185]">
-                    Available for withdrawal
-                  </p>
-                  <p className="text-xl font-medium text-[#13191C]">
-                    GBP999,999,999
-                  </p>
-                </div>
-
-                <Button
-                  onClick={() => setOpenWithdrawalModal(true)}
-                  className="h-9 w-[117px] rounded-[8px] gap-2"
-                  prefixItem={
-                    <div>
-                      <MoveUpRight size={15} color="#FFFFFF" />
+      <div className="flex justify-between items-start pt-4 gap-10 w-full">
+        {isLoadingWallet ? (
+          <div className="grid grid-cols-2 xl:flex xl:items-center gap-3 pt-4">
+            <Skeleton className="w-[250px] h-[150px] p-3 rounded-[12px] ml-5 bg-gray-200" />
+            <Skeleton className="w-[250px] h-[150px] p-3 rounded-[12px] ml-5 bg-gray-200" />
+            <Skeleton className="w-[250px] h-[150px] p-3 rounded-[12px] ml-5 bg-gray-200" />
+          </div>
+        ) : (
+          <div className="grid grid-cols-3 gap-3 w-[90%]">
+            <Card className="border-[#F5FFF0] p-3 rounded-[12px] ml-5 bg-[#F5FFF0]">
+              <CardContent className="flex justify-between p-0 gap-10">
+                <div className="flex flex-col justify-between gap-4">
+                  <div className="space-y-1">
+                    <div className="w-6 h-6 rounded-[8px] bg-white border border-[#E4E7EC] flex justify-center items-center">
+                      <MoveUpRight size={12} color="#13191C" />
                     </div>
-                  }
-                >
-                  Withdraw
-                </Button>
-              </div>
-
-              <CreateNewFolderIcon />
-            </CardContent>
-          </Card>
-          <Card className="border-[#F0F2F5] w-[320px] p-3 rounded-[12px] ml-5 bg-[#FFFFFF]">
-            <CardContent className="flex justify-between p-0">
-              <div className="flex flex-col justify-between gap-4">
-                <div className="space-y-1">
-                  <div className="w-6 h-6 rounded-[8px] bg-white border border-[#E4E7EC] flex justify-center items-center">
-                    <WalletIcon size={12} color="#13191C" />
+                    <p className="text-sm text-[#667185]">
+                      Available for withdrawal
+                    </p>
+                    <p className="text-xl font-medium text-[#13191C]">GBP 0</p>
                   </div>
-                  <p className="text-sm text-[#667185]">Total withdrawals</p>
-                  <p className="text-xl font-medium text-[#13191C]">
-                    GBP999,999,999
-                  </p>
+
+                  <Button
+                    onClick={() => setOpenWithdrawalModal(true)}
+                    className="h-9 w-[117px] rounded-[8px] gap-2"
+                    prefixItem={
+                      <div>
+                        <MoveUpRight size={15} color="#FFFFFF" />
+                      </div>
+                    }
+                  >
+                    Withdraw
+                  </Button>
                 </div>
 
-                <div className="h-9 flex flex-col justify-end items-end">
-                  <button className="text-sm justify-end items-end p-0 bg-transparent text-[#667185] border-b-[1px] border-[#667185] self-start">
-                    View report
-                  </button>
-                </div>
-              </div>
+                <CreateNewFolderIcon />
+              </CardContent>
+            </Card>
+            <Card className="border-[#F0F2F5] p-3 rounded-[12px] ml-5 bg-[#FFFFFF]">
+              <CardContent className="flex justify-between p-0 gap-10">
+                <div className="flex flex-col justify-between gap-4">
+                  <div className="space-y-1">
+                    <div className="w-6 h-6 rounded-[8px] bg-white border border-[#E4E7EC] flex justify-center items-center">
+                      <WalletIcon size={12} color="#13191C" />
+                    </div>
+                    <p className="text-sm text-[#667185]">
+                      Pending withdrawals
+                    </p>
+                    <p className="text-xl font-medium text-[#13191C]">GBP 0</p>
+                  </div>
 
-              <BubbleIcon />
-            </CardContent>
-          </Card>
-        </div>
+                  <div className="h-9 flex flex-col justify-end items-end"></div>
+                </div>
+
+                <BubbleIcon fill="#FFB21D" />
+              </CardContent>
+            </Card>
+            <Card className="border-[#F0F2F5] p-3 rounded-[12px] ml-5 bg-[#FFFFFF]">
+              <CardContent className="flex justify-between p-0 gap-10">
+                <div className="flex flex-col justify-between gap-4">
+                  <div className="space-y-1">
+                    <div className="w-6 h-6 rounded-[8px] bg-white border border-[#E4E7EC] flex justify-center items-center">
+                      <WalletIcon size={12} color="#13191C" />
+                    </div>
+                    <p className="text-sm text-[#667185]">Total withdrawals</p>
+                    <p className="text-xl font-medium text-[#13191C]">
+                      GBP {WALLET?.data?.totalWithdrawal || 0}
+                    </p>
+                  </div>
+
+                  <div className="h-9 flex flex-col justify-end items-end">
+                    <button className="text-sm justify-end items-end p-0 bg-transparent text-[#667185] border-b-[1px] border-[#667185] self-start">
+                      View report
+                    </button>
+                  </div>
+                </div>
+
+                <BubbleIcon />
+              </CardContent>
+            </Card>
+          </div>
+        )}
 
         <Link
-          className="flex items-center gap-1"
+          className="flex items-center gap-1 w-[10%]"
           to={"/finance/withdraw-accounts"}
         >
           <svg
@@ -241,308 +235,296 @@ export default function ManageFinance({
             />
           </svg>
 
-          <p className="text-xs text-[#667185] font-medium">
-            Manage withdrawal accounts
-          </p>
+          <p className="text-xs text-[#667185] font-medium">Manage accounts</p>
         </Link>
       </div>
 
-      <div className="border-t border-[#E4E7EC] w-full my-4 py-5 px-5 space-y-4">
-        <div className="flex items-center border-b border-[#F0F2F5] pb-4">
-          <p className="text-[#13191C] font-medium text-sm">Withdrawals</p>
-          <div className="ml-auto flex items-center gap-2">
-            <Input
-              value={searchValue}
-              onChange={(e) => setSearchValue(e.target.value)}
-              className="w-[250px] h-9 border border-[#D0D5DD] placeholder:text-[#98A2B3]"
-              placeholder="Search"
-              suffixitem={
-                searchValue ? (
-                  <XIcon
-                    onClick={() => {
-                      setSearchValue("");
-                      const timeOut = setTimeout(() => {
-                        //refetch();
-                        clearTimeout(timeOut);
-                      }, 200);
-                    }}
-                    size={20}
-                    //color="#D0D5DD"
-                    className="absolute top-0 right-0 mr-2 mt-2 cursor-pointer"
-                  />
-                ) : (
-                  <SearchIcon
-                    size={20}
-                    color="#D0D5DD"
-                    className="absolute top-0 right-0 mr-2 mt-2"
-                  />
-                )
-              }
-              onKeyDown={(e) => {
-                if (e.key === "Enter") {
-                  //refetch();
+      {isPending ? (
+        <Loader />
+      ) : (
+        <div className="border-t border-[#E4E7EC] w-full my-4 py-5 px-5 space-y-4">
+          <div className="flex items-center border-b border-[#F0F2F5] pb-4">
+            <p className="text-[#13191C] font-medium text-sm">Withdrawals</p>
+            <div className="ml-auto flex items-center gap-2">
+              <Input
+                value={searchValue}
+                onChange={(e) => setSearchValue(e.target.value)}
+                className="w-[250px] h-9 border border-[#D0D5DD] placeholder:text-[#98A2B3]"
+                placeholder="Search"
+                suffixitem={
+                  searchValue ? (
+                    <XIcon
+                      onClick={() => {
+                        setSearchValue("");
+                        const timeOut = setTimeout(() => {
+                          refetch();
+                          clearTimeout(timeOut);
+                        }, 200);
+                      }}
+                      size={20}
+                      color="#D0D5DD"
+                      className="absolute top-0 right-0 mr-2 mt-2 cursor-pointer"
+                    />
+                  ) : (
+                    <SearchIcon
+                      size={20}
+                      color="#D0D5DD"
+                      className="absolute top-0 right-0 mr-2 mt-2"
+                    />
+                  )
                 }
-              }}
-            />
-            <DropdownMenu open={openFilter} onOpenChange={setOpenFilter}>
-              <DropdownMenuTrigger asChild>
-                <button className="h-9 gap-3 flex items-center border border-[#D0D5DD] rounded-[8px] bg-white py-[10px] px-3">
-                  <Filter className="h-5 w-5" color="#667185" />
-                  <span className="sr-only sm:not-sr-only sm:whitespace-nowrap text-[#667185] text-sm font-medium">
-                    Filter
-                  </span>
-                </button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent
-                align="end"
-                className="border border-[#E4E7EC] p-0 rounded-[8px] w-full"
-              >
-                <div className="py-3 px-2 grid grid-cols-3 justify-center items-center border-b border-b-[#F0F2F5] bg-[#F0F2F5]">
-                  <button
-                    className="h-[27px] w-16 bg-white rounded-[6px] border border-[#E4E7EC] text-[13px] text-[#667185]"
-                    onClick={() => setFilterValue("")}
-                  >
-                    Clear
-                  </button>
-                  <DropdownMenuLabel className="text-sm text-[#13191C] font-normal">
-                    Filter
-                  </DropdownMenuLabel>
-                  <button
-                    className="h-[27px] w-16 bg-[#13191C] rounded-[6px] border border-[#E4E7EC] text-[13px] text-white"
-                    onClick={() => {
-                      //refetch();
-                      setOpenFilter(false);
-                    }}
-                  >
-                    Apply
-                  </button>
-                </div>
-                <DropdownMenuSeparator />
-                <DropdownMenuLabel className="pl-3 text-sm text-[#98A2B3] font-normal">
-                  Status
-                </DropdownMenuLabel>
-                <div className="grid grid-cols-3 px-1 pb-4">
-                  <div className="space-y-1">
-                    <FilterItem
-                      checked={filterValue === "DRAFT"}
-                      onCheckedChange={() => setFilterValue("DRAFT")}
-                    >
-                      Draft
-                    </FilterItem>
-                    <FilterItem
-                      checked={filterValue === "PENDING"}
-                      onCheckedChange={() => setFilterValue("PENDING")}
-                    >
-                      Pending
-                    </FilterItem>
-                  </div>
-                  <div className="space-y-1">
-                    <FilterItem
-                      checked={filterValue === "PAUSED"}
-                      onCheckedChange={() => setFilterValue("PAUSED")}
-                    >
-                      Paused
-                    </FilterItem>
-                    <FilterItem
-                      checked={filterValue === "ONGOING"}
-                      onCheckedChange={() => setFilterValue("ONGOING")}
-                    >
-                      Ongoing
-                    </FilterItem>
-                  </div>
-                  <div className="space-y-1">
-                    <FilterItem
-                      checked={filterValue === "COMPLETED"}
-                      onCheckedChange={() => setFilterValue("COMPLETED")}
-                    >
-                      Completed
-                    </FilterItem>
-                  </div>
-                </div>
-              </DropdownMenuContent>
-            </DropdownMenu>
-            <button
-              className="h-9 gap-3 flex items-center border border-[#D0D5DD] rounded-[8px] bg-[#F7F9FC] py-[10px] px-3"
-              onClick={() => setOpenExport(true)}
-            >
-              <Upload className="h-5 w-5" color="#667185" />
-              <span className="sr-only sm:not-sr-only sm:whitespace-nowrap text-[#667185] text-sm font-medium">
-                Export
-              </span>
-            </button>
-          </div>
-        </div>
-
-        <Card
-          x-chunk="dashboard-06-chunk-0"
-          className="rounded-[12px] border-[#E4E7EC] shadow-none mb-10"
-        >
-          <CardContent className="p-0 m-0">
-            <Table className="rounded-[40px]">
-              <TableHeader className="rounded-40px]">
-                <TableRow className="border-[#E4E7EC]">
-                  <TableHead className="pr-20 bg-[#F9FAFB] rounded-tl-[12px]">
-                    <span className="flex items-center justify-between text-[#475367] font-medium text-sm ">
-                      Beneficiary
-                    </span>
-                  </TableHead>
-                  <TableHead className="bg-[#F9FAFB]">
-                    <span className="flex items-center gap-3 text-[#475367] font-medium text-sm">
-                      Withdrawal amount
-                    </span>
-                  </TableHead>
-                  <TableHead className="flex items-center gap-2 bg-[#F9FAFB]">
-                    <span className="flex items-center gap-2 text-[#475367] font-medium text-sm ">
-                      Date raised
-                    </span>
-                  </TableHead>
-                  <TableHead className="text-[#475367] font-medium text-sm bg-[#F9FAFB]">
-                    Status
-                  </TableHead>
-
-                  <TableHead className="hidden md:table-cell bg-[#F9FAFB] rounded-tr-[12px]">
-                    <span className="sr-only">Actions</span>
-                  </TableHead>
-                </TableRow>
-              </TableHeader>
-              {false ? (
-                <LoadingMovieList />
-              ) : (
-                <TableBody className="[&_tr:last-child]:border-1">
-                  {DATA.map((data) => (
-                    <TableRow key={data.id} className="border-[#E4E7EC]">
-                      <TableCell>
-                        <div>
-                          <p className="text-[#475367] text-sm">{data.name}</p>
-                          <p className="text-[#667185] text-[13px]">
-                            {data.email}
-                          </p>
-                        </div>
-                      </TableCell>
-                      <TableCell className="text-[#13191C] font-medium">
-                        {data.amount}
-                      </TableCell>
-                      <TableCell>
-                        <div>
-                          <p className="text-[#475367] text-sm">{data.name}</p>
-                          <p className="text-[#667185] text-[13px]">
-                            {data.email}
-                          </p>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div
-                          className={cn(
-                            `flex items-center gap-1 px-3 py-1 rounded-[12px] w-[116px] bg-[${
-                              getItemColor(data.status.toLowerCase()).bgColor
-                            }]`
-                          )}
-                        >
-                          {data.status.toLowerCase() === "completed" ? (
-                            <CircleCheck size={16} color="#036B26" />
-                          ) : (
-                            <svg
-                              width="14"
-                              height="15"
-                              viewBox="0 0 14 15"
-                              fill="none"
-                              xmlns="http://www.w3.org/2000/svg"
-                            >
-                              <path
-                                d="M2.86627 1.39909C2.86627 1.0309 2.56779 0.732422 2.1996 0.732422C1.83141 0.732422 1.53293 1.0309 1.53293 1.39909V3.79909C1.53293 4.16728 1.83141 4.46576 2.1996 4.46576H4.60004C4.96823 4.46576 5.26671 4.16728 5.26671 3.79909C5.26671 3.4309 4.96823 3.13242 4.60004 3.13242H3.79936C4.69113 2.46227 5.79924 2.06576 7.00004 2.06576C9.94556 2.06576 12.3334 4.45357 12.3334 7.39909C12.3334 10.3446 9.94556 12.7324 7.00004 12.7324C4.05452 12.7324 1.66671 10.3446 1.66671 7.39909C1.66671 7.0309 1.36823 6.73242 1.00004 6.73242C0.631851 6.73242 0.333374 7.0309 0.333374 7.39909C0.333374 11.081 3.31814 14.0658 7.00004 14.0658C10.6819 14.0658 13.6667 11.081 13.6667 7.39909C13.6667 3.71719 10.6819 0.732422 7.00004 0.732422C5.4384 0.732422 4.00215 1.26973 2.86627 2.16853V1.39909Z"
-                                fill="#865503"
-                              />
-                              <path
-                                d="M7.00004 5.06576C7.00004 4.69757 6.70156 4.39909 6.33337 4.39909C5.96518 4.39909 5.66671 4.69757 5.66671 5.06576V8.39909C5.66671 8.76728 5.96518 9.06576 6.33337 9.06576H8.33337C8.70156 9.06576 9.00004 8.76728 9.00004 8.39909C9.00004 8.0309 8.70156 7.73242 8.33337 7.73242H7.00004V5.06576Z"
-                                fill="#865503"
-                              />
-                            </svg>
-                          )}
-                          <p
-                            className={cn(
-                              "text-sm font-medium",
-                              data.status.toLowerCase() === "completed"
-                                ? "text-[#036B26]"
-                                : data.status.toLowerCase() === "processing"
-                                ? "text-[#865503]"
-                                : "text-[#E72113]"
-                            )}
-                          >
-                            {data.status}
-                          </p>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <button
-                          aria-haspopup="true"
-                          className="w-8 h-8 rounded-[8px] flex items-center justify-center border border-[#E4E7EC] bg-white"
-                          onClick={() => {
-                            setOpenModal(true);
-                            // setSelectedEvent(data);
-                          }}
-                        >
-                          <VisibleIcon className="h-4 w-4" color="#475367" />
-                          <span className="sr-only">Toggle menu</span>
-                        </button>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              )}
-            </Table>
-          </CardContent>
-          <CardFooter className="flex items-center justify-center border-t border-[#E4E7EC] mt-5 self-center p-5">
-            <div className="flex items-center gap-2">
-              <button
-                aria-haspopup="true"
-                className="w-9 h-9 rounded-[6px] flex items-center justify-center border border-[#D0D5DD] bg-white"
-                onClick={() => {
-                  currentPage > 1 && setCurrentPage((page) => page - 1);
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    refetch();
+                  }
                 }}
-              >
-                <ChevronLeft color="#13191C" size={25} />
-                <span className="sr-only">Navigation control</span>
-              </button>
-              {[1, 2, 3, 4, 5].map((page) => (
-                <button
-                  className={cn(
-                    "w-9 h-9 rounded-[6px] flex items-center justify-center bg-white",
-                    page === currentPage && "border border-[#13191C]"
-                  )}
-                  onClick={() => setCurrentPage(page)}
-                  key={page}
+              />
+              <DropdownMenu open={openFilter} onOpenChange={setOpenFilter}>
+                <DropdownMenuTrigger asChild>
+                  <button className="h-9 gap-3 flex items-center border border-[#D0D5DD] rounded-[8px] bg-white py-[10px] px-3">
+                    <Filter className="h-5 w-5" color="#667185" />
+                    <span className="sr-only sm:not-sr-only sm:whitespace-nowrap text-[#667185] text-sm font-medium">
+                      Filter
+                    </span>
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent
+                  align="end"
+                  className="border border-[#E4E7EC] p-0 rounded-[8px] w-full"
                 >
-                  <p
-                    className={cn(
-                      "text-[#667185] text-sm",
-                      page === currentPage && "text-[#13191C] font-medium"
-                    )}
-                  >
-                    {page}
-                  </p>
-                </button>
-              ))}
+                  <div className="py-3 px-2 grid grid-cols-3 justify-center items-center border-b border-b-[#F0F2F5] bg-[#F0F2F5]">
+                    <button
+                      className="h-[27px] w-16 bg-white rounded-[6px] border border-[#E4E7EC] text-[13px] text-[#667185]"
+                      onClick={() => setFilterValue("")}
+                    >
+                      Clear
+                    </button>
+                    <DropdownMenuLabel className="text-sm text-[#13191C] font-normal">
+                      Filter
+                    </DropdownMenuLabel>
+                    <button
+                      className="h-[27px] w-16 bg-[#13191C] rounded-[6px] border border-[#E4E7EC] text-[13px] text-white"
+                      onClick={() => {
+                        refetch();
+                        setOpenFilter(false);
+                      }}
+                    >
+                      Apply
+                    </button>
+                  </div>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuLabel className="pl-3 text-sm text-[#98A2B3] font-normal">
+                    Status
+                  </DropdownMenuLabel>
+                  <div className="grid grid-cols-3 px-1 pb-4">
+                    <div className="space-y-1">
+                      <FilterItem
+                        checked={filterValue === "DRAFT"}
+                        onCheckedChange={() => setFilterValue("DRAFT")}
+                      >
+                        Draft
+                      </FilterItem>
+                      <FilterItem
+                        checked={filterValue === "PENDING"}
+                        onCheckedChange={() => setFilterValue("PENDING")}
+                      >
+                        Pending
+                      </FilterItem>
+                    </div>
+                    <div className="space-y-1">
+                      <FilterItem
+                        checked={filterValue === "PAUSED"}
+                        onCheckedChange={() => setFilterValue("PAUSED")}
+                      >
+                        Paused
+                      </FilterItem>
+                      <FilterItem
+                        checked={filterValue === "ONGOING"}
+                        onCheckedChange={() => setFilterValue("ONGOING")}
+                      >
+                        Ongoing
+                      </FilterItem>
+                    </div>
+                    <div className="space-y-1">
+                      <FilterItem
+                        checked={filterValue === "COMPLETED"}
+                        onCheckedChange={() => setFilterValue("COMPLETED")}
+                      >
+                        Completed
+                      </FilterItem>
+                    </div>
+                  </div>
+                </DropdownMenuContent>
+              </DropdownMenu>
               <button
-                aria-haspopup="true"
-                className="w-9 h-9 rounded-[6px] flex items-center justify-center border border-[#D0D5DD] bg-white"
-                onClick={() => {
-                  currentPage < 6 && setCurrentPage((page) => page + 1);
-                }}
+                className="h-9 gap-3 flex items-center border border-[#D0D5DD] rounded-[8px] bg-[#F7F9FC] py-[10px] px-3"
+                onClick={() => setOpenExport(true)}
               >
-                <ChevronRight color="#13191C" size={25} />
-                <span className="sr-only">Navigation control</span>
+                <Upload className="h-5 w-5" color="#667185" />
+                <span className="sr-only sm:not-sr-only sm:whitespace-nowrap text-[#667185] text-sm font-medium">
+                  Export
+                </span>
               </button>
             </div>
-          </CardFooter>
-        </Card>
-      </div>
+          </div>
+
+          <Card
+            x-chunk="dashboard-06-chunk-0"
+            className="rounded-[12px] border-[#E4E7EC] shadow-none mb-10"
+          >
+            <CardContent className="p-0 m-0">
+              <Table className="rounded-[40px]">
+                <TableHeader className="rounded-40px]">
+                  <TableRow className="border-[#E4E7EC]">
+                    <TableHead className="pr-20 bg-[#F9FAFB] rounded-tl-[12px]">
+                      <span className="flex items-center justify-between text-[#475367] font-medium text-sm ">
+                        Beneficiary
+                      </span>
+                    </TableHead>
+                    <TableHead className="bg-[#F9FAFB]">
+                      <span className="flex items-center gap-3 text-[#475367] font-medium text-sm">
+                        Withdrawal amount
+                      </span>
+                    </TableHead>
+                    <TableHead className="flex items-center gap-2 bg-[#F9FAFB]">
+                      <span className="flex items-center gap-2 text-[#475367] font-medium text-sm ">
+                        Date raised
+                      </span>
+                    </TableHead>
+                    <TableHead className="text-[#475367] font-medium text-sm bg-[#F9FAFB]">
+                      Status
+                    </TableHead>
+
+                    <TableHead className="hidden md:table-cell bg-[#F9FAFB] rounded-tr-[12px]">
+                      <span className="sr-only">Actions</span>
+                    </TableHead>
+                  </TableRow>
+                </TableHeader>
+                {loading ? (
+                  <LoadingList />
+                ) : (
+                  <TableBody className="[&_tr:last-child]:border-1">
+                    {DATA.map((data) => (
+                      <TableRow key={data.id} className="border-[#E4E7EC]">
+                        <TableCell>
+                          <div>
+                            <p className="text-[#475367] text-sm">
+                              John Doe D. Rockefeller
+                            </p>
+                            <p className="text-[#667185] text-[13px]">
+                              9018275991 | JP Morgan & Chase
+                            </p>
+                          </div>
+                        </TableCell>
+                        <TableCell className="text-[#13191C] font-medium">
+                          GPB {data.amount}
+                        </TableCell>
+                        <TableCell>
+                          <div>
+                            <p className="text-[#475367] text-sm">
+                              {format(data.createdAt, "d MMM. yyyy")}
+                            </p>
+                            <p className="text-[#667185] text-[13px]">
+                              {format(data.createdAt, "hh:mm a")}
+                            </p>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div
+                            className={cn(
+                              `flex items-center gap-1 px-3 py-1 rounded-[12px] w-[116px] ${
+                                getItemColor(data.status.toLowerCase()).bgColor
+                              }`
+                            )}
+                          >
+                            {data.status.toLowerCase() === "completed" ? (
+                              <CircleCheck size={16} color="#036B26" />
+                            ) : (
+                              <svg
+                                width="14"
+                                height="15"
+                                viewBox="0 0 14 15"
+                                fill="none"
+                                xmlns="http://www.w3.org/2000/svg"
+                              >
+                                <path
+                                  d="M2.86627 1.39909C2.86627 1.0309 2.56779 0.732422 2.1996 0.732422C1.83141 0.732422 1.53293 1.0309 1.53293 1.39909V3.79909C1.53293 4.16728 1.83141 4.46576 2.1996 4.46576H4.60004C4.96823 4.46576 5.26671 4.16728 5.26671 3.79909C5.26671 3.4309 4.96823 3.13242 4.60004 3.13242H3.79936C4.69113 2.46227 5.79924 2.06576 7.00004 2.06576C9.94556 2.06576 12.3334 4.45357 12.3334 7.39909C12.3334 10.3446 9.94556 12.7324 7.00004 12.7324C4.05452 12.7324 1.66671 10.3446 1.66671 7.39909C1.66671 7.0309 1.36823 6.73242 1.00004 6.73242C0.631851 6.73242 0.333374 7.0309 0.333374 7.39909C0.333374 11.081 3.31814 14.0658 7.00004 14.0658C10.6819 14.0658 13.6667 11.081 13.6667 7.39909C13.6667 3.71719 10.6819 0.732422 7.00004 0.732422C5.4384 0.732422 4.00215 1.26973 2.86627 2.16853V1.39909Z"
+                                  fill="#865503"
+                                />
+                                <path
+                                  d="M7.00004 5.06576C7.00004 4.69757 6.70156 4.39909 6.33337 4.39909C5.96518 4.39909 5.66671 4.69757 5.66671 5.06576V8.39909C5.66671 8.76728 5.96518 9.06576 6.33337 9.06576H8.33337C8.70156 9.06576 9.00004 8.76728 9.00004 8.39909C9.00004 8.0309 8.70156 7.73242 8.33337 7.73242H7.00004V5.06576Z"
+                                  fill="#865503"
+                                />
+                              </svg>
+                            )}
+                            <p
+                              className={cn(
+                                "text-sm font-medium",
+                                data.status.toLowerCase() === "completed"
+                                  ? "text-[#036B26]"
+                                  : data.status.toLowerCase() === "processing"
+                                  ? "text-[#865503]"
+                                  : "text-[#E72113]"
+                              )}
+                            >
+                              {capitalizeFirstLetter(data.status)}
+                            </p>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <button
+                            aria-haspopup="true"
+                            className="w-8 h-8 rounded-[8px] flex items-center justify-center border border-[#E4E7EC] bg-white"
+                            onClick={() => {
+                              setOpenModal(true);
+                              setSelectedEvent(data);
+                            }}
+                          >
+                            <VisibleIcon className="h-4 w-4" color="#475367" />
+                            <span className="sr-only">Toggle menu</span>
+                          </button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                )}
+              </Table>
+            </CardContent>
+            <CardFooter className="flex items-center justify-center border-t border-[#E4E7EC] mt-5 self-center p-5">
+              {RESPONSE?.data && (
+                <Pagination
+                  currentPage={currentPage}
+                  pageSize={20}
+                  totalCount={RESPONSE.data.totalPages}
+                  onNext={() => {
+                    setCurrentPage(currentPage + 1);
+                    fetchNextPage();
+                  }}
+                  onPrevious={() => {
+                    setCurrentPage(currentPage - 1);
+                    fetchPreviousPage();
+                  }}
+                  onPageChange={(page) => {
+                    setCurrentPage(page);
+                    refetch();
+                  }}
+                />
+              )}
+            </CardFooter>
+          </Card>
+        </div>
+      )}
 
       <ExportEvents openExport={openExport} setOpenExport={setOpenExport} />
       <FinanceWithdrawal
         openWithDrawalModal={openWithdrawalModal}
         setOpenWithDrawalModal={setOpenWithdrawalModal}
       />
-      <FinanceActions openModal={openModal} setOpenModal={setOpenModal} />
+      <FinanceActions
+        openModal={openModal}
+        setOpenModal={setOpenModal}
+        data={selectedEvent}
+      />
     </div>
   );
 }

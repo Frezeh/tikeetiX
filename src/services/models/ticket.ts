@@ -63,12 +63,22 @@ export interface TicketResponse {
   ticket: string;
   status: string;
   ticketType: string;
+  activity: string;
   createdAt: string;
   updatedAt: string;
   id: string;
 }
 
 export interface TicketEventData {
+  nextPage: number | null;
+  prevPage: number | null;
+  limit: number;
+  currentPage: number;
+  foundItems: TicketEvents[];
+  totalCount: number;
+}
+
+export interface EventData {
   nextPage: number | null;
   prevPage: number | null;
   limit: number;
@@ -157,10 +167,10 @@ export interface MovieEvent {
 }
 
 export interface Discount {
-  code: string
-  quantity: number
-  amount: number
-  rangeType: "percentage" | "constant"
-  startDate: Date
-  endDate: Date
+  code: string;
+  quantity: number;
+  amount: number;
+  rangeType: "percentage" | "constant";
+  startDate: Date;
+  endDate: Date;
 }

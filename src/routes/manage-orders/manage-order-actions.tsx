@@ -19,6 +19,7 @@ import {
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
+import { Events } from "@/services/models/events";
 import {
   CheckCircle2Icon,
   HistoryIcon,
@@ -31,6 +32,7 @@ import { Dispatch, SVGProps, SetStateAction } from "react";
 type Props = {
   openModal: boolean;
   setOpenModal: Dispatch<SetStateAction<boolean>>;
+  data: Events;
 };
 
 export default function ManageOrdersActions({

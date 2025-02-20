@@ -12,6 +12,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
+import { LoadingList } from "@/components/ui/loading-movie";
+import Pagination from "@/components/ui/pagination";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Table,
@@ -27,11 +29,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { cn } from "@/lib/utils";
-import { LoadingMovieList } from "@/components/ui/loading-movie";
 import {
-  ChevronLeft,
-  ChevronRight,
   ChevronsUpDown,
   CircleCheck,
   CircleX,
@@ -41,40 +39,14 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 
-const DATA = [
-  {
-    id: 1,
-    order_id: "#01234/10",
-    name: "Billy Butcher",
-    email: "customer@mail.com",
-    amount: "GBP999,999",
-    status: "Completed",
-  },
-  {
-    id: 2,
-    order_id: "#01234/10",
-    name: "Billy Butcher",
-    email: "customer@mail.com",
-    amount: "GBP999,999",
-    status: "Cancelled",
-  },
-  {
-    id: 3,
-    order_id: "#01234/10",
-    name: "Billy Butcher",
-    email: "customer@mail.com",
-    amount: "GBP999,999",
-    status: "Completed",
-  },
-  {
-    id: 4,
-    order_id: "#01234/10",
-    name: "Billy Butcher",
-    email: "customer@mail.com",
-    amount: "GBP999,999",
-    status: "Cancelled",
-  },
-];
+const DATA = [] as {
+  id: number;
+  order_id: string;
+  name: string;
+  email: string;
+  amount: string;
+  status: string;
+}[];
 
 export default function TicketsSold({ ticketSold }: { ticketSold: number }) {
   const [currentPage, setCurrentPage] = useState(1);
@@ -88,7 +60,9 @@ export default function TicketsSold({ ticketSold }: { ticketSold: number }) {
               <CardContent className="flex justify-between items-center p-0">
                 <div className="space-y-2">
                   <p className="text-[#475367] text-sm">No. Tickets sold</p>
-                  <p className="text-[#344054] font-bold text-xl">{ticketSold}</p>
+                  <p className="text-[#344054] font-bold text-xl">
+                    {ticketSold}
+                  </p>
                 </div>
                 <div className="w-10 h-10 rounded-full bg-[#C7FFAC] border border-[#A8F285] flex justify-center items-center">
                   <TicketIcon fill="#133205" />
@@ -237,7 +211,7 @@ export default function TicketsSold({ ticketSold }: { ticketSold: number }) {
               </TableRow>
             </TableHeader>
             {false ? (
-              <LoadingMovieList />
+              <LoadingList />
             ) : (
               <TableBody className="[&_tr:last-child]:border-1">
                 {DATA.map((data) => (
@@ -282,47 +256,25 @@ export default function TicketsSold({ ticketSold }: { ticketSold: number }) {
           </Table>
         </CardContent>
         <CardFooter className="flex items-center justify-center border-t border-[#E4E7EC] mt-5 self-center p-5">
-          <div className="flex items-center gap-2">
-            <button
-              aria-haspopup="true"
-              className="w-9 h-9 rounded-[6px] flex items-center justify-center border border-[#D0D5DD] bg-white"
-              onClick={() => {
-                currentPage > 1 && setCurrentPage((page) => page - 1);
+          {DATA && (
+            <Pagination
+              currentPage={currentPage}
+              pageSize={20}
+              totalCount={0}
+              onNext={() => {
+                setCurrentPage(currentPage + 1);
+                // fetchNextPage();
               }}
-            >
-              <ChevronLeft color="#13191C" size={25} />
-              <span className="sr-only">Navigation control</span>
-            </button>
-            {[1, 2, 3, 4, 5].map((page) => (
-              <button
-                className={cn(
-                  "w-9 h-9 rounded-[6px] flex items-center justify-center bg-white",
-                  page === currentPage && "border border-[#13191C]"
-                )}
-                onClick={() => setCurrentPage(page)}
-                key={page}
-              >
-                <p
-                  className={cn(
-                    "text-[#667185] text-sm",
-                    page === currentPage && "text-[#13191C] font-medium"
-                  )}
-                >
-                  {page}
-                </p>
-              </button>
-            ))}
-            <button
-              aria-haspopup="true"
-              className="w-9 h-9 rounded-[6px] flex items-center justify-center border border-[#D0D5DD] bg-white"
-              onClick={() => {
-                currentPage < 6 && setCurrentPage((page) => page + 1);
+              onPrevious={() => {
+                setCurrentPage(currentPage - 1);
+                // fetchPreviousPage();
               }}
-            >
-              <ChevronRight color="#13191C" size={25} />
-              <span className="sr-only">Navigation control</span>
-            </button>
-          </div>
+              onPageChange={(page) => {
+                setCurrentPage(page);
+                // refetch();
+              }}
+            />
+          )}
         </CardFooter>
       </Card>
     </ScrollArea>

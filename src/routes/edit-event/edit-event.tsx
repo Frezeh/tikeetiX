@@ -23,16 +23,12 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { toast } from "@/hooks/use-toast";
-import { cn, generateRandomId } from "@/lib/utils";
+import { cn } from "@/lib/utils";
+import { getEvent, updateEvent } from "@/services/api/events";
 import { uploadSingleFile } from "@/services/api/file-upload";
-import {
-  getEventTicket,
-  updateEventDetails,
-  updateEventTicket,
-} from "@/services/api/ticket";
-import { EventTicketBodyPayload } from "@/services/models/ticket";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { format, setHours, setMinutes } from "date-fns";
 import { ChevronDown, ChevronLeft, ChevronRight, MapPin } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
 import { useEffect, useMemo, useState } from "react";
@@ -45,7 +41,6 @@ import EventLevelModal from "../create-event/components/event-level-modal";
 import { EVENTLEVEL, TICKETPRICE } from "../create-event/create-event";
 import EditEventDetails from "./edit-event-details";
 import EventLevel from "./event-level";
-import { format, setHours, setMinutes } from "date-fns";
 
 export const CreateEventFormSchema = z.object({
   poster: z.string().min(1, { message: "Required" }),
@@ -97,9 +92,8 @@ export default function EditEvent() {
   const [selected, setSelected] = useState<Date>();
   const [timeValue, setTimeValue] = useState("00:00");
 
-  const { isPending, mutate } = useMutation({ mutationFn: updateEventTicket });
   const { isPending: isDetailsPending, mutate: updateDetails } = useMutation({
-    mutationFn: updateEventDetails,
+    mutationFn: updateEvent,
   });
   const { isPending: isUploading, mutate: upload } = useMutation({
     mutationFn: uploadSingleFile,
@@ -110,11 +104,11 @@ export default function EditEvent() {
     error,
   } = useQuery({
     queryKey: [`event-${id}`],
-    queryFn: () => getEventTicket(id!),
+    queryFn: () => getEvent(id!),
     enabled: !!id,
   });
 
-  const isCreating = isPending || isUploading || isDetailsPending;
+  const isCreating = isUploading || isDetailsPending;
 
   const form = useForm<z.infer<typeof CreateEventFormSchema>>({
     resolver: zodResolver(CreateEventFormSchema),
@@ -152,78 +146,57 @@ export default function EditEvent() {
 
   useEffect(() => {
     if (EVENT) {
-      form.setValue("title", EVENT.data.ticket.title);
-      form.setValue("description", EVENT.data.ticket.description);
-      form.setValue("category", EVENT.data.ticket.category);
-      form.setValue("type", EVENT.data.ticket.type);
-      form.setValue("poster", EVENT.data.ticket.image);
-      form.setValue("location", EVENT.data.ticket.location);
-      form.setValue("name", EVENT.data.ticket.organizerName);
-      form.setValue("startTime", new Date(EVENT.data.ticket.startTime));
-      levelForm.setValue(
-        "end",
-        EVENT.data.ticket.salesEndDate
-          ? new Date(EVENT.data.ticket.salesEndDate)
-          : undefined
-      );
-      levelForm.setValue(
-        "start",
-        EVENT.data.ticket.salesStartDate
-          ? new Date(EVENT.data.ticket.salesStartDate)
-          : undefined
-      );
+      form.setValue("title", EVENT.data.event.title);
+      form.setValue("description", EVENT.data.event.description);
+      form.setValue("category", EVENT.data.event.category);
+      form.setValue("type", EVENT.data.event.type);
+      form.setValue("poster", EVENT.data.event.image);
+      form.setValue("location", EVENT.data.event.location);
+      form.setValue("name", EVENT.data.event.organizerName);
+      form.setValue("startTime", new Date(EVENT.data.event.startTime));
+      // levelForm.setValue(
+      //   "end",
+      //   EVENT.data.event.salesEndDate
+      //     ? new Date(EVENT.data.event.salesEndDate)
+      //     : undefined
+      // );
+      // levelForm.setValue(
+      //   "start",
+      //   EVENT.data.event.salesStartDate
+      //     ? new Date(EVENT.data.event.salesStartDate)
+      //     : undefined
+      // );
       levelForm.setValue(
         "maxpurchase",
-        String(EVENT.data.ticket.maxPurchasePerUser)
+        String(EVENT.data.event.maxPurchasePerUser)
       );
       setPoster(undefined);
-      setEventLevel([
-        {
-          category: EVENT.data.name,
-          ticketPrice: EVENT.data.ticketPrice,
-          quantity: EVENT.data.quantity,
+      setEventLevel(
+        EVENT.data.event.tickets.map((level) => ({
+          category: level.name,
+          ticketPrice: level.ticketPrice,
+          quantity: level.quantity,
           ticketCurrency: "GBP",
-          id: generateRandomId(),
-        },
-      ]);
-      handleTimeChange(EVENT.data.ticket.startTime);
+          id: level.id,
+        }))
+      );
+      handleTimeChange(EVENT.data.event.startTime);
     }
   }, [EVENT]);
 
   const handleTimeChange = (date: Date) => {
-    const time = format(date, "hh:mm")
+    const time = format(date, "hh:mm");
     const [hours, minutes] = time.split(":").map((str) => parseInt(str, 10));
     const newSelectedDate = setHours(setMinutes(date, minutes), hours);
     setSelected(newSelectedDate);
     setTimeValue(time);
   };
 
-  const updateTicket = (data: Partial<EventTicketBodyPayload>) => {
-    mutate(
-      { id: id!, body: data },
-      {
-        onSuccess: (res) => {
-          if (res.message) {
-            setOpenPublish(true);
-            queryClient.invalidateQueries();
-          }
-        },
-        onError: () => {
-          toast({
-            title: "Failed to update event ticket",
-            variant: "error",
-          });
-        },
-      }
-    );
-  };
-
   const updateEventDetail = (image: string) => {
-    updateDetails({
-      id: EVENT?.data.ticket.id!,
-      body: {
-        isMovie: false,
-        event: {
+    updateDetails(
+      {
+        id: EVENT?.data.event.id!,
+        body: {
           title: form.getValues("title"),
           description: form.getValues("description") ?? "",
           location: form.getValues("location"),
@@ -237,7 +210,21 @@ export default function EditEvent() {
           category: form.getValues("category"),
         },
       },
-    });
+      {
+        onSuccess: (res) => {
+          if (res.message) {
+            setOpenPublish(true);
+            queryClient.invalidateQueries();
+          }
+        },
+        onError: () => {
+          toast({
+            title: "Failed to update event",
+            variant: "error",
+          });
+        },
+      }
+    );
   };
 
   const publishTicket = () => {
@@ -245,42 +232,12 @@ export default function EditEvent() {
     file.append("file", poster as File);
 
     if (!poster) {
-      updateEventDetail(EVENT?.data.ticket.image!);
-      updateTicket(
-        price === "Paid event"
-          ? {
-              name: eventLevel[0]?.category,
-              ticketPrice: Number(eventLevel[0]?.ticketPrice),
-              quantity: Number(eventLevel[0]?.quantity),
-              ticketType: "Events",
-            }
-          : {
-              name: "Free event",
-              ticketPrice: 0,
-              quantity: 0,
-              ticketType: "Events",
-            }
-      );
+      updateEventDetail(EVENT?.data.event.image!);
     } else {
       upload(file, {
         onSuccess: (res) => {
           if (res.message) {
             updateEventDetail(res.data);
-            updateTicket(
-              price === "Paid event"
-                ? {
-                    name: eventLevel[0]?.category,
-                    ticketPrice: Number(eventLevel[0]?.ticketPrice),
-                    quantity: Number(eventLevel[0]?.quantity),
-                    ticketType: "Events",
-                  }
-                : {
-                    name: "Free event",
-                    ticketPrice: 0,
-                    quantity: 0,
-                    ticketType: "Events",
-                  }
-            );
           }
         },
         onError: () => {

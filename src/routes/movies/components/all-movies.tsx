@@ -19,7 +19,7 @@ import {
 import FilterItem from "@/components/ui/filter-item";
 import { Input } from "@/components/ui/input";
 import Loading from "@/components/ui/loading";
-import { LoadingMovieList } from "@/components/ui/loading-movie";
+import { LoadingList } from "@/components/ui/loading-movie";
 import Pagination from "@/components/ui/pagination";
 import Ratings from "@/components/ui/ratings";
 import {
@@ -149,7 +149,7 @@ export default function AllMovies(props: Props) {
   };
 
   if (isPending) {
-    <LoadingMovieList />;
+    <LoadingList />;
   }
 
   return (
@@ -354,7 +354,7 @@ export default function AllMovies(props: Props) {
                 </TableRow>
               </TableHeader>
               {loading ? (
-                <LoadingMovieList />
+                <LoadingList />
               ) : (
                 <TableBody className="[&_tr:last-child]:border-1">
                   {MOVIES.map((movie) => (

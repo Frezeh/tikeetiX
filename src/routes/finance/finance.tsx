@@ -1,45 +1,8 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useState } from "react";
 import Integrations from "./integrations";
 import ManageFinance from "./manage-finance";
 
-const DATA = [
-  {
-    id: 1,
-    order_id: "#01234/10",
-    ticket_name: "AI Meetup with Autogon",
-    name: "Billy Butcher",
-    email: "customer@mail.com",
-    amount: "GBP 4,995",
-    status: "Completed",
-    category: "Event",
-  },
-  {
-    id: 2,
-    order_id: "#01234/10",
-    ticket_name: "AI Meetup with Autogon",
-    name: "Billy Butcher",
-    email: "customer@email.com",
-    amount: "GBP 4,995",
-    status: "Processing",
-    category: "Event",
-  },
-  {
-    id: 3,
-    order_id: "#01234/10",
-    ticket_name: "AI Meetup with Autogon",
-    name: "Billy Butcher",
-    email: "customer@email.com",
-    amount: "GBP 4,995",
-    status: "Completed",
-    category: "Event",
-  },
-];
-
 export default function Finance() {
-  const [filterValue, setFilterValue] = useState("");
-  const [searchValue, setSearchValue] = useState("");
-
   return (
     <div className="pb-5">
       <Tabs defaultValue={"finance"} className="mb-10">
@@ -59,13 +22,7 @@ export default function Finance() {
         </TabsList>
 
         <TabsContent value="finance" className="mt-2">
-          <ManageFinance
-            DATA={DATA}
-            filterValue={filterValue}
-            searchValue={searchValue}
-            setFilterValue={setFilterValue}
-            setSearchValue={setSearchValue}
-          />
+          <ManageFinance />
         </TabsContent>
         <TabsContent value="integrations" className="mt-2">
           <Integrations />

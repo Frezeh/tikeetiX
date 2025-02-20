@@ -21,6 +21,7 @@ export default function AuthenticationLayot({
 }: {
   children: ReactNode;
 }) {
+  // check if user has a valid token in and redirect to dashboard
   return (
     <main className="flex h-screen overflow-hidden lg:justify-between items-center justify-center px-5 bg-background">
       {children}

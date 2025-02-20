@@ -44,9 +44,11 @@ export default function VerifyEmail({ goBack, email }: Props) {
             });
           }
         },
-        onError: () => {
+        onError: (err: any) => {
           toast({
-            title: "Failed to verify email",
+            title: err?.error?.message
+              ? err?.error?.message
+              : "Failed to verify email",
             variant: "error",
           });
         },

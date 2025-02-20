@@ -1,6 +1,6 @@
 import { AxiosRequestConfig } from "axios";
 import { makeRequest } from "../request";
-import { EventBody, Events, EventsData } from "../models/events";
+import { EventBody, EventDetails, Events, EventsData } from "../models/events";
 
 export const createEvent = async (body: EventBody) => {
   const config: AxiosRequestConfig = {
@@ -17,18 +17,7 @@ export const createEvent = async (body: EventBody) => {
 export const getEvents = async (page = 1, limit = 10, params: string) => {
   const config: AxiosRequestConfig = {
     method: "GET",
-    url: `events?page=${page}&limit=${limit}${params}`,
-  };
-
-  const response = await makeRequest<EventsData>(config);
-
-  return response.data;
-};
-
-export const getEventsWithoutParams = async () => {
-  const config: AxiosRequestConfig = {
-    method: "GET",
-    url: "events",
+    url: `events/user/created?page=${page}&limit=${limit}&${params}`,
   };
 
   const response = await makeRequest<EventsData>(config);
@@ -54,10 +43,10 @@ export const currentUserEventActivities = async (
 export const getEvent = async (id: string) => {
   const config: AxiosRequestConfig = {
     method: "GET",
-    url: `events/${id}`,
+    url: `events/details/${id}`,
   };
 
-  const response = await makeRequest<Events>(config);
+  const response = await makeRequest<EventDetails>(config);
 
   return response.data;
 };

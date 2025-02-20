@@ -1,4 +1,3 @@
-
 function StripeIcon({ ...props }) {
   return (
     <svg width={32} height={33} viewBox="0 0 32 33" fill="none" {...props}>

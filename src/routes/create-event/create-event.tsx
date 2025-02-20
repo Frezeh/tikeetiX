@@ -142,11 +142,11 @@ export default function CreateEvent() {
   const createTicket = (data: EventTicketBody) => {
     mutate(data, {
       onSuccess: (res) => {
-        if (res.message) {
+        if (res.data) {
           form.reset();
+          setId(res.data[0].activity);
           setOpenPublish(true);
-          setId(res.data[0].id);
-          queryClient.invalidateQueries({ queryKey: ["events"] });
+          queryClient.invalidateQueries();
         }
       },
       onError: () => {

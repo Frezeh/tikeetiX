@@ -7,14 +7,14 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { TicketEvents } from "@/services/models/ticket";
+import { Events } from "@/services/models/events";
 import { MoreVertical } from "lucide-react";
 import { Dispatch, SetStateAction, memo, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 
 type Props = {
-  setSelectedEvent: Dispatch<SetStateAction<TicketEvents>>;
-  event: TicketEvents;
+  setSelectedEvent: Dispatch<SetStateAction<Events>>;
+  event: Events;
   setOpenRemove: Dispatch<SetStateAction<boolean>>;
   setOpenHold: Dispatch<SetStateAction<boolean>>;
 };
@@ -47,7 +47,7 @@ function EventActions(props: Props) {
       <DropdownMenuContent align="end" className="rounded-[7px] p-0 ">
         <DropdownMenuItem
           className="px-3 py-2"
-          onClick={() => navigate(`/event-details/${event.id}`)}
+          onClick={() => navigate(`/event-details/${event._id}`)}
         >
           <span className="flex items-center gap-[10px] text-[#13191C] text-xs">
             <VisibleIcon fill="#98A2B3" /> View ticket

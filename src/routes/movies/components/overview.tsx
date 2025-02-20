@@ -20,10 +20,7 @@ import FilterItem from "@/components/ui/filter-item";
 import { Input } from "@/components/ui/input";
 import Loader from "@/components/ui/loader";
 import Loading from "@/components/ui/loading";
-import {
-  LoadingMovieGrid,
-  LoadingMovieList,
-} from "@/components/ui/loading-movie";
+import { LoadingMovieGrid, LoadingList } from "@/components/ui/loading-movie";
 import Pagination from "@/components/ui/pagination";
 import Ratings from "@/components/ui/ratings";
 import {
@@ -526,7 +523,7 @@ export default function Overview(props: Props) {
                   </TableRow>
                 </TableHeader>
                 {loading ? (
-                  <LoadingMovieList />
+                  <LoadingList />
                 ) : (
                   <TableBody className="[&_tr:last-child]:border-1">
                     {MOVIES.map((movie) => (

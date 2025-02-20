@@ -72,9 +72,11 @@ export default function Otp({ goBack, userPayload }: Props) {
             });
           }
         },
-        onError: () => {
+        onError: (err: any) => {
           toast({
-            title: "Failed to login",
+            title: err?.error?.message
+              ? err?.error?.message
+              : "Failed to login",
             variant: "error",
           });
         },

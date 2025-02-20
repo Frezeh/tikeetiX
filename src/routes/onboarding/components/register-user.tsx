@@ -114,9 +114,11 @@ export default function RegisterUser(props: Props) {
           setEmail(data.email);
           moveToNext();
         },
-        onError: () => {
+        onError: (err: any) => {
           toast({
-            title: "Failed to register",
+            title: err?.error?.message
+              ? err?.error?.message
+              : "Failed to register",
             variant: "error",
           });
         },
