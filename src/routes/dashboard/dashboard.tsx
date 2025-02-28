@@ -15,7 +15,7 @@ import {
   DialogDescription,
   DialogHeader,
 } from "@/components/ui/dialog";
-import { cn } from "@/lib/utils";
+import { cn, getTimeOfDay } from "@/lib/utils";
 import { useProfileContext } from "@/provider/profile-provider";
 import { format } from "date-fns";
 import { Calendar, Check, ChevronRight, CircleIcon } from "lucide-react";
@@ -44,7 +44,7 @@ export default function Dashboard() {
           Welcome {profile?.firstName} {profile?.lastName}
         </p>
         <p className="text-base text-[#475367]">
-          It’s a sunny day today, what would you like to do? 😊
+          Good {getTimeOfDay(new Date())}  😊
         </p>
       </div>
       <div className="py-10 flex items-center justify-between gap-2">

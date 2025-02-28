@@ -4,6 +4,7 @@ import { User } from "@/services/models/auth";
 import { useState } from "react";
 import Auth from "./components/auth";
 import Otp from "./components/otp";
+import AuthenticationMarque from "@/components/authentication-marque";
 
 export default function Login() {
   const [step, setStep] = useState<"auth" | "otp">("auth");
@@ -15,9 +16,11 @@ export default function Login() {
   return (
     <AuthenticationLayot>
       <>
-        <div className="hidden lg:flex bg-[url('./assets/images/login-background.png')] bg-[#F5FFF0] h-[96vh] lg:w-[40%] xl:w-[45%] bg-cover rounded-[32px] p-10 flex-col lg:gap-10 xl:gap-20">
-          <img src={Logo} alt="TikeetiX Logo" className="w-32 h-6" />
-          <div className="space-y-5">
+        <div className="hidden lg:flex bg-[url('./assets/images/login-background.png')] bg-[#F5FFF0] h-[96vh] lg:w-[40%] xl:w-[45%] bg-cover rounded-[32px] py-10 flex-col lg:gap-10 xl:gap-20">
+          <div className=" px-10">
+            <img src={Logo} alt="TikeetiX Logo" className="w-32 h-6" />
+          </div>
+          <div className="space-y-5 px-10">
             <h1 className="sm:text-2xl lg:text-3xl xl:text-5xl 2xl:text-[64px] text-primary leading-[120%] tracking-[-4%] font-medium">
               Elevate your ticketing workflow with Tikeeti!
             </h1>
@@ -27,6 +30,7 @@ export default function Login() {
               your campaigns.
             </p>
           </div>
+          <AuthenticationMarque />
         </div>
 
         {step === "auth" && (

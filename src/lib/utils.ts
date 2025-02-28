@@ -105,6 +105,20 @@ export function capitalizeFirstLetter(string: string) {
   return string.charAt(0).toUpperCase() + string.slice(1).toLowerCase();
 }
 
+export function getTimeOfDay(date: Date) {
+  const hours = date.getHours(); // Get the hour (0-23)
+
+  if (hours >= 5 && hours < 12) {
+      return "Morning";
+  } else if (hours >= 12 && hours < 17) {
+      return "Afternoon";
+  } else if (hours >= 17 && hours < 21) {
+      return "Evening";
+  } else {
+      return "Night";
+  }
+}
+
 export function ticketRoutes(id?: string) {
   return [
     "/events",
