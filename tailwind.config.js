@@ -1,6 +1,6 @@
 /** @type {import('tailwindcss').Config} */
 module.exports = {
-  mode: 'jit',
+  mode: "jit",
   darkMode: ["class"],
   content: [
     "./pages/**/*.{ts,tsx}",
@@ -96,6 +96,10 @@ module.exports = {
           from: { transform: "translateX(0)" },
           to: { transform: "translateX(-100%)" },
         },
+        marquee2: {
+          from: { transform: "translateX(-100%)" },
+          to: { transform: "translateX(0%)" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.3s ease-out",
@@ -103,6 +107,9 @@ module.exports = {
         marquee: "marquee 12s linear infinite",
         "marquee-fast": "marquee 7s linear infinite",
         "marquee-slow": "marquee 32s linear infinite",
+        "marquee-2": "marquee2 12s linear infinite",
+        "marquee-fast-2": "marquee2 7s linear infinite",
+        "marquee-slow-2": "marquee 32s linear infinite",
       },
     },
   },

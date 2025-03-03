@@ -32,7 +32,7 @@ export default function AuthenticationMarque() {
         </div>
       </div>
       <div className="w-full flex-shrink-0 flex items-center overflow-hidden [mask-image:_linear-gradient(to_right,transparent_0,_black_128px,_black_calc(100%-200px),transparent_100%)]">
-        <div className="whitespace-nowrap will-change-transform animate-marquee-fast flex items-center justify-center gap-[18px]">
+        <div className="whitespace-nowrap will-change-transform animate-marquee-fast-2 flex items-center justify-center gap-[18px]">
           {tags.map((t, i) => (
             <p className="text-[#72B354] xl:text-2xl transition-colors" key={i}>
               {t}
@@ -40,7 +40,7 @@ export default function AuthenticationMarque() {
           ))}
         </div>
         <div
-          className="whitespace-nowrap will-change-transform animate-marquee-fast flex items-center justify-center gap-[18px] pl-10"
+          className="whitespace-nowrap will-change-transform animate-marquee-fast-2 flex items-center justify-center gap-[18px] pl-10"
           aria-hidden="true"
         >
           {tags.map((t, i) => (
@@ -70,7 +70,7 @@ export default function AuthenticationMarque() {
         </div>
       </div>
       <div className="w-full flex-shrink-0 flex items-center overflow-hidden [mask-image:_linear-gradient(to_right,transparent_0,_black_128px,_black_calc(100%-200px),transparent_100%)]">
-        <div className="whitespace-nowrap will-change-transform animate-marquee flex items-center justify-center gap-[18px]">
+        <div className="whitespace-nowrap will-change-transform animate-marquee-2 flex items-center justify-center gap-[18px]">
           {tags.map((t, i) => (
             <p className="text-[#72B354] xl:text-2xl transition-colors" key={i}>
               {t}
@@ -78,7 +78,7 @@ export default function AuthenticationMarque() {
           ))}
         </div>
         <div
-          className="whitespace-nowrap will-change-transform animate-marquee flex items-center justify-center gap-[18px] pl-10"
+          className="whitespace-nowrap will-change-transform animate-marquee-2 flex items-center justify-center gap-[18px] pl-10"
           aria-hidden="true"
         >
           {tags.map((t, i) => (
@@ -108,7 +108,7 @@ export default function AuthenticationMarque() {
         </div>
       </div>
       <div className="w-full flex-shrink-0 flex items-center overflow-hidden [mask-image:_linear-gradient(to_right,transparent_0,_black_128px,_black_calc(100%-200px),transparent_100%)]">
-        <div className="whitespace-nowrap will-change-transform animate-marquee-slow flex items-center justify-center gap-[18px]">
+        <div className="whitespace-nowrap will-change-transform animate-marquee-slow-2 flex items-center justify-center gap-[18px]">
           {tags.map((t, i) => (
             <p className="text-[#72B354] xl:text-2xl transition-colors" key={i}>
               {t}
@@ -116,7 +116,7 @@ export default function AuthenticationMarque() {
           ))}
         </div>
         <div
-          className="whitespace-nowrap will-change-transform animate-marquee-slow flex items-center justify-center gap-[18px] pl-10"
+          className="whitespace-nowrap will-change-transform animate-marquee-slow-2 flex items-center justify-center gap-[18px] pl-10"
           aria-hidden="true"
         >
           {tags.map((t, i) => (
