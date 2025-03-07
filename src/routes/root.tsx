@@ -21,6 +21,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import Loader from "@/components/ui/loader";
+import Loading from "@/components/ui/loading";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Select,
@@ -32,11 +33,20 @@ import {
 } from "@/components/ui/select";
 import UserProfile from "@/components/user-profile";
 import useAuth from "@/hooks/use-auth";
-import { cn, routesWithoutHeader, ticketRoutes } from "@/lib/utils";
+import { cn, removeItem, routesWithoutHeader, ticketRoutes } from "@/lib/utils";
 import { useProfileContext } from "@/provider/profile-provider";
-import { ChevronDown, ClipboardIcon, SearchIcon } from "lucide-react";
+import { logout } from "@/services/api/auth";
+import { useMutation } from "@tanstack/react-query";
+import Cookies from "js-cookie";
+import { ChevronDown, ClipboardIcon, LogOut, SearchIcon } from "lucide-react";
 import { useState } from "react";
-import { Link, Outlet, useLocation, useParams } from "react-router-dom";
+import {
+  Link,
+  Outlet,
+  useLocation,
+  useNavigate,
+  useParams,
+} from "react-router-dom";
 
 const CURRENCY = [
   {
@@ -54,10 +64,13 @@ function Root() {
   const { profile } = useProfileContext();
   const [showFAQ, setShowFAQ] = useState(true);
   const { id } = useParams();
+  const navigate = useNavigate();
 
   if (isRefreshing || isLoading) {
     return <Loader />;
   }
+
+  const { isPending, mutate } = useMutation({ mutationFn: logout });
 
   return (
     <main className="flex w-screen h-screen bg-[#F7F9FC] overflow-hidden">
@@ -272,6 +285,29 @@ function Root() {
               />
               Settings
             </Link>
+          </li>
+          <li>
+            <button
+              className={cn(
+                "flex gap-3 items-center px-4 text-sm w-full h-11 transition-all duration-100 text-[#BD1B0F]"
+              )}
+              onClick={() => {
+                mutate(undefined, {
+                  onSuccess: () => {
+                    removeItem("user");
+                    Cookies.remove("accessToken");
+                    Cookies.remove("refreshToken");
+                    navigate("/login");
+                  },
+                  onError: () => {
+                    navigate("/login");
+                  },
+                });
+              }}
+            >
+              <LogOut size={20} color="#BD1B0F" />
+              {isPending ? <Loading /> : <span>Log out</span>}
+            </button>
           </li>
         </ul>
 

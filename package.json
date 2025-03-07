@@ -41,6 +41,7 @@
     "react-hook-form": "^7.52.2",
     "react-image-crop": "^11.0.7",
     "react-router-dom": "^6.26.0",
+    "recharts": "^2.15.1",
     "tailwind-merge": "^2.4.0",
     "tailwindcss-animate": "^1.0.7",
     "zod": "^3.23.8"

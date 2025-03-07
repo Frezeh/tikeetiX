@@ -109,7 +109,7 @@ module.exports = {
         "marquee-slow": "marquee 32s linear infinite",
         "marquee-2": "marquee2 12s linear infinite",
         "marquee-fast-2": "marquee2 7s linear infinite",
-        "marquee-slow-2": "marquee 32s linear infinite",
+        "marquee-slow-2": "marquee2 32s linear infinite",
       },
     },
   },
