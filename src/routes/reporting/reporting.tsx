@@ -7,47 +7,94 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { CalendarIcon } from "lucide-react";
+import { CalendarIcon, DownloadIcon, WalletIcon } from "lucide-react";
 import { useState } from "react";
 import CancelledTickets from "./components/cancelled-tickets";
 import TicketSales from "./components/ticket-sales";
+import RefundedTickets from "./components/refunded-tickets";
+import {
+  endOfMonth,
+  endOfWeek,
+  endOfYesterday,
+  format,
+  startOfMonth,
+  startOfWeek,
+  startOfYesterday,
+  subMonths,
+  subWeeks,
+} from "date-fns";
 
 const CURRENCY = [
   { id: 0, country: "United Kingdom", value: "GBP", imageUrl: GBP },
 ];
 
-const TOTALTICKETDATE = [
-  "Any time",
-  "Last 24 hours",
-  "Last week",
-  "Last month",
-];
-
 export default function Reporting() {
-  const [totalTicketDate, setTotalTicketDate] = useState(TOTALTICKETDATE[0]);
+  const [totalTicketDate, setTotalTicketDate] = useState("All time");
+  const today = new Date();
+  const thisWeekStart = startOfWeek(today);
+  const thisWeekEnd = endOfWeek(today);
+  const lastWeekStart = startOfWeek(subWeeks(today, 1));
+  const lastWeekEnd = endOfWeek(subWeeks(today, 1));
+  const lastMonthStart = startOfMonth(subMonths(today, 1));
+  const lastMonthEnd = endOfMonth(subMonths(today, 1));
+  const formattedThisWeek = `${format(thisWeekStart, "MMM d")} - ${format(
+    thisWeekEnd,
+    "MMM d"
+  )}`;
+  const formattedLastWeek = `${format(lastWeekStart, "MMM d")} - ${format(
+    lastWeekEnd,
+    "MMM d"
+  )}`;
+  const formattedLastMonth = `${format(lastMonthStart, "MMM d")} - ${format(
+    lastMonthEnd,
+    "MMM d"
+  )}`;
 
-  const date = new Date(new Date().getTime());
-  const todaysdate = Math.floor(Date.now() / 1000);
-  const timestamp = Math.floor(date.getTime() / 1000);
-  const timeStampYesterday = (todaysdate - 24 * 3600) / 1000;
-  const timeStampLastWeek = (todaysdate - 24 * 7 * 3600) / 1000;
-  const timeStampLastMonth = (todaysdate - 720 * 3600) / 1000;
-  const is24 = timestamp >= new Date(timeStampYesterday).getTime() * 1000;
-  const isLastWeek = timestamp >= new Date(timeStampLastWeek).getTime() * 1000;
-  const isLastMonth =
-    timestamp >= new Date(timeStampLastMonth).getTime() * 1000;
+  const filterOptions = [
+    { title: "All time", subtitle: "All time" },
+    { title: "Last 24 hours", subtitle: "Last 24 hours" },
+    { title: "This week", subtitle: formattedThisWeek },
+    { title: "Last week", subtitle: formattedLastWeek },
+    { title: "Last month", subtitle: formattedLastMonth },
+  ];
 
-  const filterTotalTicketDate = (type: string) => {
-    if (type === "Last 24 hours" && is24) {
-    }
-    if (type === "Last week" && isLastWeek) {
-    }
-    if (type === "Last month" && isLastMonth) {
-    }
-    if (type === "Any time") {
-    }
+  const filterTotalTicketDate = (date: string) => {
+    let title = date.split("&")[0];
+    let subtitle = date.split("&")[1];
+    setTotalTicketDate(subtitle);
 
-    setTotalTicketDate(type);
+    switch (title.toLowerCase()) {
+      case "last 24 hours":
+        return console.log(
+          `${format(startOfYesterday(), "dd MMMM")} - ${format(
+            endOfYesterday(),
+            "dd MMMM"
+          )}`
+        );
+      case "this week":
+        return console.log(
+          `${format(thisWeekStart, "dd MMMM")} - ${format(
+            thisWeekEnd,
+            "dd MMMM"
+          )}`
+        );
+      case "last week":
+        return console.log(
+          `${format(lastWeekStart, "dd MMMM")} - ${format(
+            lastWeekEnd,
+            "dd MMMM"
+          )}`
+        );
+      case "last month":
+        return console.log(
+          `${format(lastMonthStart, "dd MMMM")} - ${format(
+            lastMonthEnd,
+            "dd MMMM"
+          )}`
+        );
+      default:
+        return null;
+    }
   };
 
   return (
@@ -105,7 +152,6 @@ export default function Reporting() {
               suffixIcon={<div className=" w-0 h-0" />}
               className="border-[#D0D5DD] rounded-[8px] active:focus:outline-none h-9 w-fit"
             >
-              {/* <SelectValue className="text-sm text-[#667185] font-medium" /> */}
               <p className="text-[#667185] text-sm font-medium">
                 {totalTicketDate}
               </p>
@@ -116,25 +162,155 @@ export default function Reporting() {
               align="start"
             >
               <SelectGroup>
-                {TOTALTICKETDATE.map((date) => (
+                {filterOptions.map((date) => (
                   <SelectItem
-                    value={date}
-                    key={date}
+                    value={`${date.title}&${date.subtitle}`}
+                    key={date.title}
                     className="text-[#344054] text-sm"
                   >
-                    {date}
+                    {date.title}
                   </SelectItem>
                 ))}
               </SelectGroup>
             </SelectContent>
           </Select>
         </div>
+        <div className="flex flex-col xl:flex-row justify-between border-b border-[#F0F2F5] pt-7">
+          <div className="flex flex-col gap-5 justify-between pb-5 xl:pb-10 pr-5">
+            <div className="flex items-center gap-1">
+              <div className="w-6 h-6 border border-[#E4E7EC] bg-white rounded-[8px] flex items-center justify-center">
+                <WalletIcon size={12} color="#13191C" />
+              </div>
+              <p className="text-base text-[#667185]">Total ticket sales</p>
+            </div>
+
+            <div className="flex items-center gap-6">
+              <div className="flex flex-col justify-between p-0 gap-2">
+                <p className="text-[#667085] text-xs font-bold uppercase leading-[120%] tracking-wide">
+                  Gross revenue
+                </p>
+                <div className="flex justify-end items-end gap-2">
+                  <p className="text-[#13191C] text-xl font-medium text-ellipsis">
+                    GBP999,999,999
+                  </p>
+                </div>
+              </div>
+              <div className="flex flex-col justify-between p-0 gap-2 border-l border-[#E4E7EC] pl-6">
+                <p className="text-[#667085] text-xs font-bold uppercase leading-[120%] tracking-wide">
+                  NET revenue
+                </p>
+                <div className="flex justify-end items-end gap-4">
+                  <p className="text-[#0DA767] text-2xl font-medium">
+                    GBP999,999,999
+                  </p>
+                  <div className="flex items-center gap-2 pb-1.5">
+                    <svg
+                      width="12"
+                      height="13"
+                      viewBox="0 0 12 13"
+                      fill="none"
+                      xmlns="http://www.w3.org/2000/svg"
+                    >
+                      <path
+                        d="M6 9.87109V2.87109M6 2.87109L2.5 6.37109M6 2.87109L9.5 6.37109"
+                        stroke="#12B76A"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                    <p className="font-medium text-[10px] text-[#027A48]">
+                      40%
+                    </p>
+                    <p className="font-medium text-[10px] text-[#667085]">
+                      vs last month
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="relative flex flex-col justify-between gap-6 pb-5 xl:border-l xl:border-[#F0F2F5] xl:pl-10">
+            <button className="self-end flex items-center gap-1">
+              <DownloadIcon size={12} color="#13191C" />
+              <p className="text-xs text-[#667185] font-medium">Export</p>
+            </button>
+            <div className="grid grid-cols-3 items-center gap-20">
+              <div className="flex flex-col justify-between p-0 gap-1">
+                <p className="text-[#667185] text-[10px] font-bold uppercase leading-[120%] tracking-wide">
+                  Movies revenue
+                </p>
+                <p className="text-[#13191C] text-lg font-medium text-ellipsis">
+                  GBP999,999,999
+                </p>
+              </div>
+              <div className="flex flex-col justify-between p-0 gap-1">
+                <p className="text-[#667085] text-[10px] font-bold uppercase leading-[120%] tracking-wide">
+                  Events revenue
+                </p>
+                <p className="text-[#13191C] text-lg font-medium text-ellipsis">
+                  GBP999,999,999
+                </p>
+              </div>
+            </div>
+            <div className="grid grid-cols-3 items-center gap-10">
+              <div className="flex flex-col justify-between p-0 gap-1">
+                <p className="text-[#667085] text-[10px] font-bold uppercase leading-[120%] tracking-wide">
+                  Transportation revenue
+                </p>
+                <p className="text-[#13191C] text-lg font-medium text-ellipsis">
+                  GBP999,999,999
+                </p>
+              </div>
+            </div>
+
+            <div className="absolute bottom-0 right-0">
+              <svg
+                width="64"
+                height="65"
+                viewBox="0 0 64 65"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M62.7414 26.1412V26.1976C62.7414 28.5254 61.9634 30.7591 60.4073 32.8987C58.8387 35.0571 56.6174 36.9709 53.7374 38.6337C53.7123 38.6462 53.6873 38.6651 53.6622 38.6713C47.6512 42.1286 40.4606 43.8478 32.0967 43.8353C23.7014 43.8164 16.4668 42.0595 10.3993 38.5583C7.10522 36.6509 4.69581 34.549 3.18992 32.2526C1.9162 30.32 1.27003 28.2493 1.25748 26.0281C1.23238 21.1842 4.2315 17.018 10.2613 13.5357C16.2974 10.0533 23.5068 8.3215 31.9021 8.33405C40.2974 8.35288 47.532 10.1097 53.5994 13.6172L39.9586 21.4917L32.0026 26.0847L53.524 26.1223C53.524 26.1223 53.5743 26.1536 53.5994 26.1662V26.1223L62.7414 26.1412Z"
+                  stroke="#E4E7EC"
+                  stroke-width="0.627451"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                />
+                <path
+                  d="M53.5993 26.123V26.1669C53.5993 26.1669 53.549 26.1356 53.5239 26.123H53.5993Z"
+                  stroke="#E4E7EC"
+                  stroke-width="0.627451"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                />
+                <path
+                  d="M53.5992 13.6172V26.1223H53.5239L32.0024 26.0847L39.9585 21.4917L53.5992 13.6172Z"
+                  stroke="#E4E7EC"
+                  stroke-width="0.627451"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                />
+                <path
+                  d="M62.7412 26.1987V38.6914C62.7539 41.0381 61.9758 43.2904 60.4071 45.4488C58.8385 47.6073 56.6173 49.5211 53.7373 51.1839C47.7075 54.6662 40.4918 56.398 32.0965 56.3854C23.7012 56.3666 16.4666 54.6097 10.3992 51.1085C4.33172 47.6011 1.28242 43.4285 1.25732 38.5783V26.0293C1.26987 28.2505 1.91604 30.3212 3.18977 32.2537C4.69565 34.5502 7.10504 36.652 10.3992 38.5595C16.4666 42.0607 23.7012 43.8176 32.0965 43.8364C40.4604 43.849 47.651 42.1298 53.662 38.6725C53.6871 38.6662 53.7122 38.6474 53.7373 38.6349C56.6173 36.9721 58.8385 35.0583 60.4071 32.8998C61.9632 30.7602 62.7412 28.5266 62.7412 26.1987Z"
+                  stroke="#E4E7EC"
+                  stroke-width="0.627451"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                />
+              </svg>
+            </div>
+          </div>
+        </div>
       </div>
 
       <TicketSales />
-      <div className="flex justify-between items-center gap-10 w-full">
+      <div className="flex flex-col xl:flex-row justify-between items-center gap-10 w-full">
         <CancelledTickets />
-        <CancelledTickets />
+        <RefundedTickets />
       </div>
     </div>
   );

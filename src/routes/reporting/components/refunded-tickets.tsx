@@ -21,13 +21,13 @@ import {
 import {
   endOfMonth,
   endOfWeek,
-  endOfYesterday,
   format,
   startOfMonth,
   startOfWeek,
-  startOfYesterday,
   subMonths,
   subWeeks,
+  startOfYesterday,
+  endOfYesterday,
 } from "date-fns";
 import { CalendarIcon } from "lucide-react";
 import { useState } from "react";
@@ -54,7 +54,7 @@ const chartConfig = {
   },
 } satisfies ChartConfig;
 
-export default function CancelledTickets() {
+export default function RefundedTickets() {
   const [cancelledTicketDate, setCancelledTicketDate] = useState("All time");
   const today = new Date();
   const thisWeekStart = startOfWeek(today);
@@ -127,14 +127,26 @@ export default function CancelledTickets() {
     <Card className="border-none w-full shadow-none">
       <CardHeader>
         <CardDescription className="flex items-center justify-between">
-          <div className="flex flex-col justify-between p-0 gap-2">
-            <p className="text-[#667085] text-xs font-bold uppercase leading-[120%] tracking-[12%]">
-              Cancelled tickets
-            </p>
-            <div className="flex justify-end items-end gap-2">
-              <p className="text-[#13191C] text-xl font-medium">
-                GBP999,999,999
+          <div className="flex items-center gap-2">
+            <div className="flex flex-col justify-between p-0 gap-2">
+              <p className="text-[#667085] text-xs font-bold uppercase leading-[120%] tracking-[12%]">
+                REFUNDS
               </p>
+              <div className="flex justify-end items-end gap-2">
+                <p className="text-[#13191C] text-xl font-medium text-ellipsis">
+                  GBP999,999,999
+                </p>
+              </div>
+            </div>
+            <div className="flex flex-col justify-between p-0 gap-2 border-l border-[#E4E7EC] pl-2">
+              <p className="text-[#E72113] text-xs font-bold uppercase leading-[120%] tracking-[12%]">
+                DUE FOR Refunds
+              </p>
+              <div className="xl:max-w-24 2xl:max-w-full">
+                <p className="text-[#13191C] text-xl font-medium truncate ...">
+                  GBP999,999,999
+                </p>
+              </div>
             </div>
           </div>
 

@@ -10,7 +10,7 @@ import Movies from "./movies/movies";
 import ManageOrders from "./manage-orders/manage-orders";
 import Marketing from "./marketing/marketing";
 import Finance from "./finance/finance";
-// import Reporting from "./reporting/reporting";
+import Reporting from "./reporting/reporting";
 import Settings from "./settings/settings";
 import CreateMovie from "./create-movie/create-movie";
 import MovieDetails from "./movie-details/movie-details";
@@ -77,7 +77,7 @@ export const router = createBrowserRouter([
       },
       {
         path: "/reporting",
-        element: <div />,
+        element: <Reporting />,
       },
       {
         path: "/settings",
