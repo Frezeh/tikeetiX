@@ -107,6 +107,7 @@ export default function RegisterOrganization(props: Props) {
         accountType: type,
         lastName: " ",
         businessName: data.businessname,
+        type: "Business",
       },
       {
         onSuccess: () => {

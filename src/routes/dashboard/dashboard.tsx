@@ -44,7 +44,7 @@ export default function Dashboard() {
           Welcome {profile?.firstName} {profile?.lastName}
         </p>
         <p className="text-base text-[#475367]">
-          Good {getTimeOfDay(new Date())}  😊
+          Good {getTimeOfDay(new Date())} 😊
         </p>
       </div>
       <div className="py-10 flex items-center justify-between gap-2">
@@ -67,12 +67,17 @@ export default function Dashboard() {
         </Card>
         <Card
           className="px-[15px] py-5 bg-transparent border-[#E4E7EC] lg:w-[200px] xl:w-[262px] h-[129px] rounded-[12px] cursor-pointer"
-          onClick={() => navigate("/marketing")}
+          //onClick={() => navigate("/marketing")}
         >
           <CardContent className="p-0 space-y-4 relative flex justify-between items-center">
             <div className="space-y-1">
-              <div className="w-10 h-10 rounded-full bg-[#F0F2F5] flex justify-center items-center">
-                <LoudSpeaker fill="#13191C" />
+              <div className=" flex gap-4 items-center">
+                <div className="w-10 h-10 rounded-full bg-[#F0F2F5] flex justify-center items-center">
+                  <LoudSpeaker fill="#13191C" />
+                </div>
+                <Badge className="text-[10px] font-medium text-[#344054] bg-[#D0D5DD] rounded-[10px] h-[15px]">
+                  COMING SOON
+                </Badge>
               </div>
               <p className="text-sm xl:text-base text-[#13191C]">
                 Marketing feeds & blogs
@@ -91,7 +96,7 @@ export default function Dashboard() {
                 </div>
               </div>
               <Badge className="text-[10px] font-medium text-[#344054] bg-[#D0D5DD] rounded-[10px] h-[15px]">
-                Coming soon
+                COMING SOON
               </Badge>
             </div>
             <p className="text-sm xl:text-base text-[#1D2739]">
@@ -227,8 +232,8 @@ export default function Dashboard() {
               role="button"
               onClick={() => {
                 setTicketType("movies");
-                setOpenTicketModal(false);
-                navigate("/create-movie");
+                // setOpenTicketModal(false);
+                // navigate("/create-movie");
               }}
               className={cn(
                 "w-1/3 h-[88px] p-1.5 rounded-[12px] border flex flex-col justify-between transition-all duration-200 cursor-pointer",

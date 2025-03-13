@@ -5,7 +5,6 @@ import ChevronDouble from "@/assets/icons/chevron-double";
 import GBP from "@/assets/icons/gbp.svg";
 import HomeIcon from "@/assets/icons/home-icon";
 import Logo from "@/assets/icons/logo-dark.svg";
-import LoudSpeaker from "@/assets/icons/loud-speaker";
 import SettingsIcon from "@/assets/icons/settings-icon";
 import StoreIcon from "@/assets/icons/store-icon";
 import TicketDivider from "@/assets/icons/ticket-divider";
@@ -163,7 +162,7 @@ function Root() {
                     >
                       Events
                     </Link>
-                    <Link
+                    {/* <Link
                       to="/movies"
                       className={cn(
                         "text-sm text-[#98A2B3] text-left hover:text-primary hover:font-bold transition-colors",
@@ -174,7 +173,17 @@ function Root() {
                       )}
                     >
                       Movies
-                    </Link>
+                    </Link> */}
+                    <div
+                      className={cn(
+                        "flex justify-between gap-5 text-sm text-[#98A2B3] text-left transition-colors"
+                      )}
+                    >
+                      Movies
+                      <Badge className="text-[10px] font-medium text-[#98A2B3] bg-[#E4E7EC] rounded-[10px] h-[15px]">
+                        Coming soon
+                      </Badge>
+                    </div>
                     <div
                       className={cn(
                         "flex justify-between gap-5 text-sm text-[#98A2B3] text-left transition-colors"
@@ -212,7 +221,7 @@ function Root() {
               </Badge>
             </Link>
           </li>
-          <li>
+          {/* <li>
             <Link
               to="/marketing"
               className={cn(
@@ -227,7 +236,7 @@ function Root() {
               />
               Marketing
             </Link>
-          </li>
+          </li> */}
           <li>
             <Link
               to="/finance"

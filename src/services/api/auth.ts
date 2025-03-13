@@ -38,6 +38,7 @@ export const register = async (body: {
   lastName: string;
   accountType: "Individual" | "Organization";
   businessName?: string;
+  type: "User" | "Business";
 }) => {
   const config: AxiosRequestConfig = {
     method: "POST",
@@ -69,7 +70,7 @@ export const verifyEmail = async (body: { email: string; code: string }) => {
     data: body,
   };
 
-  const response = await makeRequest<User>(config);
+  const response = await makeRequest<{user: User, accessToken: string}>(config);
 
   return response.data;
 };
@@ -85,7 +86,10 @@ export const forgotPassword = async (body: { email: string }) => {
 
   return response.data;
 };
-export const resetPassword = async (body: { email: string, password: string }) => {
+export const resetPassword = async (body: {
+  email: string;
+  password: string;
+}) => {
   const config: AxiosRequestConfig = {
     method: "POST",
     url: "auth/reset-password",
@@ -97,7 +101,7 @@ export const resetPassword = async (body: { email: string, password: string }) =
   return response.data;
 };
 
-export const verifyOtp = async (body: { email: string, code: string }) => {
+export const verifyOtp = async (body: { email: string; code: string }) => {
   const config: AxiosRequestConfig = {
     method: "POST",
     url: "auth/verify-otp",
@@ -115,7 +119,7 @@ export const getRefreshToken = async (token: string) => {
     url: "auth/refresh-token",
     headers: {
       Authorization: `Bearer ${token}`,
-    }
+    },
   };
 
   const response = await makeRequest<{

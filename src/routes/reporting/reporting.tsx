@@ -237,14 +237,14 @@ export default function Reporting() {
               <p className="text-xs text-[#667185] font-medium">Export</p>
             </button>
             <div className="grid grid-cols-3 items-center gap-20">
-              <div className="flex flex-col justify-between p-0 gap-1">
+              {/* <div className="flex flex-col justify-between p-0 gap-1">
                 <p className="text-[#667185] text-[10px] font-bold uppercase leading-[120%] tracking-wide">
                   Movies revenue
                 </p>
                 <p className="text-[#13191C] text-lg font-medium text-ellipsis">
                   GBP999,999,999
                 </p>
-              </div>
+              </div> */}
               <div className="flex flex-col justify-between p-0 gap-1">
                 <p className="text-[#667085] text-[10px] font-bold uppercase leading-[120%] tracking-wide">
                   Events revenue
@@ -255,14 +255,14 @@ export default function Reporting() {
               </div>
             </div>
             <div className="grid grid-cols-3 items-center gap-10">
-              <div className="flex flex-col justify-between p-0 gap-1">
+              {/* <div className="flex flex-col justify-between p-0 gap-1">
                 <p className="text-[#667085] text-[10px] font-bold uppercase leading-[120%] tracking-wide">
                   Transportation revenue
                 </p>
                 <p className="text-[#13191C] text-lg font-medium text-ellipsis">
                   GBP999,999,999
                 </p>
-              </div>
+              </div> */}
             </div>
 
             <div className="absolute bottom-0 right-0">

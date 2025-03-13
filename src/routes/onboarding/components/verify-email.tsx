@@ -4,8 +4,10 @@ import { Dialog, DialogContent, DialogFooter } from "@/components/ui/dialog";
 import Loading from "@/components/ui/loading";
 import OtpInput from "@/components/ui/otp-input";
 import { useToast } from "@/hooks/use-toast";
+import { useProfileContext } from "@/provider/profile-provider";
 import { verifyEmail } from "@/services/api/auth";
 import { useMutation } from "@tanstack/react-query";
+import Cookies from "js-cookie";
 import { ChevronLeft } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -21,6 +23,7 @@ export default function VerifyEmail({ goBack, email }: Props) {
   const { isPending, mutate } = useMutation({ mutationFn: verifyEmail });
   const [otp, setOtp] = useState("");
   const [open, setOpen] = useState(false);
+  const { updateProfile } = useProfileContext();
 
   const handleOtpChange = (value: string) => {
     setOtp(value);
@@ -37,6 +40,8 @@ export default function VerifyEmail({ goBack, email }: Props) {
         onSuccess: (res) => {
           if (res.data) {
             setOpen(true);
+            updateProfile(res.data.user);
+            Cookies.set("accessToken", res.data.accessToken);
           } else {
             toast({
               title: "Failed to verify email",
@@ -98,7 +103,7 @@ export default function VerifyEmail({ goBack, email }: Props) {
         open={open}
         onOpenChange={() => {
           setOpen(!open);
-          navigate("/login");
+          navigate("/");
         }}
       >
         <DialogContent className="w-3/4 sm:max-w-[413px] sm:h-[266px] justify-center items-center gap-2 rounded-[10px]">
