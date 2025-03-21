@@ -151,7 +151,7 @@ export default function Otp({ goBack, userPayload }: Props) {
             variant="gradient"
             className="w-full h-14"
             onClick={handleSubmit}
-            disabled={isPending || otp.length !== 6}
+            disabled={isPending || otp.length !== 5}
           >
             {isPending ? <Loading /> : "Submit"}
           </Button>

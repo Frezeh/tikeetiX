@@ -192,11 +192,6 @@ export default function Auth({ moveToNext, setUserPayload }: Props) {
           </div>
           <div className="pt-4">
             <Button
-              // onClick={(e) => {
-              //   if(form.formState.errors){
-              //     e.preventDefault();
-              //   }
-              // }}
               type="submit"
               disabled={isPending}
               variant="gradient"
