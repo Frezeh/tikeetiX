@@ -23,6 +23,9 @@ import {
   subMonths,
   subWeeks,
 } from "date-fns";
+import { useQuery } from "@tanstack/react-query";
+import { getWallet } from "@/services/api/wallet";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const CURRENCY = [
   { id: 0, country: "United Kingdom", value: "GBP", imageUrl: GBP },
@@ -96,6 +99,11 @@ export default function Reporting() {
         return null;
     }
   };
+
+  const { isLoading: isLoadingWallet, data: WALLET } = useQuery({
+    queryKey: ["wallet"],
+    queryFn: () => getWallet(),
+  });
 
   return (
     <div className="pb-20">
@@ -189,10 +197,14 @@ export default function Reporting() {
                 <p className="text-[#667085] text-xs font-bold uppercase leading-[120%] tracking-wide">
                   Gross revenue
                 </p>
-                <div className="flex justify-end items-end gap-2">
-                  <p className="text-[#13191C] text-xl font-medium text-ellipsis">
-                    GBP999,999,999
-                  </p>
+                <div className="flex justify-start items-start gap-2">
+                  {isLoadingWallet ? (
+                    <Skeleton className="w-full h-4 p-3 rounded-[12px] bg-gray-200" />
+                  ) : (
+                    <p className="text-[#13191C] text-xl font-medium text-ellipsis">
+                      GBP{WALLET?.data?.grossEarnings || 0}
+                    </p>
+                  )}
                 </div>
               </div>
               <div className="flex flex-col justify-between p-0 gap-2 border-l border-[#E4E7EC] pl-6">
@@ -200,32 +212,38 @@ export default function Reporting() {
                   NET revenue
                 </p>
                 <div className="flex justify-end items-end gap-4">
-                  <p className="text-[#0DA767] text-2xl font-medium">
-                    GBP999,999,999
-                  </p>
-                  <div className="flex items-center gap-2 pb-1.5">
-                    <svg
-                      width="12"
-                      height="13"
-                      viewBox="0 0 12 13"
-                      fill="none"
-                      xmlns="http://www.w3.org/2000/svg"
-                    >
-                      <path
-                        d="M6 9.87109V2.87109M6 2.87109L2.5 6.37109M6 2.87109L9.5 6.37109"
-                        stroke="#12B76A"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
-                    </svg>
-                    <p className="font-medium text-[10px] text-[#027A48]">
-                      40%
-                    </p>
-                    <p className="font-medium text-[10px] text-[#667085]">
-                      vs last month
-                    </p>
-                  </div>
+                  {isLoadingWallet ? (
+                    <Skeleton className="w-full h-4 p-3 rounded-[12px] bg-gray-200" />
+                  ) : (
+                    <>
+                      <p className="text-[#0DA767] text-2xl font-medium">
+                        GBP{WALLET?.data?.escrowEarning || 0}
+                      </p>
+                      <div className="flex items-center gap-2 pb-1.5">
+                        <svg
+                          width="12"
+                          height="13"
+                          viewBox="0 0 12 13"
+                          fill="none"
+                          xmlns="http://www.w3.org/2000/svg"
+                        >
+                          <path
+                            d="M6 9.87109V2.87109M6 2.87109L2.5 6.37109M6 2.87109L9.5 6.37109"
+                            stroke="#12B76A"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          />
+                        </svg>
+                        <p className="font-medium text-[10px] text-[#027A48]">
+                          40%
+                        </p>
+                        <p className="font-medium text-[10px] text-[#667085]">
+                          vs last month
+                        </p>
+                      </div>
+                    </>
+                  )}
                 </div>
               </div>
             </div>
@@ -250,7 +268,7 @@ export default function Reporting() {
                   Events revenue
                 </p>
                 <p className="text-[#13191C] text-lg font-medium text-ellipsis">
-                  GBP999,999,999
+                  GBP0
                 </p>
               </div>
             </div>

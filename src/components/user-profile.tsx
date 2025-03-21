@@ -4,14 +4,13 @@ import { useProfileContext } from "@/provider/profile-provider";
 import { logout } from "@/services/api/auth";
 import { useMutation } from "@tanstack/react-query";
 import Cookies from "js-cookie";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import Loading from "./ui/loading";
 import { Select, SelectContent, SelectTrigger, SelectValue } from "./ui/select";
 
 export default function UserProfile() {
   const navigate = useNavigate();
   const { profile } = useProfileContext();
-
   const { isPending, mutate } = useMutation({ mutationFn: logout });
 
   return (
@@ -21,10 +20,15 @@ export default function UserProfile() {
           placeholder={`${profile?.firstName} ${profile?.lastName}`}
         />
       </SelectTrigger>
-      <SelectContent className="space-y-4">
-        <div className="px-4 py-3 flex items-center gap-3 cursor-pointer border-b border-[#E4E7EC]">
+      <SelectContent className="space-y-4 shadow-sm border-[#F2F4F7]">
+        <div className="px-4 py-3 flex items-center gap-3 cursor-pointer border-b border-[#F2F4F7]">
           <div className="relative">
-            <img src={Avatar} alt="Avatar" width={40} height={40} />
+            <img
+              src={profile?.profilePicture ? profile?.profilePicture : Avatar}
+              alt="Avatar"
+              width={40}
+              height={40}
+            />
             <div className="w-[10px] h-[10px] bg-[#04802E] rounded-full absolute right-0 border border-white bottom-1" />
           </div>
           <div>
@@ -34,26 +38,25 @@ export default function UserProfile() {
             <p className="text-[#667185] text-xs">{profile?.email}</p>
           </div>
         </div>
-        <div className="py-1 flex flex-col gap-[10px] border-b border-[#E4E7EC]">
-          <div className="px-4 py-1 cursor-pointer">
+        <div className="py-1 flex flex-col gap-[10px] border-b border-[#F2F4F7]">
+          <div
+            className="px-4 py-1 cursor-pointer"
+            onClick={() => navigate("/settings")}
+            role="button"
+          >
             <p className="text-[#344054] text-sm">View profile</p>
           </div>
-          <div className="px-4 py-1 cursor-pointer">
-            <p className="text-[#344054] text-sm">Settings</p>
-          </div>
-          <div className="px-4 py-1 cursor-pointer">
-            <p className="text-[#344054] text-sm">Keyboard shortcuts</p>
-          </div>
         </div>
-        <div className="py-1 flex flex-col gap-[10px] border-b border-[#E4E7EC]">
+        <div className="py-1 flex flex-col gap-[10px] border-b border-[#F2F4F7]">
           <div className="px-4 py-1 cursor-pointer">
-            <p className="text-[#344054] text-sm">Changelog</p>
-          </div>
-          <div className="px-4 py-1 cursor-pointer">
-            <p className="text-[#344054] text-sm">Support</p>
-          </div>
-          <div className="px-4 py-1 cursor-pointer">
-            <p className="text-[#344054] text-sm">API</p>
+            <Link
+              to="/faq"
+              rel="noreferrer"
+              target={"_blank"}
+              className="text-[#344054] text-sm"
+            >
+              FAQs
+            </Link>
           </div>
         </div>
         <button
@@ -75,7 +78,7 @@ export default function UserProfile() {
           {isPending ? (
             <Loading />
           ) : (
-            <p className="text-[#344054] text-sm">Log out</p>
+            <p className="text-[#E72113] text-sm">Log out</p>
           )}
         </button>
       </SelectContent>

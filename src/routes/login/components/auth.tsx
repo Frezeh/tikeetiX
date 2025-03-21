@@ -70,7 +70,7 @@ export default function Auth({ moveToNext, setUserPayload }: Props) {
 
   function onSubmit(data: z.infer<typeof FormSchema>) {
     mutate(
-      { email: data.email, password: data.password },
+      { email: data.email, password: data.password, type: "Business" },
       {
         onSuccess: (res) => {
           if (res.data) {

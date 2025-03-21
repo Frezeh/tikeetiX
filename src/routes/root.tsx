@@ -38,7 +38,6 @@ import { logout } from "@/services/api/auth";
 import { useMutation } from "@tanstack/react-query";
 import Cookies from "js-cookie";
 import { ChevronDown, ClipboardIcon, LogOut, SearchIcon } from "lucide-react";
-import { useState } from "react";
 import {
   Link,
   Outlet,
@@ -61,7 +60,6 @@ function Root() {
   const route = pathname;
   const { isRefreshing, isLoading } = useAuth();
   const { profile } = useProfileContext();
-  const [showFAQ, setShowFAQ] = useState(true);
   const { id } = useParams();
   const navigate = useNavigate();
 
@@ -320,37 +318,34 @@ function Root() {
           </li>
         </ul>
 
-        {showFAQ && (
-          <div className="w-full">
-            <Card className="mx-4 mt-4 bg-transparent border-[#E4E7EC] transition-all duration-300">
-              <CardContent className="px-4 py-5 space-y-4 relative">
-                <img
-                  src={BrowserControls}
-                  alt="controls"
-                  className="w-[94px] h-[116px] absolute top-1 left-0"
-                />
-                <div className="pt-10">
-                  <p className="text-base font-bold text-[#13191C]">FAQS</p>
-                  <p className="text-sm text-[#667185]">
-                    Get to know the platform with our Frequently Asked Questions
-                    (FAQs).
-                  </p>
-                </div>
-              </CardContent>
-              <CardFooter className="pl-4 gap-3">
-                <button className="text-sm text-primary font-bold">
-                  Check it out
-                </button>
-                <button
-                  className="text-[#98A2B3] text-sm"
-                  onClick={() => setShowFAQ(false)}
-                >
-                  Close
-                </button>
-              </CardFooter>
-            </Card>
-          </div>
-        )}
+        <div className="w-full">
+          <Card className="mx-4 mt-4 bg-transparent border-[#E4E7EC] transition-all duration-300">
+            <CardContent className="px-4 py-5 space-y-4 relative">
+              <img
+                src={BrowserControls}
+                alt="controls"
+                className="w-[94px] h-[116px] absolute top-1 left-0"
+              />
+              <div className="pt-10">
+                <p className="text-base font-bold text-[#13191C]">FAQS</p>
+                <p className="text-sm text-[#667185]">
+                  Get to know the platform with our Frequently Asked Questions
+                  (FAQs).
+                </p>
+              </div>
+            </CardContent>
+            <CardFooter className="pl-4 gap-3">
+              <Link
+                to="/faq"
+                rel="noreferrer"
+                target={"_blank"}
+                className="text-sm text-primary font-bold"
+              >
+                Check it out
+              </Link>
+            </CardFooter>
+          </Card>
+        </div>
       </div>
 
       <div className="border rounded-[15px] border-[#E4E7EC] mx-1 my-2 lg:w-[calc(100%-256px)] bg-background overflow-hidden">

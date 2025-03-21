@@ -77,7 +77,7 @@ function EventLevel(props: Props) {
     openRemovePromoCode,
     setSelectedPromoCode,
     promoCode,
-    setOpenEditPromoCode
+    setOpenEditPromoCode,
   } = props;
   const [openEndDate, setOpenEndDate] = useState(false);
   const [openStartDate, setOpenStartDate] = useState(false);
@@ -98,7 +98,7 @@ function EventLevel(props: Props) {
   return (
     <ScrollArea className="h-[80vh]">
       <div className="space-y-4 lg:max-w-[330px] 2xl:max-w-[375px] pt-5">
-        <div className="space-y-8 mt-5">
+        <div className="space-y-8 mt-5 transition-all">
           <div className="space-y-5">
             <p className="text-[#13191C] text-base font-medium">
               Ticket price <span className="font-normal">(Regular)</span>
@@ -233,75 +233,77 @@ function EventLevel(props: Props) {
               </AccordionTrigger>
               <AccordionContent className="flex gap-1 w-full">
                 <div className="space-y-3">
-                  <div className="pb-2 space-y-2">
-                    <div className="flex flex-row items-center space-x-2">
-                      <Checkbox
-                        className="transition-all duration-200 w-5 h-5"
-                        checked={promoCodeVisible}
-                        onCheckedChange={() =>
-                          setPromoCodeVisible(!promoCodeVisible)
-                        }
-                      />
-                      <div className="space-y-1 leading-none">
-                        <p className="text-sm text-primary font-medium">
-                          Add promo code
-                        </p>
+                  {price === "Paid event" && (
+                    <div className="pb-2 space-y-2 transition-all">
+                      <div className="flex flex-row items-center space-x-2">
+                        <Checkbox
+                          className="transition-all duration-200 w-5 h-5"
+                          checked={promoCodeVisible}
+                          onCheckedChange={() =>
+                            setPromoCodeVisible(!promoCodeVisible)
+                          }
+                        />
+                        <div className="space-y-1 leading-none">
+                          <p className="text-sm text-primary font-medium">
+                            Add promo code
+                          </p>
+                        </div>
                       </div>
+                      {promoCodeVisible && (
+                        <>
+                          {promoCode.map((code) => (
+                            <div className="pt-2" key={code.id}>
+                              <Input
+                                type="text"
+                                placeholder="5"
+                                disabled
+                                value={code.promocode}
+                                className="bg-white border text-sm border-[#D0D5DD] h-14 placeholder:text-[#667185] w-full pl-12 pr-[75px] focus-visible:ml-0.5 transition-opacity duration-100"
+                                suffixitem={
+                                  <div className="absolute top-0 right-7 lg:mt-[18px] mr-4 mt-4 w-5 h-5 flex items-center gap-2">
+                                    <button
+                                      onClick={() => {
+                                        setSelectedPromoCode(code);
+                                        setOpenEditPromoCode(true);
+                                      }}
+                                    >
+                                      <PencilIcon
+                                        fill="#667185"
+                                        className="w-5 h-5"
+                                      />
+                                    </button>
+                                    <button
+                                      onClick={() => {
+                                        setSelectedPromoCode(code);
+                                        openRemovePromoCode();
+                                      }}
+                                    >
+                                      <BinIcon className="w-5 h-5" />
+                                    </button>
+                                  </div>
+                                }
+                                prefixItem={
+                                  <Percent
+                                    color="#98A2B3"
+                                    width={15}
+                                    height={15}
+                                    className="absolute top-0 left-0 cursor-pointer lg:mt-[18px] ml-4 mt-4 w-5 h-5"
+                                  />
+                                }
+                              />
+                            </div>
+                          ))}
+                          <button
+                            className="h-9 rounded-[8px] bg-[#F0F2F5] text-sm font-medium text-[#475367] gap-2 mb-1 flex items-center px-3"
+                            onClick={openPromoCode}
+                          >
+                            <PlusIcon size={20} color="#CCCCCC" />
+                            <p>Add new code</p>
+                          </button>
+                        </>
+                      )}
                     </div>
-                    {promoCodeVisible && (
-                      <>
-                        {promoCode.map((code) => (
-                          <div className="pt-2" key={code.id}>
-                            <Input
-                              type="text"
-                              placeholder="5"
-                              disabled
-                              value={code.promocode}
-                              className="bg-white border text-sm border-[#D0D5DD] h-14 placeholder:text-[#667185] w-full pl-12 pr-[75px] focus-visible:ml-0.5 transition-opacity duration-100"
-                              suffixitem={
-                                <div className="absolute top-0 right-7 lg:mt-[18px] mr-4 mt-4 w-5 h-5 flex items-center gap-2">
-                                  <button
-                                    onClick={() => {
-                                      setSelectedPromoCode(code);
-                                      setOpenEditPromoCode(true);
-                                    }}
-                                  >
-                                    <PencilIcon
-                                      fill="#667185"
-                                      className="w-5 h-5"
-                                    />
-                                  </button>
-                                  <button
-                                    onClick={() => {
-                                      setSelectedPromoCode(code);
-                                      openRemovePromoCode();
-                                    }}
-                                  >
-                                    <BinIcon className="w-5 h-5" />
-                                  </button>
-                                </div>
-                              }
-                              prefixItem={
-                                <Percent
-                                  color="#98A2B3"
-                                  width={15}
-                                  height={15}
-                                  className="absolute top-0 left-0 cursor-pointer lg:mt-[18px] ml-4 mt-4 w-5 h-5"
-                                />
-                              }
-                            />
-                          </div>
-                        ))}
-                        <button
-                          className="h-9 rounded-[8px] bg-[#F0F2F5] text-sm font-medium text-[#475367] gap-2 mb-1 flex items-center px-3"
-                          onClick={openPromoCode}
-                        >
-                          <PlusIcon size={20} color="#CCCCCC" />
-                          <p>Add new code</p>
-                        </button>
-                      </>
-                    )}
-                  </div>
+                  )}
                   <div className="w-full flex justify-between gap-4 items-center">
                     <div className="flex flex-col">
                       <label className="text-[#13191C] text-sm font-medium">

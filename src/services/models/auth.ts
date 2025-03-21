@@ -1,6 +1,7 @@
 export interface LoginBody {
   email: string;
   password: string;
+  type: "User" | "Business"
 }
 
 export interface User {
@@ -25,5 +26,5 @@ export interface User {
   referralCode: string;
   deviceRegistrationToken: string;
   deviceId: string;
-  profilePicture: string;
+  profilePicture: string | null;
 }

@@ -30,6 +30,7 @@ import {
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import AddSettlementAccount from "./add-settlement-account";
+import EmptyTable from "@/components/empty-table";
 
 export default function ManageWithdrawalAccounts() {
   const navigate = useNavigate();
@@ -112,6 +113,13 @@ export default function ManageWithdrawalAccounts() {
       </div>
 
       {isLoading && <Loader />}
+
+      {data?.data?.length === 0 && (
+        <EmptyTable
+          title="No withdrawal account yet"
+          description="Manage your withdrawal accounts"
+        />
+      )}
 
       {data?.data &&
         data.data.map((d) => (

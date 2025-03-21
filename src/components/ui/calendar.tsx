@@ -50,6 +50,7 @@ function Calendar({
           buttonVariants({ variant: "ghost" }),
           "h-[38px] w-[38px] text-xs font-normal text-black p-0 font-medium rounded-[10px] aria-selected:opacity-100 bg-white shadow-sm"
         ),
+        day_today: "font-medium",
         //day_range_end: "day-range-end",
         day_selected:
           "bg-[#EAFFE0] text-black focus:bg-[#EAFFE0] focus:text-black text-xs focus:font-medium rounded-[10px] focus:border-2 focus:border-primary border-2 border-primary",

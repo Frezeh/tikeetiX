@@ -43,6 +43,7 @@ import { Link } from "react-router-dom";
 import ExportEvents from "../events/components/export-events";
 import FinanceActions from "./finance-actions";
 import FinanceWithdrawal from "./finance-withdrawal";
+import EmptyTable from "@/components/empty-table";
 
 export function getItemColor(status: string) {
   switch (status) {
@@ -404,88 +405,94 @@ export default function ManageFinance() {
                   <LoadingList />
                 ) : (
                   <TableBody className="[&_tr:last-child]:border-1">
-                    {DATA.map((data) => (
-                      <TableRow key={data.id} className="border-[#E4E7EC]">
-                        <TableCell>
-                          <div>
-                            <p className="text-[#475367] text-sm">
-                              John Doe D. Rockefeller
-                            </p>
-                            <p className="text-[#667185] text-[13px]">
-                              9018275991 | JP Morgan & Chase
-                            </p>
-                          </div>
-                        </TableCell>
-                        <TableCell className="text-[#13191C] font-medium">
-                          GPB {data.amount}
-                        </TableCell>
-                        <TableCell>
-                          <div>
-                            <p className="text-[#475367] text-sm">
-                              {format(data.createdAt, "d MMM. yyyy")}
-                            </p>
-                            <p className="text-[#667185] text-[13px]">
-                              {format(data.createdAt, "hh:mm a")}
-                            </p>
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <div
-                            className={cn(
-                              `flex items-center gap-1 px-3 py-1 rounded-[12px] w-[116px] ${
-                                getItemColor(data.status.toLowerCase()).bgColor
-                              }`
-                            )}
-                          >
-                            {data.status.toLowerCase() === "completed" ? (
-                              <CircleCheck size={16} color="#036B26" />
-                            ) : (
-                              <svg
-                                width="14"
-                                height="15"
-                                viewBox="0 0 14 15"
-                                fill="none"
-                                xmlns="http://www.w3.org/2000/svg"
-                              >
-                                <path
-                                  d="M2.86627 1.39909C2.86627 1.0309 2.56779 0.732422 2.1996 0.732422C1.83141 0.732422 1.53293 1.0309 1.53293 1.39909V3.79909C1.53293 4.16728 1.83141 4.46576 2.1996 4.46576H4.60004C4.96823 4.46576 5.26671 4.16728 5.26671 3.79909C5.26671 3.4309 4.96823 3.13242 4.60004 3.13242H3.79936C4.69113 2.46227 5.79924 2.06576 7.00004 2.06576C9.94556 2.06576 12.3334 4.45357 12.3334 7.39909C12.3334 10.3446 9.94556 12.7324 7.00004 12.7324C4.05452 12.7324 1.66671 10.3446 1.66671 7.39909C1.66671 7.0309 1.36823 6.73242 1.00004 6.73242C0.631851 6.73242 0.333374 7.0309 0.333374 7.39909C0.333374 11.081 3.31814 14.0658 7.00004 14.0658C10.6819 14.0658 13.6667 11.081 13.6667 7.39909C13.6667 3.71719 10.6819 0.732422 7.00004 0.732422C5.4384 0.732422 4.00215 1.26973 2.86627 2.16853V1.39909Z"
-                                  fill="#865503"
-                                />
-                                <path
-                                  d="M7.00004 5.06576C7.00004 4.69757 6.70156 4.39909 6.33337 4.39909C5.96518 4.39909 5.66671 4.69757 5.66671 5.06576V8.39909C5.66671 8.76728 5.96518 9.06576 6.33337 9.06576H8.33337C8.70156 9.06576 9.00004 8.76728 9.00004 8.39909C9.00004 8.0309 8.70156 7.73242 8.33337 7.73242H7.00004V5.06576Z"
-                                  fill="#865503"
-                                />
-                              </svg>
-                            )}
-                            <p
+                    {DATA.length === 0 && <EmptyTable />}
+                    {DATA.length > 0 &&
+                      DATA.map((data) => (
+                        <TableRow key={data.id} className="border-[#E4E7EC]">
+                          <TableCell>
+                            <div>
+                              <p className="text-[#475367] text-sm">
+                                John Doe D. Rockefeller
+                              </p>
+                              <p className="text-[#667185] text-[13px]">
+                                9018275991 | JP Morgan & Chase
+                              </p>
+                            </div>
+                          </TableCell>
+                          <TableCell className="text-[#13191C] font-medium">
+                            GPB {data.amount}
+                          </TableCell>
+                          <TableCell>
+                            <div>
+                              <p className="text-[#475367] text-sm">
+                                {format(data.createdAt, "d MMM. yyyy")}
+                              </p>
+                              <p className="text-[#667185] text-[13px]">
+                                {format(data.createdAt, "hh:mm a")}
+                              </p>
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <div
                               className={cn(
-                                "text-sm font-medium",
-                                data.status.toLowerCase() === "completed"
-                                  ? "text-[#036B26]"
-                                  : data.status.toLowerCase() === "processing"
-                                  ? "text-[#865503]"
-                                  : "text-[#E72113]"
+                                `flex items-center gap-1 px-3 py-1 rounded-[12px] w-[116px] ${
+                                  getItemColor(data.status.toLowerCase())
+                                    .bgColor
+                                }`
                               )}
                             >
-                              {capitalizeFirstLetter(data.status)}
-                            </p>
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <button
-                            aria-haspopup="true"
-                            className="w-8 h-8 rounded-[8px] flex items-center justify-center border border-[#E4E7EC] bg-white"
-                            onClick={() => {
-                              setOpenModal(true);
-                              setSelectedEvent(data);
-                            }}
-                          >
-                            <VisibleIcon className="h-4 w-4" color="#475367" />
-                            <span className="sr-only">Toggle menu</span>
-                          </button>
-                        </TableCell>
-                      </TableRow>
-                    ))}
+                              {data.status.toLowerCase() === "completed" ? (
+                                <CircleCheck size={16} color="#036B26" />
+                              ) : (
+                                <svg
+                                  width="14"
+                                  height="15"
+                                  viewBox="0 0 14 15"
+                                  fill="none"
+                                  xmlns="http://www.w3.org/2000/svg"
+                                >
+                                  <path
+                                    d="M2.86627 1.39909C2.86627 1.0309 2.56779 0.732422 2.1996 0.732422C1.83141 0.732422 1.53293 1.0309 1.53293 1.39909V3.79909C1.53293 4.16728 1.83141 4.46576 2.1996 4.46576H4.60004C4.96823 4.46576 5.26671 4.16728 5.26671 3.79909C5.26671 3.4309 4.96823 3.13242 4.60004 3.13242H3.79936C4.69113 2.46227 5.79924 2.06576 7.00004 2.06576C9.94556 2.06576 12.3334 4.45357 12.3334 7.39909C12.3334 10.3446 9.94556 12.7324 7.00004 12.7324C4.05452 12.7324 1.66671 10.3446 1.66671 7.39909C1.66671 7.0309 1.36823 6.73242 1.00004 6.73242C0.631851 6.73242 0.333374 7.0309 0.333374 7.39909C0.333374 11.081 3.31814 14.0658 7.00004 14.0658C10.6819 14.0658 13.6667 11.081 13.6667 7.39909C13.6667 3.71719 10.6819 0.732422 7.00004 0.732422C5.4384 0.732422 4.00215 1.26973 2.86627 2.16853V1.39909Z"
+                                    fill="#865503"
+                                  />
+                                  <path
+                                    d="M7.00004 5.06576C7.00004 4.69757 6.70156 4.39909 6.33337 4.39909C5.96518 4.39909 5.66671 4.69757 5.66671 5.06576V8.39909C5.66671 8.76728 5.96518 9.06576 6.33337 9.06576H8.33337C8.70156 9.06576 9.00004 8.76728 9.00004 8.39909C9.00004 8.0309 8.70156 7.73242 8.33337 7.73242H7.00004V5.06576Z"
+                                    fill="#865503"
+                                  />
+                                </svg>
+                              )}
+                              <p
+                                className={cn(
+                                  "text-sm font-medium",
+                                  data.status.toLowerCase() === "completed"
+                                    ? "text-[#036B26]"
+                                    : data.status.toLowerCase() === "processing"
+                                    ? "text-[#865503]"
+                                    : "text-[#E72113]"
+                                )}
+                              >
+                                {capitalizeFirstLetter(data.status)}
+                              </p>
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <button
+                              aria-haspopup="true"
+                              className="w-8 h-8 rounded-[8px] flex items-center justify-center border border-[#E4E7EC] bg-white"
+                              onClick={() => {
+                                setOpenModal(true);
+                                setSelectedEvent(data);
+                              }}
+                            >
+                              <VisibleIcon
+                                className="h-4 w-4"
+                                color="#475367"
+                              />
+                              <span className="sr-only">Toggle menu</span>
+                            </button>
+                          </TableCell>
+                        </TableRow>
+                      ))}
                   </TableBody>
                 )}
               </Table>

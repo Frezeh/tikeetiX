@@ -47,6 +47,7 @@ import {
 import { useMemo, useState } from "react";
 import ExportEvents from "../events/components/export-events";
 import ManageOrdersActions from "./manage-order-actions";
+import EmptyTable from "@/components/empty-table";
 
 export default function ManageOrders() {
   const [currentPage, setCurrentPage] = useState(1);
@@ -382,59 +383,66 @@ export default function ManageOrders() {
                   <LoadingList />
                 ) : (
                   <TableBody className="[&_tr:last-child]:border-1">
-                    {DATA.map((data) => (
-                      <TableRow key={data._id} className="border-[#E4E7EC]">
-                        <TableCell className="hidden sm:table-cell">
-                          <p className="text-[#475367] text-sm">{data._id}</p>
-                        </TableCell>
-                        <TableCell className="hidden sm:table-cell">
-                          <p className="text-[#475367] text-sm">{data.title}</p>
-                        </TableCell>
-                        <TableCell>
-                          {/* <div>
+                    {DATA.length === 0 && <EmptyTable />}
+                    {DATA.length > 0 &&
+                      DATA.map((data) => (
+                        <TableRow key={data._id} className="border-[#E4E7EC]">
+                          <TableCell className="hidden sm:table-cell">
+                            <p className="text-[#475367] text-sm">{data._id}</p>
+                          </TableCell>
+                          <TableCell className="hidden sm:table-cell">
+                            <p className="text-[#475367] text-sm">
+                              {data.title}
+                            </p>
+                          </TableCell>
+                          <TableCell>
+                            {/* <div>
                           <p className="text-[#475367] text-sm">{data.name}</p>
                           <p className="text-[#667185] text-[13px]">
                             {data.email}
                           </p>
                         </div> */}
-                          N/A
-                        </TableCell>
-                        <TableCell className="text-[#13191C] font-medium">
-                          0
-                        </TableCell>
-                        <TableCell className="text-[#475367]">
-                          <div className="flex gap-3 items-center">
-                            {data.status.toLowerCase() === "completed" ? (
-                              <CircleCheck size={16} color="#0DA767" />
-                            ) : data.status.toLowerCase() === "cancelled" ? (
-                              <CircleX size={16} color="#E72113" />
-                            ) : (
-                              <CircleEllipsis size={16} color="#FFB21D" />
-                            )}
-                            <p className="text-sm text-[#475367]">
-                              {capitalizeFirstLetter(data.status)}
-                            </p>
-                          </div>
-                        </TableCell>
-                        <TableCell className="text-[#13191C] gap-3 font-medium">
-                          <span>{<TicketIcon width={16} height={16} />}</span>{" "}
-                          Events
-                        </TableCell>
-                        <TableCell>
-                          <button
-                            aria-haspopup="true"
-                            className="w-8 h-8 rounded-[8px] flex items-center justify-center border border-[#E4E7EC] bg-white"
-                            onClick={() => {
-                              setOpenModal(true);
-                              setSelectedEvent(data);
-                            }}
-                          >
-                            <VisibleIcon className="h-4 w-4" color="#475367" />
-                            <span className="sr-only">Toggle menu</span>
-                          </button>
-                        </TableCell>
-                      </TableRow>
-                    ))}
+                            N/A
+                          </TableCell>
+                          <TableCell className="text-[#13191C] font-medium">
+                            0
+                          </TableCell>
+                          <TableCell className="text-[#475367]">
+                            <div className="flex gap-3 items-center">
+                              {data.status.toLowerCase() === "completed" ? (
+                                <CircleCheck size={16} color="#0DA767" />
+                              ) : data.status.toLowerCase() === "cancelled" ? (
+                                <CircleX size={16} color="#E72113" />
+                              ) : (
+                                <CircleEllipsis size={16} color="#FFB21D" />
+                              )}
+                              <p className="text-sm text-[#475367]">
+                                {capitalizeFirstLetter(data.status)}
+                              </p>
+                            </div>
+                          </TableCell>
+                          <TableCell className="text-[#13191C] gap-3 font-medium">
+                            <span>{<TicketIcon width={16} height={16} />}</span>{" "}
+                            Events
+                          </TableCell>
+                          <TableCell>
+                            <button
+                              aria-haspopup="true"
+                              className="w-8 h-8 rounded-[8px] flex items-center justify-center border border-[#E4E7EC] bg-white"
+                              onClick={() => {
+                                setOpenModal(true);
+                                setSelectedEvent(data);
+                              }}
+                            >
+                              <VisibleIcon
+                                className="h-4 w-4"
+                                color="#475367"
+                              />
+                              <span className="sr-only">Toggle menu</span>
+                            </button>
+                          </TableCell>
+                        </TableRow>
+                      ))}
                   </TableBody>
                 )}
               </Table>
@@ -465,7 +473,11 @@ export default function ManageOrders() {
       )}
 
       <ExportEvents openExport={openExport} setOpenExport={setOpenExport} />
-      <ManageOrdersActions openModal={openModal} setOpenModal={setOpenModal} data={selectedEvent} />
+      <ManageOrdersActions
+        openModal={openModal}
+        setOpenModal={setOpenModal}
+        data={selectedEvent}
+      />
     </div>
   );
 }

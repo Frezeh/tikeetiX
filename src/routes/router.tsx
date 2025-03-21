@@ -18,6 +18,7 @@ import CreateEvent from "./create-event/create-event";
 import EventDetails from "./event-details/event-details";
 import EditEvent from "./edit-event/edit-event";
 import ManageWithdrawalAccounts from "./finance/manage-withdrawal-accounts";
+import FAQ from "./faq/faq";
 
 export const router = createBrowserRouter([
   {
@@ -38,6 +39,11 @@ export const router = createBrowserRouter([
   {
     path: "auth/code",
     element: <ResetPassword />,
+    errorElement: <ErrorPage />,
+  },
+  {
+    path: "faq",
+    element: <FAQ />,
     errorElement: <ErrorPage />,
   },
   {

@@ -2,6 +2,7 @@ import MoneyIcon from "@/assets/icons/money-icon";
 import StoreIcon from "@/assets/icons/store-icon";
 import TicketIcon from "@/assets/icons/ticket-icon";
 import VisibleIcon from "@/assets/icons/visible-icon";
+import EmptyTable from "@/components/empty-table";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import {
   DropdownMenu,
@@ -214,43 +215,49 @@ export default function TicketsSold({ ticketSold }: { ticketSold: number }) {
               <LoadingList />
             ) : (
               <TableBody className="[&_tr:last-child]:border-1">
-                {DATA.map((data) => (
-                  <TableRow key={data.id} className="border-[#E4E7EC]">
-                    <TableCell className="hidden sm:table-cell">
-                      <p className="text-[#475367] text-sm">{data.order_id}</p>
-                    </TableCell>
-                    <TableCell>
-                      <div>
-                        <p className="text-[#475367] text-sm">{data.name}</p>
-                        <p className="text-[#667185] text-[13px]">
-                          {data.email}
+                {DATA.length === 0 && <EmptyTable />}
+                {DATA.length > 0 &&
+                  DATA.map((data) => (
+                    <TableRow key={data.id} className="border-[#E4E7EC]">
+                      <TableCell className="hidden sm:table-cell">
+                        <p className="text-[#475367] text-sm">
+                          {data.order_id}
                         </p>
-                      </div>
-                    </TableCell>
-                    <TableCell className="text-[#13191C] font-medium">
-                      {data.amount}
-                    </TableCell>
-                    <TableCell className="text-[#475367]">
-                      <div className="flex gap-3 items-center">
-                        {data.status.toLowerCase() === "completed" ? (
-                          <CircleCheck size={16} color="#0DA767" />
-                        ) : (
-                          <CircleX size={16} color="#E72113" />
-                        )}
-                        <p className="text-sm text-[#475367]">{data.status}</p>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <button
-                        aria-haspopup="true"
-                        className="w-8 h-8 rounded-[8px] flex items-center justify-center border border-[#E4E7EC] bg-white"
-                      >
-                        <VisibleIcon className="h-4 w-4" color="#475367" />
-                        <span className="sr-only">Toggle menu</span>
-                      </button>
-                    </TableCell>
-                  </TableRow>
-                ))}
+                      </TableCell>
+                      <TableCell>
+                        <div>
+                          <p className="text-[#475367] text-sm">{data.name}</p>
+                          <p className="text-[#667185] text-[13px]">
+                            {data.email}
+                          </p>
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-[#13191C] font-medium">
+                        {data.amount}
+                      </TableCell>
+                      <TableCell className="text-[#475367]">
+                        <div className="flex gap-3 items-center">
+                          {data.status.toLowerCase() === "completed" ? (
+                            <CircleCheck size={16} color="#0DA767" />
+                          ) : (
+                            <CircleX size={16} color="#E72113" />
+                          )}
+                          <p className="text-sm text-[#475367]">
+                            {data.status}
+                          </p>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <button
+                          aria-haspopup="true"
+                          className="w-8 h-8 rounded-[8px] flex items-center justify-center border border-[#E4E7EC] bg-white"
+                        >
+                          <VisibleIcon className="h-4 w-4" color="#475367" />
+                          <span className="sr-only">Toggle menu</span>
+                        </button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
               </TableBody>
             )}
           </Table>

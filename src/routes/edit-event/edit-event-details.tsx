@@ -455,7 +455,7 @@ function EditEventDetails(props: Props) {
                       //   form.setValue("end", d!);
                       //   setOpenEndDate(false);
                       // }}
-                      disabled={(date) => date < new Date()}
+                      // disabled={(date) => date < new Date()}
                       fromDate={new Date()}
                       toDate={new Date(Date.now() + 10000 * 60 * 60 * 24 * 365)}
                       // fromYear={1800}

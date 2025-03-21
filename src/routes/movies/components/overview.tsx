@@ -65,6 +65,7 @@ import {
 } from "react";
 import { useNavigate } from "react-router-dom";
 import MovieActions from "./movie-actions";
+import EmptyTable from "@/components/empty-table";
 
 type Props = {
   overviewFilterValue: string;
@@ -526,41 +527,43 @@ export default function Overview(props: Props) {
                   <LoadingList />
                 ) : (
                   <TableBody className="[&_tr:last-child]:border-1">
-                    {MOVIES.map((movie) => (
-                      <TableRow key={movie.id} className="border-[#E4E7EC]">
-                        <TableCell className="hidden sm:table-cell">
-                          <div className="flex items-center gap-2">
-                            <img
-                              alt="Movie image"
-                              className="aspect-square rounded-md object-cover w-[43px] h-[43px]"
-                              src={movie.ticket.image}
-                            />
-                            <div>
-                              <p className="text-[#101928] font-medium">
-                                {movie.ticket.title}
-                              </p>
+                    {MOVIES.length === 0 && <EmptyTable />}
+                    {MOVIES.length > 0 &&
+                      MOVIES.map((movie) => (
+                        <TableRow key={movie.id} className="border-[#E4E7EC]">
+                          <TableCell className="hidden sm:table-cell">
+                            <div className="flex items-center gap-2">
+                              <img
+                                alt="Movie image"
+                                className="aspect-square rounded-md object-cover w-[43px] h-[43px]"
+                                src={movie.ticket.image}
+                              />
+                              <div>
+                                <p className="text-[#101928] font-medium">
+                                  {movie.ticket.title}
+                                </p>
+                              </div>
                             </div>
-                          </div>
-                        </TableCell>
-                        <TableCell className="font-medium text-[#13191C]">
-                          {priceRange(movie.ticketPrice)}
-                        </TableCell>
-                        <TableCell className="text-[#475367]">{0}</TableCell>
-                        <TableCell className="text-[#475367]">
-                          <div className="flex gap-0.5 items-center">
-                            <Ratings />
-                            <p className="text-sm text-[#667185]">{3.5}</p>
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <MovieActions
-                            movie={movie}
-                            setOpenRemove={setOpenRemove}
-                            setSelectedMovie={setSelectedMovie}
-                          />
-                        </TableCell>
-                      </TableRow>
-                    ))}
+                          </TableCell>
+                          <TableCell className="font-medium text-[#13191C]">
+                            {priceRange(movie.ticketPrice)}
+                          </TableCell>
+                          <TableCell className="text-[#475367]">{0}</TableCell>
+                          <TableCell className="text-[#475367]">
+                            <div className="flex gap-0.5 items-center">
+                              <Ratings />
+                              <p className="text-sm text-[#667185]">{3.5}</p>
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <MovieActions
+                              movie={movie}
+                              setOpenRemove={setOpenRemove}
+                              setSelectedMovie={setSelectedMovie}
+                            />
+                          </TableCell>
+                        </TableRow>
+                      ))}
                   </TableBody>
                 )}
               </Table>

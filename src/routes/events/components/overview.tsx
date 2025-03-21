@@ -44,9 +44,10 @@ import {
   Upload,
   XIcon,
 } from "lucide-react";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import EventActions from "./event-actions";
 import { OverviewDialogue } from "./overview-dialog";
+import EmptyTable from "@/components/empty-table";
 
 type Props = {
   filterValue: string;
@@ -151,6 +152,18 @@ export default function Overview({
     });
   };
 
+  const holdTicket = () => {};
+
+  useEffect(() => {
+    return () => {
+      setFilterValue("");
+      const timeOut = setTimeout(() => {
+        refetch();
+        clearTimeout(timeOut);
+      }, 200);
+    };
+  }, []);
+
   if (isPending) {
     return <Loader />;
   }
@@ -192,11 +205,13 @@ export default function Overview({
         deleteTicket={deleteTicket}
         openRemove={openRemove}
         setOpenRemove={setOpenRemove}
+        holdTicket={holdTicket}
         openHold={openHold}
         setOpenHold={setOpenHold}
         openExport={openExport}
         setOpenExport={setOpenExport}
         isDeleting={isDeleting}
+        isUpdating={false}
       />
       <div className="grid grid-cols-2 xl:flex xl:items-center gap-2 mt-8">
         <Tooltip>
@@ -510,49 +525,51 @@ export default function Overview({
                   <LoadingList />
                 ) : (
                   <TableBody className="[&_tr:last-child]:border-1">
-                    {EVENTS.map((event: Events) => (
-                      <TableRow key={event._id} className="border-[#E4E7EC]">
-                        <TableCell className="hidden sm:table-cell">
-                          <div className="flex items-center gap-2">
-                            <img
-                              alt="Event image"
-                              className="aspect-square rounded-md object-cover w-[43px] h-[43px]"
-                              src={event.image}
-                            />
-                            <div>
-                              <p className="text-[#101928] font-medium">
-                                {event.title}
-                              </p>
-                              <p className="text-sm text-[#667185]">
-                                {event.startTime
-                                  ? format(event.startTime, "d MMM. yyyy")
-                                  : ""}
-                              </p>
+                    {EVENTS.length === 0 && <EmptyTable />}
+                    {EVENTS.length > 0 &&
+                      EVENTS.map((event: Events) => (
+                        <TableRow key={event._id} className="border-[#E4E7EC]">
+                          <TableCell className="hidden sm:table-cell">
+                            <div className="flex items-center gap-2">
+                              <img
+                                alt="Event image"
+                                className="aspect-square rounded-md object-cover w-[43px] h-[43px]"
+                                src={event.image}
+                              />
+                              <div>
+                                <p className="text-[#101928] font-medium">
+                                  {event.title}
+                                </p>
+                                <p className="text-sm text-[#667185]">
+                                  {event.startTime
+                                    ? format(event.startTime, "d MMM. yyyy")
+                                    : ""}
+                                </p>
+                              </div>
                             </div>
-                          </div>
-                        </TableCell>
-                        <TableCell className="font-medium text-[#13191C]">
-                          {priceRange(event.tickets)}
-                        </TableCell>
-                        <TableCell className="text-[#475367]">
-                          {quantitySold(event.tickets)}
-                        </TableCell>
-                        <TableCell className="text-[#475367]">
-                          <span className="flex items-center gap-1">
-                            {displayStatusIcon(event.status)?.icon}{" "}
-                            {displayStatusIcon(event.status)?.text}
-                          </span>
-                        </TableCell>
-                        <TableCell>
-                          <EventActions
-                            event={event}
-                            setOpenRemove={setOpenRemove}
-                            setSelectedEvent={setSelectedEvent}
-                            setOpenHold={setOpenHold}
-                          />
-                        </TableCell>
-                      </TableRow>
-                    ))}
+                          </TableCell>
+                          <TableCell className="font-medium text-[#13191C]">
+                            {priceRange(event.tickets)}
+                          </TableCell>
+                          <TableCell className="text-[#475367]">
+                            {quantitySold(event.tickets)}
+                          </TableCell>
+                          <TableCell className="text-[#475367]">
+                            <span className="flex items-center gap-1">
+                              {displayStatusIcon(event.status)?.icon}{" "}
+                              {displayStatusIcon(event.status)?.text}
+                            </span>
+                          </TableCell>
+                          <TableCell>
+                            <EventActions
+                              event={event}
+                              setOpenRemove={setOpenRemove}
+                              setSelectedEvent={setSelectedEvent}
+                              setOpenHold={setOpenHold}
+                            />
+                          </TableCell>
+                        </TableRow>
+                      ))}
                   </TableBody>
                 )}
               </Table>

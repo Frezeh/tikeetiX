@@ -5927,7 +5927,7 @@ export const COUNTRIES = [
       currencyCode: "CHF",
     },
     {
-      name: "United States",
+      name: "United States of America",
       flag: "🇺🇸",
       code: "US",
       dialCode: "+1",

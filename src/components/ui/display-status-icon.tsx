@@ -1,33 +1,39 @@
 import LiveIcon from "@/assets/icons/live-icon";
 import NotLiveIcon from "@/assets/icons/not-live-icon";
 import OnHoldIcon from "@/assets/icons/on-hold-icon";
+import SoldOutIcon from "@/assets/icons/sold-out-icon";
 
 export default function displayStatusIcon(status: string) {
   switch (status) {
-    case "Live":
-      return {
-        icon: <LiveIcon />,
-        text: "Live",
-      };
     case "DRAFT":
       return {
         icon: <NotLiveIcon />,
-        text: "Not-live",
+        text: "Draft",
       };
-    case "On-Hold":
+    case "PENDING":
       return {
         icon: <OnHoldIcon />,
-        text: "On-Hold",
+        text: "Pending",
       };
-    case "Sold Out!":
+    case "PAUSED":
       return {
         icon: <OnHoldIcon />,
-        text: "On-Hold",
+        text: "Paused",
+      };
+    case "COMPLETED":
+      return {
+        icon: <SoldOutIcon />,
+        text: "Completed",
+      };
+    case "ONGOING":
+      return {
+        icon: <LiveIcon />,
+        text: "Ongoing",
       };
     default:
       return {
         icon: <NotLiveIcon />,
-        text: "Not-live",
+        text: "Draft",
       };
   }
 }

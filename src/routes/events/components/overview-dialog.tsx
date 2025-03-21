@@ -20,7 +20,9 @@ type Props = {
   openExport: boolean;
   setOpenExport: Dispatch<SetStateAction<boolean>>;
   deleteTicket: () => void;
+  holdTicket: () => void;
   isDeleting: boolean;
+  isUpdating: boolean;
 };
 export function OverviewDialogue({
   openRemove,
@@ -30,7 +32,9 @@ export function OverviewDialogue({
   openExport,
   setOpenExport,
   deleteTicket,
+  holdTicket,
   isDeleting,
+  isUpdating
 }: Props) {
   return (
     <div>
@@ -93,14 +97,19 @@ export function OverviewDialogue({
           </DialogDescription>
 
           <DialogFooter className="flex justify-between items-center">
-            <Button className="h-9 w-[178px]" variant="ghost">
+            <Button
+              className="h-9 w-[178px]"
+              variant="ghost"
+              onClick={() => setOpenHold(false)}
+            >
               Cancel
             </Button>
             <Button
               className="h-9 w-[178px] bg-[#13191C] bg-gradient-to-r from-[#13191C] to-[#13191C]"
               variant="gradient"
+              onClick={holdTicket}
             >
-              Pause
+              {isUpdating ? <Loading className="w-4 h-4" /> : "Pause"}
             </Button>
           </DialogFooter>
         </DialogContent>

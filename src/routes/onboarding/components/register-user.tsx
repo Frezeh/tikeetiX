@@ -108,7 +108,7 @@ export default function RegisterUser(props: Props) {
         lastName: data.lastname,
         country: data.country,
         accountType: type,
-        type: "User",
+        type: "Business",
       },
       {
         onSuccess: () => {

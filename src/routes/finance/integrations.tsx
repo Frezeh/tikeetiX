@@ -3,6 +3,14 @@ import { Switch } from "@/components/ui/switch";
 import { useState } from "react";
 import IntegrationIcon from "./integration-icon";
 import StripeIcon from "./stripe";
+import EmptyTable from "@/components/empty-table";
+
+const DATA = new Array(0).fill("").map((_, index) => ({
+  id: index,
+  name: "Stripe",
+  description:
+    "A suite of APIs powering online payment processing and commerce solutions",
+}));
 
 export default function Integrations() {
   const [manage, setManage] = useState<
@@ -23,9 +31,37 @@ export default function Integrations() {
       </div>
 
       <div className="grid grid-cols-4 gap-2 p-5">
-        {new Array(0).fill("").map((_, index) => (
+        {DATA?.length === 0 && (
+          <EmptyTable
+            title="No integrations yet"
+            description="Manage your integrations settings"
+            icon={
+              <svg
+                width="33"
+                height="33"
+                viewBox="0 0 33 33"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  fill-rule="evenodd"
+                  clip-rule="evenodd"
+                  d="M20.1094 5.44216C20.6301 4.92146 20.6301 4.07724 20.1094 3.55654C19.5887 3.03584 18.7445 3.03584 18.2238 3.55654L15.5571 6.22321C15.0364 6.74391 15.0364 7.58813 15.5571 8.10882L18.2238 10.7755C18.7445 11.2962 19.5887 11.2962 20.1094 10.7755C20.6301 10.2548 20.6301 9.41057 20.1094 8.88987L19.763 8.54352C21.6893 8.8315 23.1666 10.4929 23.1666 12.4993V22.0603C21.613 22.6094 20.4999 24.0911 20.4999 25.8327C20.4999 28.0418 22.2908 29.8327 24.4999 29.8327C26.7091 29.8327 28.4999 28.0418 28.4999 25.8327C28.4999 24.0911 27.3868 22.6094 25.8333 22.0603V12.4993C25.8333 8.99632 23.1314 6.12433 19.698 5.85355L20.1094 5.44216ZM24.4999 24.4993C23.7635 24.4993 23.1666 25.0963 23.1666 25.8327C23.1666 26.5691 23.7635 27.166 24.4999 27.166C25.2363 27.166 25.8333 26.5691 25.8333 25.8327C25.8333 25.0963 25.2363 24.4993 24.4999 24.4993Z"
+                  fill="#98A2B3"
+                />
+                <path
+                  fill-rule="evenodd"
+                  clip-rule="evenodd"
+                  d="M13.8333 7.16602C13.8333 8.90764 12.7202 10.3893 11.1666 10.9384V22.0603C12.7202 22.6094 13.8333 24.0911 13.8333 25.8327C13.8333 28.0418 12.0424 29.8327 9.83325 29.8327C7.62411 29.8327 5.83325 28.0418 5.83325 25.8327C5.83325 24.0911 6.94633 22.6094 8.49992 22.0603V10.9384C6.94633 10.3893 5.83325 8.90764 5.83325 7.16602C5.83325 4.95688 7.62411 3.16602 9.83325 3.16602C12.0424 3.16602 13.8333 4.95688 13.8333 7.16602ZM9.83325 5.83268C10.5696 5.83268 11.1666 6.42964 11.1666 7.16602C11.1666 7.9024 10.5696 8.49935 9.83325 8.49935C9.09687 8.49935 8.49992 7.9024 8.49992 7.16602C8.49992 6.42964 9.09687 5.83268 9.83325 5.83268ZM8.49992 25.8327C8.49992 25.0963 9.09687 24.4993 9.83325 24.4993C10.5696 24.4993 11.1666 25.0963 11.1666 25.8327C11.1666 26.5691 10.5696 27.166 9.83325 27.166C9.09687 27.166 8.49992 26.5691 8.49992 25.8327Z"
+                  fill="#98A2B3"
+                />
+              </svg>
+            }
+          />
+        )}
+        {DATA.map((data, index) => (
           <Card
-            key={index}
+            key={data.id}
             x-chunk="dashboard-06-chunk-0"
             className="rounded-[8px] border-[#F0F2F5] shadow-none mb-2"
           >
@@ -33,17 +69,14 @@ export default function Integrations() {
               <div className="space-y-1">
                 <StripeIcon />
                 <div className="space-y-2">
-                  <p>Stripe</p>
+                  <p>{data.name}</p>
                 </div>
-                <p className="text-xs text-[#667185]">
-                  A suite of APIs powering online payment processing and
-                  commerce solutions
-                </p>
+                <p className="text-xs text-[#667185]">{data.description}</p>
               </div>
               <button className="flex gap-1 justify-start items-start h-3">
                 <div className="border-b border-[#98A2B3] justify-end items-end flex flex-col">
                   <p className="text-[10px] text-[#98A2B3] justify-end self-end">
-                    stripe
+                    {data.name}
                   </p>
                 </div>
                 <svg width="12" height="13" viewBox="0 0 12 13" fill="none">
