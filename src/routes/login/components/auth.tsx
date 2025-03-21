@@ -198,7 +198,7 @@ export default function Auth({ moveToNext, setUserPayload }: Props) {
               //   }
               // }}
               type="submit"
-              disabled
+              disabled={isPending}
               variant="gradient"
               className="w-full sm:w-[357px] h-14"
             >
