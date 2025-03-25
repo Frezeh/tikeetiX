@@ -1,10 +1,7 @@
-import Avatar from "@/assets/icons/avatar.svg";
 import BarChart from "@/assets/icons/bar-chart";
 import BellIcon from "@/assets/icons/bell-icon";
-import ChevronDouble from "@/assets/icons/chevron-double";
 import GBP from "@/assets/icons/gbp.svg";
 import HomeIcon from "@/assets/icons/home-icon";
-import Logo from "@/assets/icons/logo-dark.svg";
 import SettingsIcon from "@/assets/icons/settings-icon";
 import StoreIcon from "@/assets/icons/store-icon";
 import TicketDivider from "@/assets/icons/ticket-divider";
@@ -33,7 +30,6 @@ import {
 import UserProfile from "@/components/user-profile";
 import useAuth from "@/hooks/use-auth";
 import { cn, removeItem, routesWithoutHeader, ticketRoutes } from "@/lib/utils";
-import { useProfileContext } from "@/provider/profile-provider";
 import { logout } from "@/services/api/auth";
 import { useMutation } from "@tanstack/react-query";
 import Cookies from "js-cookie";
@@ -45,21 +41,16 @@ import {
   useNavigate,
   useParams,
 } from "react-router-dom";
+import TikeetiXIcon from "./faq/components/tikeetix-icon";
 
 const CURRENCY = [
-  {
-    id: 0,
-    country: "United Kingdom",
-    value: "GBP",
-    imageUrl: GBP,
-  },
+  { id: 0, country: "United Kingdom", value: "GBP", imageUrl: GBP },
 ];
 
 function Root() {
   const { pathname } = useLocation();
   const route = pathname;
   const { isRefreshing, isLoading } = useAuth();
-  const { profile } = useProfileContext();
   const { id } = useParams();
   const navigate = useNavigate();
 
@@ -73,25 +64,8 @@ function Root() {
     <main className="flex w-screen h-screen bg-[#F7F9FC] overflow-hidden">
       <div className="hidden lg:flex flex-col overflow-hidden py-6 max-h-full w-[272px] overflow-y-auto no-scrollbar">
         <div className="px-7 py-3 relative">
-          <img src={Logo} alt="Logo" width={105} height={20} />
+          <TikeetiXIcon color="#133205" width={105} height={20} />
         </div>
-        <div
-          className="px-8 pt-5 pb-8 flex items-center gap-3 cursor-pointer border-b border-[#E4E7EC]"
-          role="button"
-        >
-          <div className="relative">
-            <img src={Avatar} alt="Avatar" width={40} height={40} />
-            <div className="w-[10px] h-[10px] bg-[#04802E] rounded-full absolute right-0 border border-white bottom-1" />
-          </div>
-          <div>
-            <p className="text-sm text-[#13191C] font-bold">
-              {profile?.firstName} {profile?.lastName}
-            </p>
-            <p className="text-[#667185] text-xs">{profile?.email}</p>
-          </div>
-          <ChevronDouble fill="#D0D5DD" />
-        </div>
-
         <ul className="flex flex-col gap-1 pt-2 px-1">
           <li>
             <Link

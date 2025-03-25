@@ -1,8 +1,8 @@
-function TikeetiXIcon({ color = "#D0D5DD", ...props }) {
+function TikeetiXIcon({ color = "#D0D5DD", width = 98, height = 18, ...props }) {
   return (
     <svg
-      width={98}
-      height={18}
+      width={width}
+      height={height}
       viewBox="0 0 98 18"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"

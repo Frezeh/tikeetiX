@@ -178,7 +178,7 @@ export default function ExportEvents(props: Props) {
                       setStartDate(d!);
                       setOpenStartDate(false);
                     }}
-                    disabled={(date) => date < new Date()}
+                    // disabled={(date) => date < new Date()}
                     fromDate={new Date()}
                     toDate={new Date(Date.now() + 10000 * 60 * 60 * 24 * 365)}
                     initialFocus
@@ -225,7 +225,7 @@ export default function ExportEvents(props: Props) {
                       setEndDate(d!);
                       setOpenEndDate(false);
                     }}
-                    disabled={(date) => date < new Date()}
+                    // disabled={(date) => date < new Date()}
                     fromDate={new Date()}
                     toDate={new Date(Date.now() + 10000 * 60 * 60 * 24 * 365)}
                     initialFocus

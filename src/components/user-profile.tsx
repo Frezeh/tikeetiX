@@ -1,4 +1,5 @@
 import Avatar from "@/assets/icons/avatar.svg";
+import ChevronDouble from "@/assets/icons/chevron-double";
 import { removeItem } from "@/lib/utils";
 import { useProfileContext } from "@/provider/profile-provider";
 import { logout } from "@/services/api/auth";
@@ -6,7 +7,7 @@ import { useMutation } from "@tanstack/react-query";
 import Cookies from "js-cookie";
 import { Link, useNavigate } from "react-router-dom";
 import Loading from "./ui/loading";
-import { Select, SelectContent, SelectTrigger, SelectValue } from "./ui/select";
+import { Select, SelectContent, SelectTrigger } from "./ui/select";
 
 export default function UserProfile() {
   const navigate = useNavigate();
@@ -15,13 +16,25 @@ export default function UserProfile() {
 
   return (
     <Select>
-      <SelectTrigger className="border-0 space-x-2 text-[#13191C] text-base  focus:ring-0">
-        <SelectValue
-          placeholder={`${profile?.firstName} ${profile?.lastName}`}
-        />
+      <SelectTrigger
+        className="border-0 space-x-2 text-[#13191C] text-base focus:ring-0"
+        suffixIcon={<ChevronDouble fill="#D0D5DD" />}
+      >
+        <div className="flex items-center gap-3 cursor-pointer">
+          <div className="relative">
+            <img src={Avatar} alt="Avatar" width={40} height={40} />
+            <div className="w-[10px] h-[10px] bg-[#04802E] rounded-full absolute right-0 border border-white bottom-1" />
+          </div>
+          <div>
+            <p className="text-sm text-[#13191C] font-bold text-left">
+              {profile?.firstName} {profile?.lastName}
+            </p>
+            <p className="text-[#667185] text-xs text-left">{profile?.email}</p>
+          </div>
+        </div>
       </SelectTrigger>
-      <SelectContent className="space-y-4 shadow-sm border-[#F2F4F7]">
-        <div className="px-4 py-3 flex items-center gap-3 cursor-pointer border-b border-[#F2F4F7]">
+      <SelectContent className="space-y-4 shadow-sm border-[#F2F4F7] mt-4 rounded-[8px]">
+        <div className="px-4 pb-3 flex items-center gap-3 cursor-pointer border-b border-[#F2F4F7]">
           <div className="relative">
             <img
               src={profile?.profilePicture ? profile?.profilePicture : Avatar}

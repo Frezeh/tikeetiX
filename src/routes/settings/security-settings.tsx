@@ -12,8 +12,13 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import Loading from "@/components/ui/loading";
+import { toast } from "@/hooks/use-toast";
 import { cn, one_alphabet, one_number, special_character } from "@/lib/utils";
+import { useProfileContext } from "@/provider/profile-provider";
+import { resetPassword } from "@/services/api/auth";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useMutation } from "@tanstack/react-query";
 import { EyeOff } from "lucide-react";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
@@ -65,8 +70,13 @@ const FormSchema = z
   });
 
 export default function SecuritySettings() {
+  const { profile } = useProfileContext();
   const [formType, setFormType] = useState<"display" | "edit">("display");
   const [visible, setVisible] = useState(false);
+
+  const { isPending: isReseting, mutate: reset } = useMutation({
+    mutationFn: resetPassword,
+  });
 
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
@@ -77,7 +87,27 @@ export default function SecuritySettings() {
     },
   });
 
-  function onSubmit(_: z.infer<typeof FormSchema>) {}
+  function onSubmit(data: z.infer<typeof FormSchema>) {
+    reset(
+      { email: profile?.email ?? "", password: data.password },
+      {
+        onSuccess: () => {
+          toast({
+            title: "Password reset was successful!",
+            variant: "success",
+          });
+          form.reset();
+          setFormType("display");
+        },
+        onError: () => {
+          toast({
+            title: "Failed to reset password!",
+            variant: "error",
+          });
+        },
+      }
+    );
+  }
 
   function validate(value: string) {
     let sixcharacters = value.length >= 6;
@@ -300,8 +330,9 @@ export default function SecuritySettings() {
                 <Button
                   className="h-9 text-sm font-medium rounded-[8px]"
                   onClick={form.handleSubmit(onSubmit)}
+                  disabled={isReseting}
                 >
-                  Save changes
+                  {isReseting ? <Loading /> : "Save changes"}
                 </Button>
                 <Button
                   variant="ghost"

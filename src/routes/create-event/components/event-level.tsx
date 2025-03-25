@@ -351,7 +351,7 @@ function EventLevel(props: Props) {
                               form.setValue("start", d!);
                               setOpenStartDate(false);
                             }}
-                            disabled={(date) => date < new Date()}
+                            // disabled={(date) => date < new Date()}
                             fromDate={new Date()}
                             toDate={
                               new Date(Date.now() + 10000 * 60 * 60 * 24 * 365)
@@ -404,7 +404,7 @@ function EventLevel(props: Props) {
                               form.setValue("end", d!);
                               setOpenEndDate(false);
                             }}
-                            disabled={(date) => date < new Date()}
+                            // disabled={(date) => date < new Date()}
                             fromDate={new Date()}
                             toDate={
                               new Date(Date.now() + 10000 * 60 * 60 * 24 * 365)
