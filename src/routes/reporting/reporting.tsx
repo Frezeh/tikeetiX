@@ -7,11 +7,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { CalendarIcon, DownloadIcon, WalletIcon } from "lucide-react";
-import { useState } from "react";
-import CancelledTickets from "./components/cancelled-tickets";
-import TicketSales from "./components/ticket-sales";
-import RefundedTickets from "./components/refunded-tickets";
+import { Skeleton } from "@/components/ui/skeleton";
+import { getSalesReport } from "@/services/api/orders";
+import { reportOverview } from "@/services/api/report";
+import { useQuery } from "@tanstack/react-query";
 import {
   endOfMonth,
   endOfWeek,
@@ -23,9 +22,11 @@ import {
   subMonths,
   subWeeks,
 } from "date-fns";
-import { useQuery } from "@tanstack/react-query";
-import { getWallet } from "@/services/api/wallet";
-import { Skeleton } from "@/components/ui/skeleton";
+import { CalendarIcon, DownloadIcon, WalletIcon } from "lucide-react";
+import { useMemo, useState } from "react";
+import CancelledTickets from "./components/cancelled-tickets";
+import RefundedTickets from "./components/refunded-tickets";
+import TicketSales from "./components/ticket-sales";
 
 const CURRENCY = [
   { id: 0, country: "United Kingdom", value: "GBP", imageUrl: GBP },
@@ -33,6 +34,13 @@ const CURRENCY = [
 
 export default function Reporting() {
   const [totalTicketDate, setTotalTicketDate] = useState("All time");
+  const [paramsValue, setParamsValue] = useState<{
+    startDate: string | null;
+    endDate: string | null;
+  }>({
+    startDate: null,
+    endDate: null,
+  });
   const today = new Date();
   const thisWeekStart = startOfWeek(today);
   const thisWeekEnd = endOfWeek(today);
@@ -68,41 +76,61 @@ export default function Reporting() {
 
     switch (title.toLowerCase()) {
       case "last 24 hours":
-        return console.log(
-          `${format(startOfYesterday(), "dd MMMM")} - ${format(
-            endOfYesterday(),
-            "dd MMMM"
-          )}`
-        );
+        return setParamsValue({
+          startDate: `${format(startOfYesterday(), "yyyy-MM-dd")}`,
+          endDate: `${format(endOfYesterday(), "yyyy-MM-dd")}`,
+        });
       case "this week":
-        return console.log(
-          `${format(thisWeekStart, "dd MMMM")} - ${format(
-            thisWeekEnd,
-            "dd MMMM"
-          )}`
-        );
+        return setParamsValue({
+          startDate: `${format(thisWeekStart, "yyyy-MM-dd")}`,
+          endDate: `${format(thisWeekEnd, "yyyy-MM-dd")}`,
+        });
       case "last week":
-        return console.log(
-          `${format(lastWeekStart, "dd MMMM")} - ${format(
-            lastWeekEnd,
-            "dd MMMM"
-          )}`
-        );
+        return setParamsValue({
+          startDate: `${format(lastWeekStart, "yyyy-MM-dd")}`,
+          endDate: `${format(lastWeekEnd, "yyyy-MM-dd")}`,
+        });
       case "last month":
-        return console.log(
-          `${format(lastMonthStart, "dd MMMM")} - ${format(
-            lastMonthEnd,
-            "dd MMMM"
-          )}`
-        );
+        return setParamsValue({
+          startDate: `${format(lastMonthStart, "yyyy-MM-dd")}`,
+          endDate: `${format(lastMonthEnd, "yyyy-MM-dd")}`,
+        });
       default:
-        return null;
+        return setParamsValue({
+          startDate: null,
+          endDate: null,
+        });
     }
   };
 
-  const { isLoading: isLoadingWallet, data: WALLET } = useQuery({
-    queryKey: ["wallet"],
-    queryFn: () => getWallet(),
+  const salesReportQueryParams = useMemo(() => {
+    let params = "";
+
+    if (paramsValue.startDate && paramsValue.endDate) {
+      params = `?startDate=${paramsValue.startDate}&endDate=${paramsValue.endDate}`;
+    }
+
+    return params;
+  }, [paramsValue]);
+
+  const eventReportQueryParams = useMemo(() => {
+    let params = "";
+
+    if (paramsValue.startDate && paramsValue.endDate) {
+      params = `&startDate=${paramsValue.startDate}&endDate=${paramsValue.endDate}`;
+    }
+
+    return params;
+  }, [paramsValue]);
+
+  const { isLoading: isLoadingSalesReport, data: SalesReport } = useQuery({
+    queryKey: [`sales-report${salesReportQueryParams}`],
+    queryFn: () => getSalesReport(salesReportQueryParams),
+  });
+  const { isLoading: isLoadingEventReport, data: EventReport } = useQuery({
+    queryKey: [`report-overview-event${eventReportQueryParams}`],
+    queryFn: () =>
+      reportOverview(`activityType=Event${eventReportQueryParams}`),
   });
 
   return (
@@ -192,17 +220,17 @@ export default function Reporting() {
               <p className="text-base text-[#667185]">Total ticket sales</p>
             </div>
 
-            <div className="flex items-center gap-6">
+            <div className="flex items-start gap-6">
               <div className="flex flex-col justify-between p-0 gap-2">
                 <p className="text-[#667085] text-xs font-bold uppercase leading-[120%] tracking-wide">
                   Gross revenue
                 </p>
                 <div className="flex justify-start items-start gap-2">
-                  {isLoadingWallet ? (
+                  {isLoadingSalesReport ? (
                     <Skeleton className="w-full h-4 p-3 rounded-[12px] bg-gray-200" />
                   ) : (
                     <p className="text-[#13191C] text-xl font-medium text-ellipsis">
-                      GBP{WALLET?.data?.grossEarnings || 0}
+                      GBP{SalesReport?.data?.totalGrossRevenue || 0}
                     </p>
                   )}
                 </div>
@@ -212,12 +240,12 @@ export default function Reporting() {
                   NET revenue
                 </p>
                 <div className="flex justify-end items-end gap-4">
-                  {isLoadingWallet ? (
+                  {isLoadingSalesReport ? (
                     <Skeleton className="w-full h-4 p-3 rounded-[12px] bg-gray-200" />
                   ) : (
                     <>
                       <p className="text-[#0DA767] text-2xl font-medium">
-                        GBP{WALLET?.data?.escrowEarning || 0}
+                        GBP{SalesReport?.data?.totalNetRevenue || 0}
                       </p>
                       <div className="flex items-center gap-2 pb-1.5">
                         <svg
@@ -236,7 +264,7 @@ export default function Reporting() {
                           />
                         </svg>
                         <p className="font-medium text-[10px] text-[#027A48]">
-                          40%
+                          0%
                         </p>
                         <p className="font-medium text-[10px] text-[#667085]">
                           vs last month
@@ -267,9 +295,13 @@ export default function Reporting() {
                 <p className="text-[#667085] text-[10px] font-bold uppercase leading-[120%] tracking-wide">
                   Events revenue
                 </p>
-                <p className="text-[#13191C] text-lg font-medium text-ellipsis">
-                  GBP0
-                </p>
+                {isLoadingEventReport ? (
+                  <Skeleton className="w-full h-4 p-3 rounded-[12px] bg-gray-200" />
+                ) : (
+                  <p className="text-[#13191C] text-lg font-medium text-ellipsis">
+                    GBP{EventReport?.data?.totalRevenue || 0}
+                  </p>
+                )}
               </div>
             </div>
             <div className="grid grid-cols-3 items-center gap-10">
@@ -325,10 +357,14 @@ export default function Reporting() {
         </div>
       </div>
 
-      <TicketSales />
+      <TicketSales amount={EventReport?.data?.totalTicketsSold ?? 0} />
       <div className="flex flex-col xl:flex-row justify-between items-center gap-10 w-full">
-        <CancelledTickets />
-        <RefundedTickets />
+        <CancelledTickets
+          amount={EventReport?.data?.orderStatusCounts?.CANCELLED ?? 0}
+        />
+        <RefundedTickets
+          amount={EventReport?.data?.orderStatusCounts?.REFUNDED ?? 0}
+        />
       </div>
     </div>
   );

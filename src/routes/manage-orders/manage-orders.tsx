@@ -1,6 +1,8 @@
 import MoneyMultipleIcon from "@/assets/icons/money-multiple-icon";
 import TicketIcon from "@/assets/icons/ticket-icon";
 import VisibleIcon from "@/assets/icons/visible-icon";
+import EmptyTable from "@/components/empty-table";
+import orderStatusIcon from "@/components/order-status-icon";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import {
   DropdownMenu,
@@ -30,15 +32,12 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { capitalizeFirstLetter } from "@/lib/utils";
-import { getOrders } from "@/services/api/transaction";
+import { getOrders } from "@/services/api/orders";
 import { getWallet } from "@/services/api/wallet";
-import { Events } from "@/services/models/events";
+import { Order } from "@/services/models/orders";
 import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import {
   ChevronsUpDown,
-  CircleCheck,
-  CircleEllipsis,
-  CircleX,
   Filter,
   SearchIcon,
   Upload,
@@ -47,7 +46,6 @@ import {
 import { useMemo, useState } from "react";
 import ExportEvents from "../events/components/export-events";
 import ManageOrdersActions from "./manage-order-actions";
-import EmptyTable from "@/components/empty-table";
 
 export default function ManageOrders() {
   const [currentPage, setCurrentPage] = useState(1);
@@ -57,7 +55,7 @@ export default function ManageOrders() {
   const [openExport, setOpenExport] = useState(false);
   const [openModal, setOpenModal] = useState(false);
 
-  const [selectedEvent, setSelectedEvent] = useState<Events>({} as Events);
+  const [selectedEvent, setSelectedEvent] = useState<Order>({} as Order);
 
   const queryParams = useMemo(() => {
     let params = "";
@@ -388,34 +386,34 @@ export default function ManageOrders() {
                       DATA.map((data) => (
                         <TableRow key={data._id} className="border-[#E4E7EC]">
                           <TableCell className="hidden sm:table-cell">
-                            <p className="text-[#475367] text-sm">{data._id}</p>
+                            <p className="text-[#475367] text-sm">
+                              {data.uniqueCode}
+                            </p>
                           </TableCell>
                           <TableCell className="hidden sm:table-cell">
                             <p className="text-[#475367] text-sm">
-                              {data.title}
+                              {data.createdBy}
                             </p>
                           </TableCell>
                           <TableCell>
-                            {/* <div>
-                          <p className="text-[#475367] text-sm">{data.name}</p>
-                          <p className="text-[#667185] text-[13px]">
-                            {data.email}
-                          </p>
-                        </div> */}
-                            N/A
+                            {data.recipients && (
+                              <div>
+                                <p className="text-[#475367] text-sm">
+                                  {data.recipients[0].firstName}{" "}
+                                  {data.recipients[0].lastName}
+                                </p>
+                                <p className="text-[#667185] text-[13px]">
+                                  {data.recipients[0].email}
+                                </p>
+                              </div>
+                            )}
                           </TableCell>
                           <TableCell className="text-[#13191C] font-medium">
-                            0
+                            {data.totalAmount}
                           </TableCell>
                           <TableCell className="text-[#475367]">
                             <div className="flex gap-3 items-center">
-                              {data.status.toLowerCase() === "completed" ? (
-                                <CircleCheck size={16} color="#0DA767" />
-                              ) : data.status.toLowerCase() === "cancelled" ? (
-                                <CircleX size={16} color="#E72113" />
-                              ) : (
-                                <CircleEllipsis size={16} color="#FFB21D" />
-                              )}
+                              {orderStatusIcon(data.status)}
                               <p className="text-sm text-[#475367]">
                                 {capitalizeFirstLetter(data.status)}
                               </p>
@@ -423,7 +421,7 @@ export default function ManageOrders() {
                           </TableCell>
                           <TableCell className="text-[#13191C] gap-3 font-medium">
                             <span>{<TicketIcon width={16} height={16} />}</span>{" "}
-                            Events
+                            {data.activityType}
                           </TableCell>
                           <TableCell>
                             <button

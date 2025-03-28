@@ -2,6 +2,7 @@ import GBP from "@/assets/icons/gbp.svg";
 import MoneyIcon from "@/assets/icons/money-icon";
 import TicketIcon from "@/assets/icons/ticket-icon";
 import Globe from "@/assets/images/bad-boys.png";
+import orderStatusIcon from "@/components/order-status-icon";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -16,29 +17,46 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import Loading from "@/components/ui/loading";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { cn } from "@/lib/utils";
-import { Events } from "@/services/models/events";
-import {
-  CheckCircle2Icon,
-  HistoryIcon,
-  MapPin,
-  MoreVertical,
-  User2,
-} from "lucide-react";
-import { Dispatch, SVGProps, SetStateAction } from "react";
+import { capitalizeFirstLetter, cn } from "@/lib/utils";
+import { getEvent } from "@/services/api/events";
+import { Order } from "@/services/models/orders";
+import { useQuery } from "@tanstack/react-query";
+import { format } from "date-fns";
+import { HistoryIcon, MapPin, MoreVertical, User2 } from "lucide-react";
+import { Dispatch, SetStateAction, useMemo } from "react";
 
 type Props = {
   openModal: boolean;
   setOpenModal: Dispatch<SetStateAction<boolean>>;
-  data: Events;
+  data: Order;
 };
 
 export default function ManageOrdersActions({
   setOpenModal,
   openModal,
+  data,
 }: Props) {
+  const { isLoading, data: Details } = useQuery({
+    queryKey: [`event-${data?._id}`],
+    queryFn: () => getEvent(data?._id!),
+    enabled: !!data?._id,
+  });
+
+  const ticketPrice = useMemo(() => {
+    const tickets = Details?.data?.event?.tickets;
+
+    if (!tickets || tickets?.length < 1) {
+      return "Free";
+    }
+
+    return `£${Math.min(...tickets.map((t) => t.ticketPrice))} - £${Math.max(
+      ...tickets.map((t) => t.ticketPrice)
+    )}`;
+  }, [Details]);
+
   return (
     <Dialog open={openModal} onOpenChange={setOpenModal}>
       <DialogContent
@@ -53,7 +71,9 @@ export default function ManageOrdersActions({
                 alt="order"
                 className="w-[90px] h-[100px] rounded-[8px]"
               />
-              <p className="text-black font-semibold text-xl">Order #123456</p>
+              <p className="text-black font-semibold text-xl">
+                Order {data.uniqueCode}
+              </p>
             </div>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -86,9 +106,7 @@ export default function ManageOrdersActions({
             <div className="grid grid-cols-2 gap-10">
               <div className="space-y-2 max-w-[190px]">
                 <p className="text-[#667185]">Ticket name</p>
-                <p className="text-[#13191C] font-medium">
-                  Hawk Tuah: Return of the memes (2024)
-                </p>
+                <p className="text-[#13191C] font-medium">{data.createdBy}</p>
               </div>
               <div className="space-y-2">
                 <p className="text-[#667185]">Type</p>
@@ -106,37 +124,42 @@ export default function ManageOrdersActions({
                   <span className="pl-1 text-[#667185] text-sm font-medium">
                     GBP
                   </span>
-                  <p className="text-[#13191C] text-sm font-medium"> 49.99</p>
+                  <p className="text-[#13191C] text-sm font-medium">
+                    {" "}
+                    {data.totalAmount}
+                  </p>
                 </span>
               </div>
               <div className="space-y-2">
                 <p className="text-[#667185]">Quantity</p>
-                <p className="text-[#13191C] font-medium">01</p>
+                <p className="text-[#13191C] font-medium">{data.quantity}</p>
               </div>
             </div>
             <div className="grid grid-cols-2 gap-10">
               <div className="space-y-2 max-w-[190px]">
                 <p className="text-[#667185]">Date</p>
                 <p className="text-[#13191C] font-medium">
-                  09 Sep 2024, 15:27pm
+                  {format(data.createdAt, "dd MMM yyyy, HH:mma")}
                 </p>
               </div>
               <div className="space-y-2">
                 <p className="text-[#667185]">Status</p>
-                <span className="flex items-center gap-2 text-[#475367] text-sm">
-                  <CheckCircle2Icon size={16} color="#0DA767" />
-                  Completed
-                </span>
+                <div className="flex gap-2 items-center">
+                  {orderStatusIcon(data.status)}
+                  <p className="text-sm text-[#475367]">
+                    {capitalizeFirstLetter(data.status)}
+                  </p>
+                </div>
               </div>
             </div>
-            <div className="grid grid-cols-2 gap-10">
+            {/* <div className="grid grid-cols-2 gap-10">
               <div className="space-y-2 max-w-[190px]">
                 <p className="text-[#667185]">Platform</p>
                 <p className="text-[#13191C] font-medium">
                   09 Sep 2024, 15:27pm
                 </p>
               </div>
-            </div>
+            </div> */}
           </DialogDescription>
 
           <DialogDescription className="text-center space-y-3">
@@ -167,7 +190,7 @@ export default function ManageOrdersActions({
                   <HistoryIcon size={12} color="#667185" />
                   <p className="text-[#667185]">Order history</p>
                 </div>
-                <div className="py-5">
+                {/* <div className="py-5">
                   <div className="flex flex-row gap-[14px] pb-1">
                     <div className="flex flex-col items-center gap-1">
                       <CheckIcon />
@@ -241,145 +264,161 @@ export default function ManageOrdersActions({
                       </p>
                     </div>
                   </div>
-                </div>
+                </div> */}
               </TabsContent>
               <TabsContent value="details" className="mt-5 px-5">
-                <div className="flex flex-row items-center gap-2">
-                  <TicketIcon width={12} height={12} color="#667185" />
-                  <p className="text-[#667185]">Ticket details</p>
-                </div>
-                <div className="space-y-7 pt-4">
-                  <div className="space-y-1">
-                    <p className="text-[#667185] text-left text-sm">
-                      Description
-                    </p>
-                    <p className="text-[#13191C] text-left text-sm">
-                      Lorem ipsum dolor sit amet, consectetur adipiscing elit.
-                      Ut et massa mi. Aliquam in hendrerit urna. see more
-                    </p>
-                  </div>
-                  <div className={cn("grid grid-cols-3 gap-7")}>
-                    <div>
-                      <p className="text-[#667185] text-sm text-left">
-                        Category
-                      </p>
-                      <p className="text-[#13191C] text-sm text-left font-medium">
-                        Event
-                      </p>
+                {isLoading ? (
+                  <Loading />
+                ) : (
+                  <>
+                    <div className="flex flex-row items-center gap-2">
+                      <TicketIcon width={12} height={12} color="#667185" />
+                      <p className="text-[#667185]">Ticket details</p>
                     </div>
-                    <div>
-                      <p className="text-[#667185] text-sm text-left">
-                        Ticket price
-                      </p>
-                      <div className="flex items-center gap-1">
-                        <img src={GBP} alt="gbp" className="w-3 h-3" />
-                        <p className="text-[#667185] text-[15px] font-medium">
-                          GBP <span className="text-[#13191C]">49.99</span>
+                    <div className="space-y-7 pt-4">
+                      <div className="space-y-1">
+                        <p className="text-[#667185] text-left text-sm">
+                          Description
+                        </p>
+                        <p className="text-[#13191C] text-left text-sm">
+                          {Details?.data?.event?.description ?? ""}
                         </p>
                       </div>
-                    </div>
-                    <div>
-                      <p className="text-[#667185] text-sm text-left">
-                        Age rating
-                      </p>
-                      <p className="text-[#13191C] text-sm text-left font-medium">
-                        PG 13
-                      </p>
-                    </div>
-                  </div>
-                  <div className={cn("grid grid-cols-2 gap-7")}>
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <p className="text-[#667185] text-sm text-left">
-                          Location
-                        </p>
-                        <MapPin size={20} color="#98A2B3" />
+                      <div className={cn("grid grid-cols-3 gap-7")}>
+                        <div>
+                          <p className="text-[#667185] text-sm text-left">
+                            Category
+                          </p>
+                          <p className="text-[#13191C] text-sm text-left font-medium">
+                            {Details?.data?.event?.category ?? ""}
+                          </p>
+                        </div>
+                        <div>
+                          <p className="text-[#667185] text-sm text-left">
+                            Ticket price
+                          </p>
+                          <div className="flex items-center gap-1">
+                            {ticketPrice !== "Free" ? (
+                              <p className="flex items-center gap-1 text-[15px] font-medium">
+                                <img src={GBP} alt="gbp" className="w-3 h-3" />
+                                <span className="text-[#13191C]">
+                                  {ticketPrice}
+                                </span>
+                              </p>
+                            ) : (
+                              <p className="text-[#13191C] text-[15px] font-medium">
+                                Free
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                        <div>
+                          <p className="text-[#667185] text-sm">Type</p>
+                          <p className="text-[#13191C] text-sm font-medium">
+                            {Details?.data?.event?.type}
+                          </p>
+                        </div>
                       </div>
-                      <p className="text-[#13191C] text-sm text-left font-medium">
-                        The Cinema, somewhere in the UK
-                      </p>
+                      <div className={cn("grid grid-cols-2 gap-7")}>
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <p className="text-[#667185] text-sm">Location</p>
+                            <MapPin size={20} color="#98A2B3" />
+                          </div>
+                          <p className="text-[#13191C] text-sm font-medium">
+                            {Details?.data?.event?.location}
+                          </p>
+                        </div>
+                        <div>
+                          <p className="text-[#667185] text-sm">Organizer</p>
+                          <p className="text-[#13191C] text-sm font-medium">
+                            {Details?.data?.event?.organizerName ?? "---"}
+                          </p>
+                        </div>
+                        <div>
+                          <p className="text-[#667185] text-sm">Start time</p>
+                          <p className="text-[#13191C] text-sm font-medium">
+                            {Details?.data?.event?.startTime
+                              ? format(Details?.data?.event?.startTime, "PP")
+                              : "---"}
+                          </p>
+                        </div>
+                      </div>
                     </div>
-                    <div>
-                      <p className="text-[#667185] text-sm text-left">
-                        Playtime/Duration
-                      </p>
-                      <p className="text-[#13191C] text-sm text-left font-medium">
-                        2:15:20
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-[#667185] text-sm text-left">
-                        Organizer
-                      </p>
-                      <p className="text-[#13191C] text-sm text-left font-medium">
-                        Frank
-                      </p>
-                    </div>
-                  </div>
-                </div>
+                  </>
+                )}
               </TabsContent>
               <TabsContent value="info" className="mt-5 px-5">
                 <div className="flex flex-row items-center gap-2">
                   <User2 size={12} color="#667185" />
                   <p className="text-[#667185]">Customer information</p>
                 </div>
-                <div className="space-y-7 pt-4">
-                  <div className="grid grid-cols-2 gap-7">
-                    <div>
-                      <p className="text-[#667185] text-sm text-left">Name</p>
-                      <p className="text-[#13191C] text-sm text-left font-medium">
-                        Billy Butcher
-                      </p>
+                {data.recipients &&
+                  data.recipients.map((recipient, index) => (
+                    <div className="space-y-7 pt-4" key={index}>
+                      <div className="grid grid-cols-2 gap-7">
+                        <div>
+                          <p className="text-[#667185] text-sm text-left">
+                            Name
+                          </p>
+                          <p className="text-[#13191C] text-sm text-left font-medium">
+                            {recipient.firstName} {recipient.lastName}
+                          </p>
+                        </div>
+                        <div>
+                          <p className="text-[#667185] text-sm text-left">
+                            Email
+                          </p>
+                          <p className="text-[#13191C] text-sm text-left font-medium">
+                            {recipient.email}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-2 gap-7">
+                        <div>
+                          <p className="text-[#667185] text-sm text-left">
+                            Payment info
+                          </p>
+                          <span className="text-[#13191C] text-sm text-left font-medium flex items-center gap-2">
+                            Card{" "}
+                            <svg
+                              width="12"
+                              height="13"
+                              viewBox="0 0 12 13"
+                              fill="none"
+                              xmlns="http://www.w3.org/2000/svg"
+                            >
+                              <circle
+                                cx="3.75"
+                                cy="6.2666"
+                                r="3.375"
+                                fill="#E80B26"
+                              />
+                              <circle
+                                cx="8.25"
+                                cy="6.2666"
+                                r="3.375"
+                                fill="#F59D31"
+                              />
+                              <path
+                                d="M6 8.78217C6.69049 8.16418 7.125 7.26614 7.125 6.26657C7.125 5.267 6.69049 4.36896 6 3.75098C5.30951 4.36896 4.875 5.267 4.875 6.26657C4.875 7.26614 5.30951 8.16418 6 8.78217Z"
+                                fill="#FC6020"
+                              />
+                            </svg>
+                            ****** 4317
+                          </span>
+                        </div>
+                        <div>
+                          <p className="text-[#667185] text-sm text-left">
+                            QR code
+                          </p>
+                          <p className="text-[#13191C] text-sm text-left font-medium">
+                            {recipient.qrCode}
+                          </p>
+                        </div>
+                      </div>
                     </div>
-                    <div>
-                      <p className="text-[#667185] text-sm text-left">Email</p>
-                      <p className="text-[#13191C] text-sm text-left font-medium">
-                        customer@mail.com
-                      </p>
-                    </div>
-                  </div>
-                  <div className="grid grid-cols-2 gap-7">
-                    <div>
-                      <p className="text-[#667185] text-sm text-left">
-                        Payment info
-                      </p>
-                      <span className="text-[#13191C] text-sm text-left font-medium flex items-center gap-2">
-                        Card{" "}
-                        <svg
-                          width="12"
-                          height="13"
-                          viewBox="0 0 12 13"
-                          fill="none"
-                          xmlns="http://www.w3.org/2000/svg"
-                        >
-                          <circle
-                            cx="3.75"
-                            cy="6.2666"
-                            r="3.375"
-                            fill="#E80B26"
-                          />
-                          <circle
-                            cx="8.25"
-                            cy="6.2666"
-                            r="3.375"
-                            fill="#F59D31"
-                          />
-                          <path
-                            d="M6 8.78217C6.69049 8.16418 7.125 7.26614 7.125 6.26657C7.125 5.267 6.69049 4.36896 6 3.75098C5.30951 4.36896 4.875 5.267 4.875 6.26657C4.875 7.26614 5.30951 8.16418 6 8.78217Z"
-                            fill="#FC6020"
-                          />
-                        </svg>
-                        ****** 4317
-                      </span>
-                    </div>
-                    <div>
-                      <p className="text-[#667185] text-sm text-left">Phone</p>
-                      <p className="text-[#13191C] text-sm text-left font-medium">
-                        (+111) 999 9999 999
-                      </p>
-                    </div>
-                  </div>
-                </div>
+                  ))}
               </TabsContent>
             </Tabs>
           </DialogDescription>
@@ -397,22 +436,5 @@ export default function ManageOrdersActions({
         </DialogFooter>
       </DialogContent>
     </Dialog>
-  );
-}
-
-function CheckIcon({ ...props }: SVGProps<SVGSVGElement>) {
-  return (
-    <svg width="13" height="13" viewBox="0 0 13 13" fill="none" {...props}>
-      <rect x="0.5" y="0.266602" width="12" height="12" rx="6" fill="#0DA767" />
-      <path
-        fill-rule="evenodd"
-        clip-rule="evenodd"
-        d="M9.69005 3.80928C9.80455 3.91424 9.81229 4.09215 9.70733 4.20665L5.58232 8.70665C5.53049 8.7632 5.4578 8.79612 5.38111 8.79779C5.30442 8.79945 5.23037 8.76972 5.17613 8.71548L3.30113 6.84048C3.19129 6.73064 3.19129 6.55256 3.30113 6.44273C3.41096 6.33289 3.58904 6.33289 3.69887 6.44273L5.36617 8.11002L9.29268 3.82656C9.39764 3.71205 9.57555 3.70432 9.69005 3.80928Z"
-        fill="white"
-        stroke="white"
-        stroke-linecap="round"
-        stroke-linejoin="round"
-      />
-    </svg>
   );
 }

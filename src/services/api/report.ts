@@ -1,13 +1,14 @@
 import { AxiosRequestConfig } from "axios";
 import { makeRequest } from "../request";
+import { ReportOverview } from "../models/reporting";
 
-export const reportOverview = async () => {
+export const reportOverview = async (query: string) => {
   const config: AxiosRequestConfig = {
     method: "GET",
-    url: "report/overview",
+    url: `report/overview?${query}`,
   };
 
-  const response = await makeRequest(config);
+  const response = await makeRequest<ReportOverview>(config);
 
   return response.data;
 };
